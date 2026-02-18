@@ -2,11 +2,12 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import chalk from 'chalk';
+import { DbConnect } from './config/DbConnect';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 1350;
 
 app.use(cors());
 app.use(express.json());
@@ -17,10 +18,16 @@ app.get('/', (req, res) => {
 
 //função para iniciar o servidor
 async function startServer() {
-    //TODO: adicionar await para conectar ao banco de dados antes de iniciar o servidor
-  app.listen(PORT, () => {
-    console.log(chalk.green(`Servidor rodando em ${chalk.blue(`http://localhost:${PORT}/`)}`));
-  });
+  try {
+    console.log(chalk.yellowBright('Conectando ao banco de dados...'));
+    await DbConnect.connect();
+    app.listen(PORT, () => {
+      console.log(chalk.greenBright(`Servidor rodando em ${chalk.blueBright(`http://localhost:${PORT}/`)}`));
+    });
+  } catch (error) {
+    console.error(chalk.redBright('Erro ao iniciar o servidor:'), error);
+    process.exit(1);
+  }
 };
 
 startServer();
