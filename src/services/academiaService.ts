@@ -47,15 +47,24 @@ class AcademiaService {
     }
 
     async updateAcademia(id: number, academiaEditada: Partial<type_academia>): Promise<Partial<type_academia>> {
-        try { 
+        try {
             academiaUpdateSchema.parse(academiaEditada)
             const academiaAtualizada = await this.repository.updateAcademia(id, academiaEditada)
             return academiaAtualizada
-        } catch (error) { 
+        } catch (error) {
             if (error instanceof ZodError) {
                 throw error;
             }
 
+            throw new Error(`Erro ao criar academia: ${error instanceof Error ? error.message : 'Erro desconhecido'}`)
+        }
+    }
+
+    async deleteAcademia(id: number): Promise<type_academia> {
+        try {
+            const academiaDeletada = await this.repository.deleteAcademia(id)
+            return academiaDeletada
+        } catch (error) {
             throw new Error(`Erro ao criar academia: ${error instanceof Error ? error.message : 'Erro desconhecido'}`)
         }
     }

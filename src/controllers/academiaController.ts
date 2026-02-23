@@ -89,6 +89,20 @@ class AcademiaController {
             return CommonResponse.serverError(res, error, HttpStatusCode.INTERNAL_SERVER_ERROR.message);
         }
     }
+
+    deleteAcademia = async (req: Request, res: Response) => {
+        const { id } = req.params
+        if (!id) {
+            return CommonResponse.error(res, HttpStatusCode.BAD_REQUEST.code, null, 'id', [], 'O id é obrigatório');
+        }
+
+        try {
+            const resposta = await this.service.deleteAcademia(Number(id))
+            return CommonResponse.success(res, resposta, HttpStatusCode.OK.code)
+        } catch (error) {
+            return CommonResponse.serverError(res, error, HttpStatusCode.INTERNAL_SERVER_ERROR.message);
+        }
+    }
 }
 
 export default AcademiaController;

@@ -9,5 +9,6 @@ router
     .get('/academia', academiaController.getAllAcademia)
     .get('/academia/:id', academiaController.getAcademiaById)
     .patch('/academia/:id', academiaController.updateAcademia)
+    .delete('/academia/:id', academiaController.deleteAcademia)
 
 export default router;

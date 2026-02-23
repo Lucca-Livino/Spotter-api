@@ -44,6 +44,15 @@ class AcademiaRepository {
             throw new Error(`Erro ao atualizar academia: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
         }
     }
+
+    async deleteAcademia(id: number): Promise<type_academia> {
+        try {
+            const resposta = await this.db.delete(academia).where(eq(academia.id, id)).returning()
+            return resposta[0]
+        } catch (error) {
+            throw new Error(`Erro ao atualizar academia: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+        }
+    }
 }
 
 export default AcademiaRepository;
