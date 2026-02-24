@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts"
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "seed": "tsx src/seeds/index.ts",
+    "start": "node dist/server.js"
   },
   "repository": {
     "type": "git",
@@ -17,10 +20,12 @@
   "dependencies": {
     "chalk": "^5.6.2",
     "cors": "^2.8.6",
-    "dotenv": "^17.2.4",
+    "dotenv": "^17.3.1",
+    "drizzle-orm": "^0.45.1",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^9.2.0",
+    "pg": "^8.18.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2",
     "zod": "^4.3.6"
@@ -29,6 +34,8 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
-    "tsx": "^4.20.5"
+    "@types/pg": "^8.16.0",
+    "drizzle-kit": "^0.31.9",
+    "tsx": "^4.21.0"
   }
 }
