@@ -4,6 +4,7 @@ import CommonResponse from "../utils/helpers/commonResponse";
 import HttpStatusCode from "../utils/helpers/httpStatusCode";
 import { ZodError } from "zod";
 import { DatabaseError } from "../utils/errors/DatabaseError";
+import { type_aluno } from "../types/dbSchemas";
 
 class AlunoController {
     private service: StudentsService;
@@ -40,6 +41,38 @@ class AlunoController {
             return CommonResponse.success(res, student, HttpStatusCode.OK.code, 'Aluno encontrado com sucesso');
         } catch (error) {
             return this.handleError(res, error, 'getStudentById');
+        }
+    };
+
+    createStudent = async (req: Request, res: Response) => {
+        console.log('[StudentsController] [createStudent] Requisição recebida');
+        console.log('[StudentsController] [createStudent] Body:', JSON.stringify(req.body, null, 2));
+
+        const novoStudent: type_aluno = {
+            nome: req.body.nome,
+            email: req.body.email,
+            senha: req.body.senha,
+            data_nascimento: req.body.data_nascimento,
+            sexo: req.body.sexo,
+            url_foto: req.body.url_foto || null,
+            status_conta: req.body.status_conta ?? true,
+            academia_id: req.body.academia_id,
+        };
+
+        console.log('[StudentsController] [createStudent] Objeto montado:', JSON.stringify(novoStudent, null, 2));
+
+        if (!novoStudent.nome || !novoStudent.email || !novoStudent.senha) {
+            console.warn('[StudentsController] [createStudent] Dados obrigatórios ausentes, retornando BAD_REQUEST');
+            return CommonResponse.error(res, HttpStatusCode.BAD_REQUEST.code, null, '', [], 'Dados do aluno são obrigatórios (nome, email, senha)');
+        }
+
+        try {
+            console.log('[StudentsController] [createStudent] Chamando service.createStudent...');
+            const resposta = await this.service.createStudent(novoStudent);
+            console.log('[StudentsController] [createStudent] Aluno criado com sucesso. Resposta:', JSON.stringify(resposta, null, 2));
+            return CommonResponse.created(res, resposta, HttpStatusCode.CREATED.message);
+        } catch (error) {
+            return this.handleError(res, error, 'createStudent');
         }
     };
 
