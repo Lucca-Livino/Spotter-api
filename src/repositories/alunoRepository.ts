@@ -10,18 +10,49 @@ class AlunoRepository {
         this.db = DataBase
     }
 
-    async createAluno(novoAluno: type_aluno): Promise<type_aluno> {
-        console.log('[AlunoRepository] [createAluno] Iniciando inserção no banco de dados...');
-        console.log('[AlunoRepository] [createAluno] Dados a inserir:', JSON.stringify(novoAluno, null, 2));
+    async create(novoStudent: type_aluno): Promise<type_aluno> {
+        console.log('[StudentsRepository] [create] Iniciando inserção no banco de dados...');
+        console.log('[StudentsRepository] [create] Dados a inserir:', JSON.stringify(novoStudent, null, 2));
         try {
-            const { academia_id, ...restAluno } = novoAluno;
-            const resposta = await this.db.insert(aluno).values({ ...restAluno, academia_id: academia_id }).returning();
-            console.log('[AlunoRepository] [createAluno] Inserção concluída. Registro retornado:', JSON.stringify(resposta[0], null, 2));
-            return resposta[0];
+            const { academia_id, ...restStudent } = novoStudent;
+            const resultado = await this.db.insert(aluno).values({ ...restStudent, academia_id }).returning();
+            console.log('[StudentsRepository] [create] Inserção concluída. Registro retornado:', JSON.stringify(resultado[0], null, 2));
+            return resultado[0] as unknown as type_aluno;
         } catch (error) {
-            throw parseDatabaseError(error, 'AlunoRepository.createAluno');
+            throw parseDatabaseError(error, 'StudentsRepository.create');
         }
     }
+
+    async getAllStudents(): Promise<type_aluno[]> {
+            try {
+                const resultado = await this.db
+                    .select()
+                    .from(aluno);
+    
+                return resultado as unknown as type_aluno[];
+            } catch (error) {
+                throw parseDatabaseError(error, 'AlunoRepository.getAllStudents');
+            }
+        }
+
+    async findById(id: number): Promise<type_aluno | null> {
+        try {
+            const resultado = await this.db
+                .select()
+                .from(aluno)
+                .where(eq(aluno.id, id))
+                .limit(1);
+
+            if (resultado.length === 0) {
+                return null;
+            }
+
+            return resultado[0] as unknown as type_aluno;
+        } catch (error) {
+            throw parseDatabaseError(error, 'AlunoRepository.findById');
+        }
+    }
+
 }
 
 export default AlunoRepository

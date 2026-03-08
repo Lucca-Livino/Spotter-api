@@ -1,43 +1,77 @@
-import AlunoRepository from "../repositories/alunoRepository";
+import StudentsRepository from "../repositories/alunoRepository";
 import { type_aluno } from "../types/dbSchemas";
+import { type_physical_data } from "../types/userSchemas";
+import { studentIdSchema, studentSchema, physicalDataSchema } from "../utils/validations/alunoValidation";
 import { ZodError } from "zod";
-import { alunoSchema, alunoUpdateSchema } from "../utils/validations/alunoValidation";
 
-class AlunoService {
-    private repository: AlunoRepository
+class StudentsService {
+    private repository: StudentsRepository;
+
     constructor() {
-        this.repository = new AlunoRepository()
+        this.repository = new StudentsRepository();
     }
 
-    async createAluno(novoAluno: type_aluno): Promise<type_aluno> {
-        console.log('[AlunoService] [createAluno] Dados recebidos do controller:', JSON.stringify(novoAluno, null, 2));
+
+    async getStudentById(id: number): Promise<type_aluno> {
+        console.log(`[StudentsService] [getStudentById] Buscando aluno com ID: ${id}`);
+
+        studentIdSchema.parse(id);
+
+        const student = await this.repository.findById(id);
+
+        if (!student) {
+            throw new Error(`Aluno com ID ${id} não encontrado`);
+        }
+
+        const { senha, ...studentWithoutPassword } = student as any;
+        console.log(`[StudentsService] [getStudentById] Aluno encontrado com sucesso`);
+
+        return studentWithoutPassword as type_aluno;
+    }
+
+    async getAllStudents(): Promise<type_aluno[]> {
+        console.log('[StudentsService] [getAllStudents] Buscando todos os alunos');
+
+        const students = await this.repository.getAllStudents();
+
+        const studentsWithoutPassword = students.map((s: any) => {
+            const { senha, ...rest } = s;
+            return rest as type_aluno;
+        });
+
+        console.log(`[StudentsService] [getAllStudents] ${studentsWithoutPassword.length} aluno(s) encontrado(s)`);
+        return studentsWithoutPassword;
+    }
+
+    async createStudent(novoStudent: type_aluno): Promise<type_aluno> {
+        console.log('[StudentsService] [createStudent] Dados recebidos do controller:', JSON.stringify(novoStudent, null, 2));
         try {
-            const alunoSanitizado = {
-                ...novoAluno,
-                data_nascimento: new Date(novoAluno.data_nascimento).toISOString().split('T')[0],
-                status_conta: true,
-                academia_id: Number(novoAluno.academia_id),
-            }
-            console.log('[AlunoService] [createAluno] Dados sanitizados:', JSON.stringify(alunoSanitizado, null, 2));
+            console.log('[StudentsService] [createStudent] Iniciando validação com Zod...');
+            studentSchema.parse(novoStudent);
+            console.log('[StudentsService] [createStudent] Validação Zod concluída com sucesso');
 
-            console.log('[AlunoService] [createAluno] Iniciando validação com Zod...');
-            alunoSchema.parse(alunoSanitizado)
-            console.log('[AlunoService] [createAluno] Validação Zod concluída com sucesso');
+            const studentSanitizado = {
+                ...novoStudent,
+                status_conta: novoStudent.status_conta ?? true,
+                academia_id: Number(novoStudent.academia_id),
+            };
+            console.log('[StudentsService] [createStudent] Dados sanitizados:', JSON.stringify(studentSanitizado, null, 2));
 
-            console.log('[AlunoService] [createAluno] Chamando repository.createAluno...');
-            const resposta = await this.repository.createAluno(alunoSanitizado)
-            console.log('[AlunoService] [createAluno] Aluno persistido com sucesso:', JSON.stringify(resposta, null, 2));
-            return resposta
+            console.log('[StudentsService] [createStudent] Chamando repository.create...');
+            const resposta = await this.repository.create(studentSanitizado);
+            console.log('[StudentsService] [createStudent] Aluno persistido com sucesso:', JSON.stringify(resposta, null, 2));
+            
+            const { senha, ...studentWithoutPassword } = resposta as any;
+            return studentWithoutPassword as type_aluno;
         } catch (error) {
             if (error instanceof ZodError) {
-                console.warn('[AlunoService] [createAluno] Falha na validação Zod:', error.issues);
+                console.warn('[StudentsService] [createStudent] Falha na validação Zod:', error.issues);
                 throw error;
             }
-            // Repropaga DatabaseError e qualquer outro erro sem re-envolver
-            console.warn('[AlunoService] [createAluno] Erro recebido do repository, propagando...');
+            console.warn('[StudentsService] [createStudent] Erro recebido do repository, propagando...');
             throw error;
         }
     }
 }
 
-export default AlunoService
+export default StudentsService;

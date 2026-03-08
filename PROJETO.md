@@ -40,7 +40,7 @@
 
 |  |  |
 | :---- | :---- |
-| **NOME** | ###### |
+| **NOME** | Spotter |
 | **PRINCIPAL OBJETIVO** | Desenvolver um aplicativo que possibilite a boa comunicação entre personal trainer e alunos. |
 | **BENEFÍCIOS ESPERADOS** | Facilitar a comunicação entre o personal trainer e seus alunos. |
 | **INÍCIO E TÉRMINO PREVISTOS** | 10/02/2026 - 23/06/2026 |
@@ -121,8 +121,23 @@ Aqui estão os requisitos funcionais e não funcionais que definem o que o aplic
 
 | ID | NOME | DESCRIÇÃO | PRIORIDADE |
 | :---- | :---- | :---- | :---- |
-| RF001 | ################ | ################ | ################ |
-| RF002 | ################ | ################ | ################ |
+| RF001 | Login e Cadastro de usuátio |O sistema deve permitir cadastro e login de usuários | Alta |
+| RF002 | Tipos de usuários | O usuário deve poder se cadastrar como Aluno ou Treinador | Alta|
+| RF003 | informações de usuário |Cada perfil deve conter informações básicas (nome, foto, dados físicos no caso do aluno)| Alta|
+| RF004 | Demonstração de exercícios |  O sistema deve exibir os exercícios do treino com um GIF.| Alta|
+| RF005 | Mudança de treino | O aluno deve poder modificar pesos e séries durante a execução do treino | Alta|
+| RF006 | Histórico de treino | O sistema deve registrar e exibir um histórico de treinos realizados | Média |
+| RF007 | Treino próprio | O aluno deve poder criar um treino próprio sem necessidade de treinador | Alta |
+| RF008 | Treino para alunos | O treinador deve poder montar treinos para seus alunos | Alta |
+| RF009 | Alterar treino de alunos | O treinador deve poder editar treinos já criados para um aluno | Alta |
+| RF0010 | Acompanhamento de progresso | O treinador deve ter acesso a estatísticas dos seus alunos (ex: evolução de carga, frequência)| Média |
+| RF0011 | Lista de alunos | O treinador deve poder visualizar a lista de seus alunos | Alta |
+| RF0012 | Chat de alunos |  O sistema deve disponibilizar um chat entre aluno e treinador| Alta |
+| RF0013 | Disponibilidade do chat | O chat deve ser acessível tanto pelo perfil do aluno quanto pelo do treinador| Alta |
+| RF0014 | Procurar treinador | O sistema deve permitir que ao logar pela primeira vez, o aluno pode procurar um treinador para si | Média |
+| RF0015 | Histórico de treino | O sistema deve registrar e exibir um histórico de treinos realizados | Média |
+
+
 
 ## **REQUISITOS NÃO FUNCIONAIS**
 
