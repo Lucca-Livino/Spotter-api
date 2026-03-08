@@ -1,7 +1,7 @@
 import { DataBase } from "../config/DbConnect";
 import { academia } from "../config/db/schema";
 
-export async function seedAcademias(): Promise<number[]> {
+export async function seedAcademias(): Promise<string[]> {
     const novasAcademias = [
         {
             nome: "Engenharia do Corpo",
