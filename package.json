@@ -4,10 +4,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev:docker": "docker compose -f docker-compose-dev.yml up --build --force-recreate",
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "seed": "tsx src/seeds/index.ts",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "migrate": "npx drizzle-kit generate",
+    "migrate:push": "npx drizzle-kit push",
+    "migrate:studio": "npx drizzle-kit studio"
   },
   "repository": {
     "type": "git",

@@ -1,8 +1,13 @@
 FROM node:22
 
-EXPOSE 5015
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /usr/src/app
+EXPOSE 1350
+
+WORKDIR /app
 
 COPY package.json package-lock.json ./
 

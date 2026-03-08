@@ -1,0 +1,49 @@
+services:
+  postgres:
+    container_name: postgres-atividades-fisicas
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: aplicativo_atividades_fisicas
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - vol-postgres-atividades-fisicas:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - atividades-fisicas-network
+
+  api:
+    container_name: api-atividades-fisicas
+    build: ./
+    environment:
+      DATABASE_URL: 'postgresql://postgres:postgres@postgres-atividades-fisicas:5432/aplicativo_atividades_fisicas'
+      NODE_ENV: 'development'
+      PORT: '1350'
+      TERM: 'xterm'
+    ports:
+      - 1350:1350
+    env_file:
+      - ./.env
+    volumes:
+      - ./:/app:delegated
+      - /app/node_modules
+    command: npm run dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - atividades-fisicas-network
+
+volumes:
+  vol-postgres-atividades-fisicas:
+
+networks:
+  atividades-fisicas-network:
+    name: atividades-fisicas-network
+    driver: bridge
