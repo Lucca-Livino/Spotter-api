@@ -1,102 +1,123 @@
 import { enum_sexo, enum_turnos } from "./enum";
 
 export type type_academia = {
-    id?: number;
+    id?: string;
     nome: string;
     endereco_numero: string;
     endereco_rua: string;
     endereco_bairro: string;
     endereco_cidade: string;
     endereco_estado: string;
-    created_at: Date;
+    created_at?: Date;
 }
 
 export type type_aluno = {
-    id?: number;
+    id?: string;
     url_foto?: string | null;
     nome: string;
     email: string;
     senha: string;
     data_nascimento: string;
     sexo: enum_sexo;
-    status_conta: boolean;
+    is_admin?: boolean;
+    status_conta?: boolean;
     created_at?: Date;
-    academia_id: number;
+    academia_id: string;
 }
 
 export type type_avaliacao_fisica = {
-    id?: number;
+    id?: string;
     data_avaliacao: Date;
     peso_kg: number;
     altura_m: number;
-    aluno_id: number;
+    aluno_id: string;
 }
 
 export type type_treinador = {
-    id?: number;
-    url_foto: string;
+    id?: string;
+    url_foto?: string | null;
     nome: string;
     email: string;
     senha: string;
     data_nascimento: string;
     sexo: enum_sexo;
     cref: string;
-    turno: enum_turnos;
+    turnos: enum_turnos[];
     especializacao: string;
     graduacao: string;
-    status_conta: boolean;
-    created_at: Date;
-    academia_id: number;
+    is_admin?: boolean;
+    status_conta?: boolean;
+    created_at?: Date;
+    academia_id: string;
 }
 
 export type type_grupo_muscular = 'PEITO' | 'COSTAS' | 'PERNAS' | 'BRAÇOS' | 'OMBROS' | 'ABDOMEN';
 
 export type type_musculo = {
-    id?: number;
+    id?: string;
     nome: string;
     grupo_muscular: type_grupo_muscular;
 }
 
 export type type_aparelho = {
-    id?: number;
+    id?: string;
     nome: string;
     descricao: string;
 }
 
 export type type_exercicio = {
-    id?: number;
+    id?: string;
     nome: string;
-    descricao: string;
+    descricao?: string | null;
+    aluno_id?: string | null;
+    deletado_em?: Date | null;
+    created_at?: Date;
+    musculos?: {
+        exercicio_id?: string;
+        musculo_id: string;
+        tipo_ativacao: type_tipo_ativacao;
+        nome: string;
+        grupo_muscular: type_grupo_muscular;
+    }[];
 }
 
 export type type_tipo_ativacao = 'PRIMARIO' | 'SECUNDARIO';
 
 export type type_exercicio_musculo = {
-    exercicio_id: number;
-    musculo_id: number;
+    exercicio_id: string;
+    musculo_id: string;
     tipo_ativacao: type_tipo_ativacao;
 }
 
 export type type_exercicio_aparelho = {
-    exercicio_id: number;
-    aparelho_id: number;
+    exercicio_id: string;
+    aparelho_id: string;
 }
 
 export type type_rotina_treino = {
-    id?: number;
+    id?: string;
     nome: string;
     data_criacao: Date;
-    usuario_id: number;
-    treinador_id: number | null;
+    usuario_id: string;
+    treinador_id: string | null;
 }
 
 export type type_item_rotina = {
-    id?: number;
+    id?: string;
     series: number;
-    repeticoes: number;
+    repeticoes: string;
     carga_sugerida: number;
     tempo_descanso_segundos: number;
     ordem_execucao: number;
-    rotina_id: number;
-    exercicio_id: number;
+    rotina_id: string;
+    exercicio_id: string;
+}
+
+/* Tipo do usuário autenticado */
+export type type_usuario_autenticado = {
+    id: string;
+    nome: string;
+    email: string;
+    tipo: 'aluno' | 'treinador';
+    is_admin: boolean;
 }
