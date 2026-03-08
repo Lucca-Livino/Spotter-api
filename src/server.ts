@@ -7,8 +7,9 @@ import { DbConnect } from "./config/DbConnect";
 import { auth } from "./utils/auth";
 
 // importação das rotas
-import academiaRoutes from "./routes/academiaRoutes";
-import alunoRoutes from "./routes/alunoRoutes";
+import academiaRoutes from './routes/academiaRoutes';
+import alunoRoutes from './routes/alunoRoutes';
+import exercicioRoutes from './routes/exercicioRoutes';
 import authRoutes from "./routes/authRoutes";
 
 dotenv.config();
@@ -35,9 +36,10 @@ app.get("/", (req, res) => {
 });
 
 // rotas
-app.use("/api", academiaRoutes);
-app.use("/api", alunoRoutes);
-app.use("/api", authRoutes);
+app.use('/api', academiaRoutes);
+app.use('/api', alunoRoutes);
+app.use('/api', exercicioRoutes);
+app.use('/api', authRoutes);
 
 //função para iniciar o servidor
 async function startServer() {

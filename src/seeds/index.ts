@@ -4,7 +4,7 @@ import chalk from 'chalk';
 
 import { seedAcademias } from './academiaSeeds';
 import { seedUsuarios } from './usuarioSeeds';
-import { seedExercicios } from './exercicioSeeds';
+import { seedExercicios, seedExerciciosPessoais } from './exercicioSeeds';
 
 async function runSeeds() {
     try {
@@ -20,9 +20,8 @@ async function runSeeds() {
                 exercicio, aparelho, musculo, treinador_academia, treinador, 
                 avaliacao_fisica, aluno_academia, aluno, academia,
                 session, account, verification, "user"
-            RESTART IDENTITY CASCADE;
+            CASCADE;
         `);
-        // RESTART IDENTITY reseta os IDs gerados automaticamente (voltando para 1)
 
         // 2. EXECUTAR OS SEEDS NA ORDEM CORRETA
         console.log(chalk.cyanBright('Executando Seeds:'))
@@ -33,7 +32,10 @@ async function runSeeds() {
         await seedExercicios();
 
         console.log(chalk.cyanBright(`※ ${chalk.cyan('Alunos e Treinadores...')}`));
-        await seedUsuarios(academiasIds);
+        const alunoIds = await seedUsuarios(academiasIds);
+
+        console.log(chalk.cyanBright(`※ ${chalk.cyan('Exercícios Pessoais...')}`));
+        await seedExerciciosPessoais(alunoIds);
 
         console.log(chalk.greenBright('Seeds executados com sucesso!'));
         process.exit(0);
