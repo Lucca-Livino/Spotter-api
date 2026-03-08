@@ -56,6 +56,103 @@ class ExercicioRepository {
         }
     }
 
+    async listarExercicios(
+        filtros: FiltrosExercicio,
+        page: number,
+        limite: number,
+    ): Promise<ResultadoPaginado> {
+        try {
+            const condicoes: SQL[] = [isNull(exercicio.deletado_em)];
+
+            // Filtro por nome
+            if (filtros.nome) {
+                condicoes.push(ilike(exercicio.nome, `%${filtros.nome}%`));
+            }
+
+            // Filtro por aluno_id -> mostra globais + pessoais do aluno
+            if (filtros.aluno_id) {
+                condicoes.push(
+                    or(
+                        isNull(exercicio.aluno_id),
+                        eq(exercicio.aluno_id, filtros.aluno_id),
+                    )!,
+                );
+            } else {
+                condicoes.push(isNull(exercicio.aluno_id));
+            }
+
+            // Filtro por grupo_muscular via subquery (exercícios que possuem ao menos 1 músculo no grupo)
+            if (filtros.grupo_muscular) {
+                const idsExercicios = this.db
+                    .selectDistinct({ id: exercicio_musculo.exercicio_id })
+                    .from(exercicio_musculo)
+                    .innerJoin(musculo, eq(exercicio_musculo.musculo_id, musculo.id))
+                    .where(eq(musculo.grupo_muscular, filtros.grupo_muscular as any));
+
+                condicoes.push(inArray(exercicio.id, idsExercicios));
+            }
+
+            const where = and(...condicoes);
+            const offset = (page - 1) * limite;
+
+            const [dados, countResult] = await Promise.all([
+                this.db
+                    .select()
+                    .from(exercicio)
+                    .where(where)
+                    .limit(limite)
+                    .offset(offset)
+                    .orderBy(exercicio.nome),
+                this.db
+                    .select({ count: sql<number>`count(*)` })
+                    .from(exercicio)
+                    .where(where),
+            ]);
+
+            const total = Number(countResult[0].count);
+
+            let dadosComMusculos: (type_exercicio & { musculos: any[] })[] = dados.map(e => ({ ...e, musculos: [] }));
+
+            if (dados.length > 0) {
+                const ids = dados.map(e => e.id!);
+                const vinculosMusculos = await this.db
+                    .select({
+                        exercicio_id: exercicio_musculo.exercicio_id,
+                        musculo_id: exercicio_musculo.musculo_id,
+                        tipo_ativacao: exercicio_musculo.tipo_ativacao,
+                        nome: musculo.nome,
+                        grupo_muscular: musculo.grupo_muscular,
+                    })
+                    .from(exercicio_musculo)
+                    .innerJoin(musculo, eq(exercicio_musculo.musculo_id, musculo.id))
+                    .where(inArray(exercicio_musculo.exercicio_id, ids));
+
+                const musculosPorExercicio = new Map<string, any[]>();
+                for (const vínculo of vinculosMusculos) {
+                    if (!musculosPorExercicio.has(vínculo.exercicio_id)) {
+                        musculosPorExercicio.set(vínculo.exercicio_id, []);
+                    }
+                    musculosPorExercicio.get(vínculo.exercicio_id)!.push(vínculo);
+                }
+
+                dadosComMusculos = dadosComMusculos.map(e => ({
+                    ...e,
+                    musculos: musculosPorExercicio.get(e.id!) ?? [],
+                }));
+            }
+
+            return {
+                dados: dadosComMusculos,
+                total,
+                page,
+                limite,
+                totalPages: Math.ceil(total / limite),
+            };
+        } catch (error) {
+            throw parseDatabaseError(error, 'ExercicioRepository.listarExercicios');
+        }
+    }
+
     async getExercicioById(id: string): Promise<(type_exercicio & { musculos?: any[] }) | null> {
         try {
             const resposta = await this.db

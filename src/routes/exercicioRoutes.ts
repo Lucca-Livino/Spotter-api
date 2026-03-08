@@ -12,5 +12,7 @@ const exercicioController = new ExercicioController();
 //   - DELETE: apenas criador do exercício pessoal ou ADMIN para globais
 
 router.post('/exercicios', exercicioController.createExercicio);
+router.get('/exercicios', exercicioController.listarExercicios);
+router.get('/exercicios/:id', exercicioController.getExercicioById);
 
 export default router;

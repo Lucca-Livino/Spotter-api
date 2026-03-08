@@ -23,4 +23,35 @@ const exercicioSchema = z.object({
         .min(1, { message: "É obrigatório informar ao menos um músculo associado" }),
 }).strict();
 
-export { exercicioSchema};
+const exercicioQuerySchema = z.object({
+    nome: z
+        .string()
+        .optional(),
+    grupo_muscular: z
+        .enum(['PEITO', 'COSTAS', 'PERNAS', 'BRAÇOS', 'OMBROS', 'ABDOMEN'])
+        .optional(),
+    aluno_id: z
+        .string()
+        .uuid({ message: 'aluno_id deve ser um UUID válido' })
+        .optional(),
+    page: z
+        .string()
+        .optional()
+        .transform((val) => (val ? parseInt(val, 10) : 1))
+        .refine((val) => Number.isInteger(val) && val > 0, {
+            message: 'page deve ser um número inteiro maior que 0',
+        }),
+    limite: z
+        .string()
+        .optional()
+        .transform((val) => (val ? parseInt(val, 10) : 10))
+        .refine((val) => Number.isInteger(val) && val > 0 && val <= 100, {
+            message: 'limite deve ser entre 1 e 100',
+        }),
+});
+
+const exercicioIdSchema = z
+    .string()
+    .uuid('ID inválido, deve ser um UUID válido');
+
+export { exercicioSchema, exercicioQuerySchema, exercicioIdSchema };

@@ -2,7 +2,9 @@ import ExercicioRepository from "../repositories/exercicioRepository";
 import { type_exercicio } from "../types/dbSchemas";
 import { ZodError } from "zod";
 import {
-    exercicioSchema
+    exercicioSchema,
+    exercicioQuerySchema,
+    exercicioIdSchema,
 } from "../utils/validations/exercicioValidation";
 
 // Tipos auxiliares
@@ -63,6 +65,45 @@ class ExercicioService {
             throw error;
         }
     }
+
+    async listarExercicios(query: any): Promise<ResultadoPaginado> {
+        try {
+            const { page, limite, nome, grupo_muscular, aluno_id } = exercicioQuerySchema.parse(query);
+
+            const filtros: FiltrosExercicio = {};
+            if (nome) filtros.nome = nome;
+            if (grupo_muscular) filtros.grupo_muscular = grupo_muscular;
+            if (aluno_id) filtros.aluno_id = aluno_id;
+
+            return await this.repository.listarExercicios(filtros, page, limite);
+        } catch (error) {
+            if (error instanceof ZodError) {
+                console.warn('[ExercicioService] [listarExercicios] Falha na validação Zod:', error.issues);
+            }
+            throw error;
+        }
+    }
+
+    async getExercicioById(idParam: string): Promise<type_exercicio> {
+        const id = exercicioIdSchema.parse(idParam);
+
+        try {
+            const exercicioEncontrado = await this.repository.getExercicioById(id);
+
+            if (!exercicioEncontrado) {
+                throw new Error('Exercício não encontrado');
+            }
+
+            // TODO: [AUTH] Quando implementado, validar se o usuário tem permissão:
+            // - Exercício global (aluno_id = NULL): qualquer usuário autenticado pode visualizar
+            // - Exercício pessoal: apenas o dono (aluno_id === usuarioLogadoId) ou ADMIN pode visualizar
+
+            return exercicioEncontrado;
+        } catch (error) {
+            throw error;
+        }
+    }
+
 }
 
 export default ExercicioService;
