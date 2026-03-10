@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const alunoIdSchema = z.coerce.number().int().positive({ message: "ID deve ser um número inteiro positivo" });
+const alunoIdSchema = z.string().uuid({ message: "ID deve ser um UUID válido" });
 
 const alunoSchema = z.object({
     user_id: z
@@ -30,9 +30,8 @@ const alunoSchema = z.object({
         .optional()
         .default(true),
     academia_id: z
-        .number()
-        .int({ message: "O ID da academia deve ser um número inteiro" })
-        .positive({ message: "O aluno deve estar vinculado a uma academia válida" }),
+        .string()
+        .uuid({ message: "O ID da academia deve ser um UUID válido" }),
 });
 
 const alunoUpdateSchema = alunoSchema.partial();

@@ -45,10 +45,8 @@ export async function seedExercicios(): Promise<string[]> {
     return exerciciosCriados.map(e => e.id);
 }
 
-/**
- * Seed de exercícios pessoais (requer IDs de alunos já inseridos).
- * Exercícios pessoais possuem aluno_id preenchido e são visíveis apenas para o dono.
- */
+// Seed de exercícios pessoais (requer IDs de alunos já inseridos).
+// Exercícios pessoais possuem aluno_id preenchido e são visíveis apenas para o dono.
 export async function seedExerciciosPessoais(alunoIds: string[]): Promise<void> {
     if (alunoIds.length === 0) return;
 

@@ -28,7 +28,7 @@ class AcademiaRepository {
         }
     }
 
-    async getAcademiaById(id: number): Promise<type_academia> {
+    async getAcademiaById(id: string): Promise<type_academia> {
         try {
             const resposta = await this.db.select().from(academia).where(eq(academia.id, id));
             return resposta[0];
@@ -37,7 +37,7 @@ class AcademiaRepository {
         }
     }
 
-    async updateAcademia(id: number, academiaEditada: Partial<type_academia>): Promise<Partial<type_academia>> {
+    async updateAcademia(id: string, academiaEditada: Partial<type_academia>): Promise<Partial<type_academia>> {
         try {
             const resposta = await this.db.update(academia).set(academiaEditada).where(eq(academia.id, id)).returning();
             return resposta[0];
@@ -46,7 +46,7 @@ class AcademiaRepository {
         }
     }
 
-    async deleteAcademia(id: number): Promise<type_academia> {
+    async deleteAcademia(id: string): Promise<type_academia> {
         try {
             const resposta = await this.db.delete(academia).where(eq(academia.id, id)).returning()
             return resposta[0]

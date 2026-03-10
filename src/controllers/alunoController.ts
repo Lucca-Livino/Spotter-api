@@ -34,10 +34,10 @@ class AlunoController {
 
   getAlunoById = async (req: Request, res: Response) => {
     console.log("[AlunoController] [getAlunoById] Requisição recebida");
-    const { id } = req.params;
+    const id = req.params.id as string;
 
     try {
-      const Aluno = await this.service.getAlunoById(Number(id));
+      const Aluno = await this.service.getAlunoById(id);
       return CommonResponse.success(
         res,
         Aluno,

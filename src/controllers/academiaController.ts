@@ -63,10 +63,9 @@ class AcademiaController {
             return CommonResponse.error(res, HttpStatusCode.BAD_REQUEST.code, null, 'id', [], 'O id é obrigatório');
         }
 
-        let id_param = Number(id)
         console.log(`[Controller] id:${id}`)
         try {
-            const resposta = await this.service.getAcademiaById(id_param);
+            const resposta = await this.service.getAcademiaById(id);
             return CommonResponse.success(res, resposta, HttpStatusCode.OK.code);
         } catch (error) {
             if (error instanceof Error) {
@@ -88,7 +87,7 @@ class AcademiaController {
         }
 
         try {
-            const resposta = await this.service.updateAcademia(Number(id), academiaEditadaBody)
+            const resposta = await this.service.updateAcademia(id, academiaEditadaBody)
             return CommonResponse.success(res, resposta, HttpStatusCode.OK.code)
         } catch (error) {
             if (error instanceof ZodError) {
@@ -105,7 +104,7 @@ class AcademiaController {
         }
 
         try {
-            const resposta = await this.service.deleteAcademia(Number(id))
+            const resposta = await this.service.deleteAcademia(id)
             return CommonResponse.success(res, resposta, HttpStatusCode.OK.code)
         } catch (error) {
             return CommonResponse.serverError(res, error, HttpStatusCode.INTERNAL_SERVER_ERROR.message);

@@ -111,7 +111,7 @@ export type type_item_rotina = {
     exercicio_id: string;
 }
 
-/* Tipo do usuário autenticado */
+// Tipo do usuário autenticado
 export type type_usuario_autenticado = {
     id: string;
     nome: string;

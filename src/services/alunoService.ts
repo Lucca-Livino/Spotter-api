@@ -11,14 +11,14 @@ class AlunoService {
     this.repository = new AlunosRepository();
   }
 
-  async getAlunoById(id: number): Promise<type_aluno> {
+  async getAlunoById(id: string): Promise<type_aluno> {
     console.log(
       `[AlunoService] [getAlunoById] Buscando aluno com ID: ${id}`,
     );
 
     alunoIdSchema.parse(id);
     
-    const Aluno = await this.repository.findById(String(id));
+    const Aluno = await this.repository.findById(id);
 
     if (!Aluno) {
       throw new Error(`Aluno com ID ${id} não encontrado`);

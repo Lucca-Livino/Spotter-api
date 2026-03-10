@@ -35,10 +35,10 @@ class AcademiaService {
         }
     }
 
-    async getAcademiaById(id: number): Promise<type_academia> {
-        console.log(`Recebido id no Service: ${id} do tipo ${typeof id}`);
-        if (isNaN(id)) {
-            throw new Error('O id deve ser um número válido');
+    async getAcademiaById(id: string): Promise<type_academia> {
+        console.log(`Recebido id no Service: ${id}`);
+        if (!id) {
+            throw new Error('O id é obrigatório');
         }
         try {
             console.log(`Buscando academia com id: ${id}`);
@@ -49,7 +49,7 @@ class AcademiaService {
         }
     }
 
-    async updateAcademia(id: number, academiaEditada: Partial<type_academia>): Promise<Partial<type_academia>> {
+    async updateAcademia(id: string, academiaEditada: Partial<type_academia>): Promise<Partial<type_academia>> {
         try {
             academiaUpdateSchema.parse(academiaEditada)
             const academiaAtualizada = await this.repository.updateAcademia(id, academiaEditada)
@@ -63,7 +63,7 @@ class AcademiaService {
         }
     }
 
-    async deleteAcademia(id: number): Promise<type_academia> {
+    async deleteAcademia(id: string): Promise<type_academia> {
         try {
             const academiaDeletada = await this.repository.deleteAcademia(id)
             return academiaDeletada
