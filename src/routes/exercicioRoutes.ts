@@ -1,5 +1,6 @@
 import express from 'express';
 import ExercicioController from '../controllers/exercicioController';
+import { authMiddleware } from '../middlewares/authMiddleware';
 const router = express.Router();
 
 const exercicioController = new ExercicioController();
@@ -11,9 +12,9 @@ const exercicioController = new ExercicioController();
 //   - PATCH: apenas criador do exercício ou ADMIN
 //   - DELETE: apenas criador do exercício pessoal ou ADMIN para globais
 
-router.post('/exercicios', exercicioController.createExercicio);
-router.get('/exercicios', exercicioController.listarExercicios);
-router.get('/exercicios/:id', exercicioController.getExercicioById);
-router.patch('/exercicios/:id', exercicioController.updateExercicio);
+router.post('/exercicios', authMiddleware, exercicioController.createExercicio);
+router.get('/exercicios', authMiddleware, exercicioController.listarExercicios);
+router.get('/exercicios/:id', authMiddleware, exercicioController.getExercicioById);
+router.patch('/exercicios/:id', authMiddleware, exercicioController.updateExercicio);
 
 export default router;

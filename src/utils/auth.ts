@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { DataBase } from "../config/DbConnect";
+import { bearer } from "better-auth/plugins";
 
 export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET!,
@@ -10,6 +11,10 @@ export const auth = betterAuth({
   database: drizzleAdapter(DataBase, {
     provider: "pg",
   }),
+
+  plugins: [
+    bearer()
+  ],
 
   emailAndPassword: {
     enabled: true,
@@ -22,5 +27,5 @@ export const auth = betterAuth({
   },
 
   // Aceita requisições de qualquer origem (necessário para app mobile)
-  trustedOrigins: ["*"],
+  trustedOrigins: ["*","http://localhost:3000"],
 });
