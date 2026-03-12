@@ -34,7 +34,18 @@ class AlunoController {
 
   getAlunoById = async (req: Request, res: Response) => {
     console.log("[AlunoController] [getAlunoById] Requisição recebida");
-    const id = req.params.id as string;
+    const id = this.getRequestIdParam(req);
+
+    if (!id) {
+      return CommonResponse.error(
+        res,
+        HttpStatusCode.BAD_REQUEST.code,
+        null,
+        "id",
+        [],
+        "O id é obrigatório",
+      );
+    }
 
     try {
       const Aluno = await this.service.getAlunoById(id);
@@ -104,6 +115,34 @@ class AlunoController {
     }
   };
 
+  deleteAluno = async (req: Request, res: Response) => {
+    console.log("[AlunoController] [deleteAluno] Requisição recebida");
+    const id = this.getRequestIdParam(req);
+
+    if (!id) {
+      return CommonResponse.error(
+        res,
+        HttpStatusCode.BAD_REQUEST.code,
+        null,
+        "id",
+        [],
+        "O id é obrigatório",
+      );
+    }
+
+    try {
+      const alunoDeletado = await this.service.deleteAluno(id);
+      return CommonResponse.success(
+        res,
+        alunoDeletado,
+        HttpStatusCode.OK.code,
+        "Aluno deletado com sucesso",
+      );
+    } catch (error) {
+      return this.handleError(res, error, "deleteAluno");
+    }
+  };
+
   private handleError(res: Response, error: unknown, context: string) {
     if (error instanceof ZodError) {
       console.warn(
@@ -159,6 +198,15 @@ class AlunoController {
       { message: errorMessage },
       HttpStatusCode.INTERNAL_SERVER_ERROR.message,
     );
+  }
+
+  private getRequestIdParam(req: Request): string | null {
+    const { id } = req.params;
+    if (Array.isArray(id)) {
+      return id[0] ?? null;
+    }
+
+    return id ?? null;
   }
 }
 

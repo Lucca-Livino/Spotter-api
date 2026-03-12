@@ -107,6 +107,26 @@ class AlunoService {
       throw error;
     }
   }
+
+  async deleteAluno(id: string): Promise<type_aluno> {
+    console.log(
+      `[AlunoService] [deleteAluno] Deletando aluno com ID: ${id}`,
+    );
+
+    alunoIdSchema.parse(id);
+
+    const alunoDeletado = await this.repository.delete(id);
+
+    if (!alunoDeletado) {
+      throw new Error(`Aluno com ID ${id} não encontrado`);
+    }
+
+    console.log(
+      `[AlunoService] [deleteAluno] Aluno deletado com sucesso`,
+    );
+
+    return alunoDeletado;
+  }
 }
 
 export default AlunoService;

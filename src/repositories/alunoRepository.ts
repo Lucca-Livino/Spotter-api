@@ -99,6 +99,23 @@ class AlunoRepository {
       throw parseDatabaseError(error, "AlunoRepository.findByUserId");
     }
   }
+
+  async delete(id: string): Promise<type_aluno | null> {
+    try {
+      const resultado = await this.db
+        .delete(aluno)
+        .where(eq(aluno.id, id))
+        .returning();
+
+      if (resultado.length === 0) {
+        return null;
+      }
+
+      return resultado[0] as unknown as type_aluno;
+    } catch (error) {
+      throw parseDatabaseError(error, "AlunoRepository.delete");
+    }
+  }
 }
 
 export default AlunoRepository;
