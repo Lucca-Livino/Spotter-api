@@ -3,8 +3,10 @@ import dotenv from "dotenv";
 import cors from "cors";
 import chalk from "chalk";
 import { toNodeHandler } from "better-auth/node";
+import swaggerUi from "swagger-ui-express";
 import { DbConnect } from "./config/DbConnect";
 import { auth } from "./utils/auth";
+import { openApiDocument } from "./docs/swagger";
 
 // importação das rotas
 import academiaRoutes from './routes/academiaRoutes';
@@ -24,6 +26,12 @@ app.use(cors());
 app.all("/api/auth/*splat", toNodeHandler(auth));
 
 app.use(express.json());
+
+// Swagger UI — documentação da API
+app.get("/api/docs/openapi.json", (req, res) => {
+  res.json(openApiDocument);
+});
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openApiDocument));
 
 // Rota Health Check
 app.get("/api", (req, res) => {
