@@ -7,8 +7,17 @@ export interface FiltrosExercicio {
     aluno_id?: string;
 }
 
+export interface MusculoResumo {
+    musculo_id: string;
+    tipo_ativacao: 'PRIMARIO' | 'SECUNDARIO';
+    nome: string;
+    grupo_muscular: string;
+}
+
+export type ExercicioComMusculos = type_exercicio & { musculos: MusculoResumo[] };
+
 export interface ResultadoPaginadoExercicio {
-    dados: type_exercicio[];
+    dados: ExercicioComMusculos[];
     total: number;
     page: number;
     limite: number;
