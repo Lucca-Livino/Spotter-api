@@ -158,3 +158,62 @@ exercicioRegistry.registerPath({
         422: { description: "Erro de validação" },
     },
 });
+
+// DELETE /exercicios/{id}
+exercicioRegistry.registerPath({
+    method: "delete",
+    path: "/exercicios/{id}",
+    summary: "Deletar exercício",
+    description: `Remove um exercício pelo ID. Requer autenticação.
+
+**Comportamento padrão:** Remove permanentemente o exercício se ele não estiver vinculado a nenhuma rotina de treino.
+
+**Quando o exercício está vinculado a rotinas:**
+- \`?soft=true\` — Desativa o exercício sem removê-lo (soft delete). As rotinas existentes são preservadas.
+- \`?force=true\` — Exclui permanentemente o exercício junto com todas as rotinas vinculadas. **Requer perfil admin.**
+
+Se nenhum parâmetro for informado e o exercício estiver vinculado, a requisição retornará erro 409.`,
+    tags: ["Exercicio"],
+    security: [{ BearerAuth: [] }],
+    request: {
+        params: idParam,
+        query: z.object({
+            soft: z.enum(["true", "false"]).optional().openapi({
+                description: "Se `true`, desativa o exercício sem remover do banco (soft delete). As rotinas vinculadas são preservadas.",
+                example: "true",
+            }),
+            force: z.enum(["true", "false"]).optional().openapi({
+                description: "Se `true`, exclui permanentemente o exercício e todas as rotinas vinculadas. **Requer perfil admin.**",
+                example: "false",
+            }),
+        }),
+    },
+    responses: {
+        200: {
+            description: "Exercício removido com sucesso",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        error: z.boolean().openapi({ example: false }),
+                        code: z.number().openapi({ example: 200 }),
+                        message: z.string().nullable().openapi({ example: "Exercício removido com sucesso" }),
+                        data: z.object({
+                            exercicio: ExercicioResponse,
+                            tipo_exclusao: z.enum(["soft", "hard", "cascade"]).openapi({
+                                description: "Tipo de exclusão realizada",
+                                example: "hard",
+                            }),
+                        }),
+                        errors: z.array(z.any()),
+                    }),
+                },
+            },
+        },
+        401: { description: "Não autorizado" },
+        403: { description: "Sem permissão para deletar este exercício" },
+        404: { description: "Exercício não encontrado" },
+        409: { description: "Exercício está vinculado a rotinas. Use ?soft=true ou ?force=true (admin)" },
+        422: { description: "ID inválido" },
+    },
+});
+

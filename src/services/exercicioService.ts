@@ -78,7 +78,7 @@ class ExercicioService {
 
     async getAllExercicios(query: any, userId: string): Promise<ResultadoPaginadoExercicio> {
         try {
-            const { page, limite, nome, grupo_muscular, tipo_ativacao, aluno_id } = exercicioQuerySchema.parse(query);
+            const { page, limite, nome, grupo_muscular, aluno_id } = exercicioQuerySchema.parse(query);
 
             if (aluno_id) {
                 const perfil = await this.repository.buscarPerfilDoUsuario(userId);
@@ -90,7 +90,6 @@ class ExercicioService {
             const filtros: FiltrosExercicio = {};
             if (nome) filtros.nome = nome;
             if (grupo_muscular) filtros.grupo_muscular = grupo_muscular;
-            if (tipo_ativacao) filtros.tipo_ativacao = tipo_ativacao;
             if (aluno_id) filtros.aluno_id = aluno_id;
 
             return await this.repository.getAllExercicios(filtros, page, limite);
