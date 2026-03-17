@@ -6,9 +6,10 @@ const router = express.Router();
 const alunoController = new AlunoController();
 
 router
-    .get('/alunos', alunoController.getAllAlunos)
-    .get('/alunos/:id', alunoController.getAlunoById)
-    .post('/alunos', alunoController.createAluno)
-    .delete('/alunos/:id', alunoController.deleteAluno)
+    .get('/alunos', authMiddleware, alunoController.getAllAlunos)
+    .get('/alunos/:id', authMiddleware, alunoController.getAlunoById)
+    .post('/alunos', authMiddleware, alunoController.createAluno)
+    .patch('/alunos/:id', authMiddleware, alunoController.updateAluno)
+    .delete('/alunos/:id', authMiddleware, alunoController.deleteAluno)
 
 export default router
