@@ -116,6 +116,24 @@ class AlunoRepository {
       throw parseDatabaseError(error, "AlunoRepository.delete");
     }
   }
+
+  async update(id: string, alunoEditado: Partial<type_aluno>): Promise<type_aluno | null> {
+    try {
+      const resultado = await this.db
+        .update(aluno)
+        .set(alunoEditado)
+        .where(eq(aluno.id, id))
+        .returning();
+
+      if (resultado.length === 0) {
+        return null;
+      }
+
+      return resultado[0] as unknown as type_aluno;
+    } catch (error) {
+      throw parseDatabaseError(error, "AlunoRepository.update");
+    }
+  }
 }
 
 export default AlunoRepository;
