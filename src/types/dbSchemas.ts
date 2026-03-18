@@ -90,6 +90,7 @@ export type type_treino = {
     nome: string;
     descricao?: string | null;
     data_criacao?: Date;
+    deletado_em?: Date | null;
     usuario_id: string;
     treinador_id: string | null;
 }

@@ -183,6 +183,7 @@ export const treino = pgTable('treino', {
     nome: varchar('nome', { length: 255 }).notNull(),
     descricao: text('descricao'),
     data_criacao: timestamp('data_criacao').defaultNow().notNull(),
+    deletado_em: timestamp('deletado_em'),
     usuario_id: uuid('usuario_id').notNull().references(() => aluno.id),
     treinador_id: uuid('treinador_id').references(() => treinador.id),
 });
