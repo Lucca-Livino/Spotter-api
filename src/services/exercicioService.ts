@@ -78,21 +78,55 @@ class ExercicioService {
 
     async getAllExercicios(query: any, userId: string): Promise<ResultadoPaginadoExercicio> {
         try {
-            const { page, limite, nome, grupo_muscular, aluno_id } = exercicioQuerySchema.parse(query);
+            const {
+                page,
+                limite,
+                nome,
+                grupo_muscular,
+                tipo_ativacao,
+                aluno_id,
+                escopo,
+                em_uso,
+                ordem_nome,
+                incluir_musculos,
+            } = exercicioQuerySchema.parse(query);
+
+            const perfil = await this.repository.buscarPerfilDoUsuario(userId);
+
+            let alunoContexto = aluno_id;
+            let escopoFinal = escopo;
+
+            if (!escopoFinal) {
+                escopoFinal = perfil.alunoId ? 'TODOS' : 'GLOBAL';
+            }
 
             if (aluno_id) {
-                const perfil = await this.repository.buscarPerfilDoUsuario(userId);
-                if (!perfil.isAdmin && perfil.alunoId !== aluno_id) {
+                if (!perfil.isAdmin && !perfil.alunoId) {
+                } else if (!perfil.isAdmin && perfil.alunoId !== aluno_id) {
                     throw new Error('FORBIDDEN: você não pode listar exercícios de outro aluno');
+                }
+            }
+
+            if (escopoFinal === 'PESSOAL' || escopoFinal === 'TODOS') {
+                if (!alunoContexto && perfil.alunoId) {
+                    alunoContexto = perfil.alunoId;
+                }
+
+                if (!alunoContexto) {
+                    throw new Error('VALIDATION: aluno_id é obrigatório para escopo PESSOAL ou TODOS sem contexto de aluno autenticado');
                 }
             }
 
             const filtros: FiltrosExercicio = {};
             if (nome) filtros.nome = nome;
             if (grupo_muscular) filtros.grupo_muscular = grupo_muscular;
-            if (aluno_id) filtros.aluno_id = aluno_id;
+            if (tipo_ativacao) filtros.tipo_ativacao = tipo_ativacao;
+            if (alunoContexto) filtros.aluno_id = alunoContexto;
+            if (escopoFinal) filtros.escopo = escopoFinal;
+            if (typeof em_uso === 'boolean') filtros.em_uso = em_uso;
+            if (ordem_nome) filtros.ordem_nome = ordem_nome;
 
-            return await this.repository.getAllExercicios(filtros, page, limite);
+            return await this.repository.getAllExercicios(filtros, page, limite, incluir_musculos);
         } catch (error) {
             if (error instanceof ZodError) {
                 console.warn('[ExercicioService] [getAllExercicios] Falha na validação Zod:', error.issues);

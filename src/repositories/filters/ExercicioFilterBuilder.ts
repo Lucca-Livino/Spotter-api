@@ -1,6 +1,6 @@
-import { and, or, isNull, eq, ilike, inArray, SQL } from 'drizzle-orm';
+import { and, or, isNull, eq, ilike, inArray, notInArray, SQL, sql } from 'drizzle-orm';
 import { DataBase } from '../../config/DbConnect';
-import { exercicio, exercicio_musculo, musculo } from '../../config/db/schema';
+import { exercicio, exercicio_musculo, musculo, treino_exercicio } from '../../config/db/schema';
 
 type GrupoMuscular = 'PEITO' | 'COSTAS' | 'PERNAS' | 'BRAÇOS' | 'OMBROS' | 'ABDOMEN';
 type TipoAtivacao = 'PRIMARIO' | 'SECUNDARIO';
@@ -21,17 +21,52 @@ class ExercicioFilterBuilder {
         return this;
     }
 
-    comAluno(aluno_id?: string) {
-        if (aluno_id?.trim()) {
-            this.condicoes.push(
-                or(
-                    isNull(exercicio.aluno_id),
-                    eq(exercicio.aluno_id, aluno_id.trim()),
-                )!,
-            );
-        } else {
-            this.condicoes.push(isNull(exercicio.aluno_id));
+    comEscopo(escopo?: 'GLOBAL' | 'PESSOAL' | 'TODOS', aluno_id?: string) {
+        const alunoId = aluno_id?.trim();
+
+        if (escopo === 'PESSOAL') {
+            if (alunoId) {
+                this.condicoes.push(eq(exercicio.aluno_id, alunoId));
+            } else {
+                this.condicoes.push(sql`1 = 0`);
+            }
+            return this;
         }
+
+        if (escopo === 'TODOS') {
+            if (alunoId) {
+                this.condicoes.push(
+                    or(
+                        isNull(exercicio.aluno_id),
+                        eq(exercicio.aluno_id, alunoId),
+                    )!,
+                );
+            } else {
+                this.condicoes.push(isNull(exercicio.aluno_id));
+            }
+            return this;
+        }
+
+        // GLOBAL (default)
+        this.condicoes.push(isNull(exercicio.aluno_id));
+        return this;
+    }
+
+    comEmUso(emUso?: boolean) {
+        if (typeof emUso !== 'boolean') {
+            return this;
+        }
+
+        const subquery = this.db
+            .selectDistinct({ id: treino_exercicio.exercicio_id })
+            .from(treino_exercicio);
+
+        if (emUso) {
+            this.condicoes.push(inArray(exercicio.id, subquery));
+        } else {
+            this.condicoes.push(notInArray(exercicio.id, subquery));
+        }
+
         return this;
     }
 

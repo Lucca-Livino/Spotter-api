@@ -52,6 +52,16 @@ class ExercicioController {
             if (error instanceof DatabaseError) {
                 return CommonResponse.error(res, error.statusCode, null, null, [error.toJSON()], error.message);
             }
+            if (error instanceof Error && error.message.startsWith('VALIDATION:')) {
+                return CommonResponse.error(
+                    res,
+                    HttpStatusCode.UNPROCESSABLE_ENTITY.code,
+                    null,
+                    null,
+                    [],
+                    error.message.replace('VALIDATION: ', ''),
+                );
+            }
             if (error instanceof Error && error.message.startsWith('FORBIDDEN:')) {
                 return CommonResponse.error(res, HttpStatusCode.FORBIDDEN.code, null, null, [], error.message.replace('FORBIDDEN: ', ''));
             }

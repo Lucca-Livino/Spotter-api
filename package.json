@@ -6,7 +6,7 @@
   "scripts": {
     "dev:docker": "docker compose -f docker-compose-dev.yml up --build --force-recreate",
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build": "rm -rf dist && tsc",
     "seed": "tsx src/seeds/index.ts",
     "start": "node dist/server.js",
     "migrate": "npx drizzle-kit generate",

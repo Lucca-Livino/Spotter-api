@@ -3,6 +3,10 @@ import { extendZodWithOpenApi } from "@asteasolutions/zod-to-openapi";
 
 extendZodWithOpenApi(z);
 
+const booleanQueryParam = z
+    .enum(['true', 'false'])
+    .transform((val) => val === 'true');
+
 const exercicioSchema = z.object({
     nome: z
         .string()
@@ -66,11 +70,40 @@ const exercicioQuerySchema = z.object({
         .enum(['PEITO', 'COSTAS', 'PERNAS', 'BRAÇOS', 'OMBROS', 'ABDOMEN'])
         .optional()
         .openapi({ description: "Filtrar por grupo muscular", example: "PEITO" }),
+    tipo_ativacao: z
+        .enum(['PRIMARIO', 'SECUNDARIO'])
+        .optional()
+        .openapi({ description: "Filtrar por tipo de ativação muscular", example: "PRIMARIO" }),
     aluno_id: z
         .string()
         .uuid({ message: 'aluno_id deve ser um UUID válido' })
         .optional()
         .openapi({ description: "Filtrar por UUID do aluno", example: "550e8400-e29b-41d4-a716-446655440000" }),
+    escopo: z
+        .enum(['GLOBAL', 'PESSOAL', 'TODOS'])
+        .optional()
+        .openapi({
+            description: "Define o escopo da biblioteca de exercícios. GLOBAL=apenas globais, PESSOAL=apenas pessoais do aluno informado/contexto, TODOS=globais+pessoais.",
+            example: "TODOS",
+        }),
+    em_uso: z
+        .union([booleanQueryParam, z.boolean()])
+        .optional()
+        .openapi({
+            description: "Filtra exercícios que já estão (ou não) vinculados a algum treino",
+            example: true,
+        }),
+    ordem_nome: z
+        .enum(['asc', 'desc'])
+        .default('asc')
+        .openapi({ description: "Ordenação alfabética por nome", example: "asc" }),
+    incluir_musculos: z
+        .union([booleanQueryParam, z.boolean()])
+        .default(true)
+        .openapi({
+            description: "Quando false, não popula músculos na listagem (resposta mais leve)",
+            example: true,
+        }),
     page: z
         .string()
         .optional()

@@ -1,5 +1,5 @@
 import { DataBase } from "../config/DbConnect";
-import { eq, and, isNull, inArray, sql } from "drizzle-orm";
+import { eq, and, isNull, inArray, sql, asc, desc } from "drizzle-orm";
 import { exercicio, exercicio_musculo, musculo, aluno, treinador, treino_exercicio } from "../config/db/schema";
 import { type_exercicio } from "../types/dbSchemas";
 import { ExercicioComMusculos, FiltrosExercicio, MusculoResumo, ResultadoPaginadoExercicio } from "../types/filters";
@@ -50,11 +50,13 @@ class ExercicioRepository {
         filtros: FiltrosExercicio,
         page: number,
         limite: number,
+        incluirMusculos: boolean,
     ): Promise<ResultadoPaginadoExercicio> {
         try {
             const where = new ExercicioFilterBuilder()
                 .comNome(filtros.nome)
-                .comAluno(filtros.aluno_id)
+                .comEscopo(filtros.escopo, filtros.aluno_id)
+                .comEmUso(filtros.em_uso)
                 .comGrupoMuscular(filtros.grupo_muscular)
                 .comTipoAtivacao(filtros.tipo_ativacao)
                 .build();
@@ -68,7 +70,11 @@ class ExercicioRepository {
                     .where(where)
                     .limit(limite)
                     .offset(offset)
-                    .orderBy(exercicio.nome),
+                    .orderBy(
+                        filtros.ordem_nome === 'desc'
+                            ? desc(exercicio.nome)
+                            : asc(exercicio.nome),
+                    ),
                 this.db
                     .select({ count: sql<number>`count(*)` })
                     .from(exercicio)
@@ -78,7 +84,7 @@ class ExercicioRepository {
             const total = Number(countResult[0].count);
 
             let musculos: (MusculoResumo & { exercicio_id: string })[] = [];
-            if (exercicios.length > 0) {
+            if (incluirMusculos && exercicios.length > 0) {
                 const ids = exercicios.map((e) => e.id!);
                 musculos = await this.db
                     .select({

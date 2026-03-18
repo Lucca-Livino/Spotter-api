@@ -61,7 +61,7 @@ exercicioRegistry.registerPath({
     method: "get",
     path: "/exercicios",
     summary: "Listar exercícios",
-    description: "Lista exercícios com paginação e filtros. Requer autenticação.",
+    description: "Lista exercícios com paginação e filtros (escopo GLOBAL/PESSOAL/TODOS, tipo de ativação, grupo muscular, em uso em treinos e ordenação por nome). Requer autenticação.",
     tags: ["Exercicio"],
     security: [{ BearerAuth: [] }],
     request: {

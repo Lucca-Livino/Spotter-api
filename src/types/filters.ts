@@ -5,6 +5,9 @@ export interface FiltrosExercicio {
     grupo_muscular?: string;
     tipo_ativacao?: string;
     aluno_id?: string;
+    escopo?: 'GLOBAL' | 'PESSOAL' | 'TODOS';
+    em_uso?: boolean;
+    ordem_nome?: 'asc' | 'desc';
 }
 
 export interface MusculoResumo {
