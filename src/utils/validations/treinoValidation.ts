@@ -334,5 +334,18 @@ const treinoListQuerySchema = z.object({
 
 type TreinoListQuery = z.infer<typeof treinoListQuerySchema>;
 
-export { treinoSchema, treinoUpdateSchema, treinoIdSchema, treinoDetalheQuerySchema, treinoListQuerySchema };
-export type { TreinoDetalheQuery, TreinoListQuery };
+const treinoDeleteQuerySchema = z.object({
+    force: z
+        .enum(['true', 'false'])
+        .default('false')
+        .transform((val) => val === 'true')
+        .openapi({
+            description: 'Quando true (somente admin), realiza hard delete em cascata removendo treino e todos os exercícios vinculados permanentemente',
+            example: false,
+        }),
+}).strict().openapi('TreinoDeleteQuery');
+
+type TreinoDeleteQuery = z.infer<typeof treinoDeleteQuerySchema>;
+
+export { treinoSchema, treinoUpdateSchema, treinoIdSchema, treinoDetalheQuerySchema, treinoListQuerySchema, treinoDeleteQuerySchema };
+export type { TreinoDetalheQuery, TreinoListQuery, TreinoDeleteQuery };

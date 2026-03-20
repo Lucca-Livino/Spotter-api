@@ -504,6 +504,43 @@ class TreinoRepository {
             throw parseDatabaseError(error, 'TreinoRepository.removeExerciciosDoTreino');
         }
     }
+
+    async softDelete(id: string): Promise<type_treino> {
+        try {
+            const [resultado] = await this.db
+                .update(treino)
+                .set({ deletado_em: new Date() })
+                .where(and(eq(treino.id, id), isNull(treino.deletado_em)))
+                .returning();
+
+            if (!resultado) {
+                throw new Error('Treino não encontrado');
+            }
+
+            return resultado as type_treino;
+        } catch (error) {
+            if (error instanceof Error && error.message === 'Treino não encontrado') {
+                throw error;
+            }
+            throw parseDatabaseError(error, 'TreinoRepository.softDelete');
+        }
+    }
+
+    async hardDelete(id: string): Promise<void> {
+        try {
+            await this.db.transaction(async (tx) => {
+                await tx
+                    .delete(treino_exercicio)
+                    .where(eq(treino_exercicio.treino_id, id));
+                await tx
+                    .delete(treino)
+                    .where(eq(treino.id, id));
+            });
+        } catch (error) {
+            throw parseDatabaseError(error, 'TreinoRepository.hardDelete');
+        }
+    }
+
 }
 
 export default TreinoRepository;

@@ -10,6 +10,7 @@ import {
     treinoIdSchema,
     treinoDetalheQuerySchema,
     treinoListQuerySchema,
+    treinoDeleteQuerySchema,
 } from '../utils/validations/treinoValidation';
 import { type_treino } from '../types/dbSchemas';
 
@@ -324,6 +325,47 @@ class TreinoService {
         }
 
         return treinoAtualizadoComExercicios;
+    }
+
+    async deleteTreino(
+        idParam: string,
+        query: unknown,
+        userId: string,
+    ): Promise<{ treino: type_treino; tipo_exclusao: 'soft' | 'hard' }> {
+        const id = treinoIdSchema.parse(idParam);
+        const { force } = treinoDeleteQuerySchema.parse(query);
+        const perfil = await this.repository.buscarPerfilAcesso(userId);
+
+        if (!perfil.isAluno && !perfil.isTreinador && !perfil.isAdmin) {
+            throw new Error('FORBIDDEN: usuário sem perfil para excluir treinos');
+        }
+
+        const treinoExistente = await this.repository.findBaseById(id);
+
+        if (!treinoExistente) {
+            throw new Error('Treino não encontrado');
+        }
+
+        const podeDeletar =
+            perfil.isAdmin ||
+            perfil.alunoId === treinoExistente.usuario_id ||
+            (perfil.treinadorId !== null && perfil.treinadorId === treinoExistente.treinador_id);
+
+        if (!podeDeletar) {
+            throw new Error('FORBIDDEN: você não tem permissão para excluir este treino');
+        }
+
+        if (force) {
+            if (!perfil.isAdmin) {
+                throw new Error('FORBIDDEN: apenas administradores podem forçar a exclusão permanente de treinos');
+            }
+
+            await this.repository.hardDelete(id);
+            return { treino: treinoExistente, tipo_exclusao: 'hard' };
+        }
+
+        const treinoDeletado = await this.repository.softDelete(id);
+        return { treino: treinoDeletado, tipo_exclusao: 'soft' };
     }
 }
 

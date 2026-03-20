@@ -5,6 +5,7 @@ import {
     treinoUpdateSchema,
     treinoDetalheQuerySchema,
     treinoListQuerySchema,
+    treinoDeleteQuerySchema,
 } from '../utils/validations/treinoValidation';
 
 export const treinoRegistry = new OpenAPIRegistry();
@@ -204,5 +205,42 @@ treinoRegistry.registerPath({
         403: { description: 'Sem permissão para atualizar este treino' },
         404: { description: 'Treino não encontrado' },
         422: { description: 'Parâmetros de rota/body inválidos' },
+    },
+});
+
+// DELETE /treinos/{id}
+treinoRegistry.registerPath({
+    method: 'delete',
+    path: '/treinos/{id}',
+    summary: 'Remover treino',
+    description: 'Remove um treino. Por padrão realiza soft delete (marca deletado_em), preservando o histórico. Com ?force=true (somente admin), realiza hard delete em cascata removendo permanentemente o treino e todos os exercícios vinculados (treino_exercicio). Acesso permitido ao aluno dono, treinador vinculado ou admin.',
+    tags: ['Treino'],
+    security: [{ BearerAuth: [] }],
+    request: {
+        params: TreinoIdParam,
+        query: treinoDeleteQuerySchema,
+    },
+    responses: {
+        200: {
+            description: 'Treino removido com sucesso',
+            content: {
+                'application/json': {
+                    schema: z.object({
+                        error: z.boolean().openapi({ example: false }),
+                        code: z.number().openapi({ example: 200 }),
+                        message: z.string().nullable(),
+                        data: z.object({
+                            treino: TreinoResponse,
+                            tipo_exclusao: z.enum(['soft', 'hard']).openapi({ example: 'soft' }),
+                        }),
+                        errors: z.array(z.any()),
+                    }),
+                },
+            },
+        },
+        401: { description: 'Não autorizado' },
+        403: { description: 'Sem permissão para excluir este treino' },
+        404: { description: 'Treino não encontrado' },
+        422: { description: 'ID inválido' },
     },
 });
