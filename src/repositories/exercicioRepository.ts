@@ -1,15 +1,10 @@
 import { DataBase } from "../config/DbConnect";
 import { eq, and, isNull, inArray, sql, asc, desc } from "drizzle-orm";
-import { exercicio, exercicio_musculo, musculo, aluno, treinador, treino_exercicio } from "../config/db/schema";
+import { exercicio, exercicio_musculo, musculo, aluno, treino_exercicio } from "../config/db/schema";
 import { type_exercicio } from "../types/dbSchemas";
 import { ExercicioComMusculos, FiltrosExercicio, MusculoResumo, ResultadoPaginadoExercicio } from "../types/filters";
 import { parseDatabaseError } from "../utils/errors/DatabaseError";
 import ExercicioFilterBuilder from "./filters/ExercicioFilterBuilder";
-
-export interface PerfilUsuario {
-    alunoId: string | null;
-    isAdmin: boolean;
-}
 
 class ExercicioRepository {
     private db: typeof DataBase;
@@ -53,13 +48,18 @@ class ExercicioRepository {
         incluirMusculos: boolean,
     ): Promise<ResultadoPaginadoExercicio> {
         try {
-            const where = new ExercicioFilterBuilder()
+            const filterBuilder = new ExercicioFilterBuilder()
                 .comNome(filtros.nome)
                 .comEscopo(filtros.escopo, filtros.aluno_id)
                 .comEmUso(filtros.em_uso)
                 .comGrupoMuscular(filtros.grupo_muscular)
-                .comTipoAtivacao(filtros.tipo_ativacao)
-                .build();
+                .comTipoAtivacao(filtros.tipo_ativacao);
+
+            if (!filtros.incluir_inativos) {
+                filterBuilder.apenasAtivos();
+            }
+
+            const where = filterBuilder.build();
 
             const offset = (page - 1) * limite;
 
@@ -249,50 +249,13 @@ class ExercicioRepository {
         }
     }
 
-    async buscarPerfilDoUsuario(userId: string): Promise<PerfilUsuario> {
-        try {
-            const [alunoResult, treinadorResult] = await Promise.all([
-                this.db
-                    .select({ id: aluno.id, is_admin: aluno.is_admin })
-                    .from(aluno)
-                    .where(eq(aluno.user_id, userId))
-                    .limit(1),
-                this.db
-                    .select({ is_admin: treinador.is_admin })
-                    .from(treinador)
-                    .where(eq(treinador.user_id, userId))
-                    .limit(1),
-            ]);
-
-            const isAdmin =
-                (alunoResult[0]?.is_admin === true) ||
-                (treinadorResult[0]?.is_admin === true);
-
-            return {
-                alunoId: alunoResult[0]?.id ?? null,
-                isAdmin,
-            };
-        } catch (error) {
-            throw parseDatabaseError(error, 'ExercicioRepository.buscarPerfilDoUsuario');
-        }
-    }
-
-    async isUserAdmin(userId: string): Promise<boolean> {
-        try {
-            const perfil = await this.buscarPerfilDoUsuario(userId);
-            return perfil.isAdmin;
-        } catch (error) {
-            throw parseDatabaseError(error, 'ExercicioRepository.isUserAdmin');
-        }
-    }
-
     async findByNome(nome: string, alunoId?: string | null): Promise<type_exercicio | null> {
         try {
             const where = alunoId
                 ? and(
                     eq(exercicio.nome, nome),
                     isNull(exercicio.deletado_em),
-                    sql`(${exercicio.aluno_id} IS NULL OR ${exercicio.aluno_id} = ${alunoId})`,
+                    eq(exercicio.aluno_id, alunoId),
                 )
                 : and(
                     eq(exercicio.nome, nome),

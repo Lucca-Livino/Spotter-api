@@ -5,6 +5,7 @@ import {
     treinoUpdateSchema,
     treinoDetalheQuerySchema,
     treinoListQuerySchema,
+    treinoDeleteQuerySchema,
 } from '../utils/validations/treinoValidation';
 
 export const treinoRegistry = new OpenAPIRegistry();
@@ -69,7 +70,7 @@ treinoRegistry.registerPath({
     method: 'post',
     path: '/treinos',
     summary: 'Criar treino',
-    description: 'Cria um novo treino. Pode ser criado sem exercícios ou já com composição inicial de exercícios. Aluno pode criar apenas treino próprio; treinador/admin podem criar para qualquer aluno existente.',
+    description: 'Cria um novo treino. Pode ser criado sem exercícios ou já com composição inicial. Aluno pode criar apenas treino próprio; treinador/admin podem criar para qualquer aluno existente. O treinador criador é vinculado automaticamente.',
     tags: ['Treino'],
     security: [{ BearerAuth: [] }],
     request: {
@@ -107,7 +108,7 @@ treinoRegistry.registerPath({
     method: 'get',
     path: '/treinos/{id}',
     summary: 'Buscar treino por ID',
-    description: 'Retorna um treino com seus exercícios e permite filtros por nome/grupo muscular/tipo de ativação, ordenação por ordem_execucao e populates opcionais de músculos e aparelhos. Acesso permitido ao aluno dono, treinador vinculado ao treino ou admin.',
+    description: 'Retorna um treino com seus exercícios. Suporta filtros por nome/grupo muscular/tipo de ativação, ordenação e populates opcionais. Use `incluir_treino_inativo=true` para buscar treinos arquivados. Acesso permitido ao aluno dono, treinador vinculado ou admin.',
     tags: ['Treino'],
     security: [{ BearerAuth: [] }],
     request: {
@@ -141,7 +142,7 @@ treinoRegistry.registerPath({
     method: 'get',
     path: '/treinos',
     summary: 'Listar treinos',
-    description: 'Lista treinos com paginação e filtros por nome, aluno e treinador. Filtros de exercício (nome_exercicio, grupo_muscular, tipo_ativacao) restringem os próprios treinos retornados para apenas os que possuem match. Suporta incluir exercícios e populates opcionais de músculos/aparelhos para cenários de dashboard e acompanhamento no app.',
+    description: 'Lista treinos com paginação e filtros. Use `incluir_inativos=true` para incluir treinos arquivados (soft-deleted). Filtros de exercício restringem os treinos retornados aos que possuem match. Aluno vê apenas seus treinos; treinador vê apenas os seus; admin vê todos.',
     tags: ['Treino'],
     security: [{ BearerAuth: [] }],
     request: {
@@ -173,7 +174,7 @@ treinoRegistry.registerPath({
     method: 'patch',
     path: '/treinos/{id}',
     summary: 'Atualizar treino',
-    description: 'Atualiza parcialmente um treino e sua composição de exercícios. Permite alterar nome/descricao, adicionar novos itens e remover itens existentes por ID de treino_exercicio. Não permite alterar aluno dono (usuario_id) nem treinador responsável (treinador_id).',
+    description: 'Atualiza parcialmente um treino e sua composição de exercícios. Permite: alterar nome/descricao, associar/desvincular treinador via `treinador_id` (null para desvincular), adicionar novos exercícios, atualizar dados de exercícios existentes (séries, carga, repetições etc.) e remover exercícios por ID.',
     tags: ['Treino'],
     security: [{ BearerAuth: [] }],
     request: {
@@ -202,7 +203,44 @@ treinoRegistry.registerPath({
         },
         401: { description: 'Não autorizado' },
         403: { description: 'Sem permissão para atualizar este treino' },
-        404: { description: 'Treino não encontrado' },
+        404: { description: 'Treino ou treinador não encontrado' },
         422: { description: 'Parâmetros de rota/body inválidos' },
+    },
+});
+
+// DELETE /treinos/{id}
+treinoRegistry.registerPath({
+    method: 'delete',
+    path: '/treinos/{id}',
+    summary: 'Remover treino',
+    description: 'Remove um treino. Por padrão realiza soft delete (marca deletado_em), preservando o histórico. Com ?force=true (somente admin), realiza hard delete em cascata removendo permanentemente o treino e todos os exercícios vinculados. Acesso permitido ao aluno dono, treinador vinculado ou admin.',
+    tags: ['Treino'],
+    security: [{ BearerAuth: [] }],
+    request: {
+        params: TreinoIdParam,
+        query: treinoDeleteQuerySchema,
+    },
+    responses: {
+        200: {
+            description: 'Treino removido com sucesso',
+            content: {
+                'application/json': {
+                    schema: z.object({
+                        error: z.boolean().openapi({ example: false }),
+                        code: z.number().openapi({ example: 200 }),
+                        message: z.string().nullable(),
+                        data: z.object({
+                            treino: TreinoResponse,
+                            tipo_exclusao: z.enum(['soft', 'hard']).openapi({ example: 'soft' }),
+                        }),
+                        errors: z.array(z.any()),
+                    }),
+                },
+            },
+        },
+        401: { description: 'Não autorizado' },
+        403: { description: 'Sem permissão para excluir este treino' },
+        404: { description: 'Treino não encontrado' },
+        422: { description: 'ID inválido' },
     },
 });

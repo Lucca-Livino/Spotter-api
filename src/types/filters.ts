@@ -8,6 +8,7 @@ export interface FiltrosExercicio {
     escopo?: 'GLOBAL' | 'PESSOAL' | 'TODOS';
     em_uso?: boolean;
     ordem_nome?: 'asc' | 'desc';
+    incluir_inativos?: boolean;
 }
 
 export interface MusculoResumo {

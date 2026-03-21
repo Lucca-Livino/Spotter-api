@@ -58,8 +58,11 @@ const exercicioUpdateSchema = z.object({
         }).strict())
         .min(1, { message: "É obrigatório informar ao menos um músculo associado" })
         .optional()
-        .openapi({ description: "Lista de músculos associados ao exercício" }),
-}).strict().openapi("ExercicioUpdateInput");
+        .openapi({ description: "Lista de músculos associados ao exercício (substitui todos os vínculos existentes)" }),
+}).strict().refine(
+    (data) => Object.keys(data).length > 0,
+    { message: 'Ao menos um campo deve ser informado para atualização' },
+).openapi("ExercicioUpdateInput");
 
 const exercicioQuerySchema = z.object({
     nome: z
@@ -86,23 +89,31 @@ const exercicioQuerySchema = z.object({
             description: "Define o escopo da biblioteca de exercícios. GLOBAL=apenas globais, PESSOAL=apenas pessoais do aluno informado/contexto, TODOS=globais+pessoais.",
             example: "TODOS",
         }),
-    em_uso: z
-        .union([booleanQueryParam, z.boolean()])
+    em_uso: booleanQueryParam
         .optional()
         .openapi({
             description: "Filtra exercícios que já estão (ou não) vinculados a algum treino",
-            example: true,
+            example: "true",
         }),
     ordem_nome: z
         .enum(['asc', 'desc'])
         .default('asc')
         .openapi({ description: "Ordenação alfabética por nome", example: "asc" }),
     incluir_musculos: z
-        .union([booleanQueryParam, z.boolean()])
-        .default(true)
+        .enum(['true', 'false'])
+        .default('true')
+        .transform(v => v === 'true')
         .openapi({
             description: "Quando false, não popula músculos na listagem (resposta mais leve)",
-            example: true,
+            example: "true",
+        }),
+    incluir_inativos: z
+        .enum(['true', 'false'])
+        .default('false')
+        .transform(v => v === 'true')
+        .openapi({
+            description: "Quando true (somente admin), inclui exercícios desativados (soft-deleted) na listagem",
+            example: "false",
         }),
     page: z
         .string()

@@ -3,26 +3,31 @@ import TreinoRepository, {
     ResultadoPaginadoTreino,
     TreinoComExercicios,
     TreinoExercicioPatchInput,
+    TreinoExercicioUpdateInput,
 } from '../repositories/treinoRepository';
+import UsuarioRepository from '../repositories/usuarioRepository';
 import {
     treinoSchema,
     treinoUpdateSchema,
     treinoIdSchema,
     treinoDetalheQuerySchema,
     treinoListQuerySchema,
+    treinoDeleteQuerySchema,
 } from '../utils/validations/treinoValidation';
 import { type_treino } from '../types/dbSchemas';
 
 class TreinoService {
     private repository: TreinoRepository;
+    private usuarioRepository: UsuarioRepository;
 
     constructor() {
         this.repository = new TreinoRepository();
+        this.usuarioRepository = new UsuarioRepository();
     }
 
     private async validarExerciciosParaVinculo(
         itens: TreinoExercicioPatchInput[],
-        perfil: Awaited<ReturnType<TreinoRepository['buscarPerfilAcesso']>>,
+        perfil: Awaited<ReturnType<UsuarioRepository['buscarPerfilAcesso']>>,
         alunoIdDonoDoTreino: string,
     ): Promise<void> {
         if (itens.length === 0) {
@@ -69,7 +74,7 @@ class TreinoService {
     async createTreino(body: unknown, userId: string): Promise<TreinoComExercicios> {
         try {
             const dadosValidados = treinoSchema.parse(body);
-            const perfil = await this.repository.buscarPerfilAcesso(userId);
+            const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
             const usuarioPodeCriar = perfil.isAluno || perfil.isTreinador || perfil.isAdmin;
             let alunoIdDestino = dadosValidados.aluno_id;
 
@@ -135,7 +140,7 @@ class TreinoService {
     async getTreinoById(idParam: string, userId: string, query: unknown): Promise<TreinoComExercicios> {
         const id = treinoIdSchema.parse(idParam);
         const filtros = treinoDetalheQuerySchema.parse(query);
-        const perfil = await this.repository.buscarPerfilAcesso(userId);
+        const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
 
         if (!perfil.isAluno && !perfil.isTreinador && !perfil.isAdmin) {
             throw new Error('FORBIDDEN: usuário sem perfil para acessar treinos');
@@ -161,7 +166,7 @@ class TreinoService {
 
     async getAllTreinos(query: unknown, userId: string): Promise<ResultadoPaginadoTreino> {
         const filtrosLista = treinoListQuerySchema.parse(query);
-        const perfil = await this.repository.buscarPerfilAcesso(userId);
+        const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
         const possuiFiltroDeExercicio = Boolean(
             filtrosLista.nome_exercicio ||
             filtrosLista.grupo_muscular ||
@@ -207,7 +212,7 @@ class TreinoService {
     async updateTreino(idParam: string, body: unknown, userId: string): Promise<TreinoComExercicios> {
         const id = treinoIdSchema.parse(idParam);
         const dadosValidados = treinoUpdateSchema.parse(body);
-        const perfil = await this.repository.buscarPerfilAcesso(userId);
+        const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
 
         if (!perfil.isAluno && !perfil.isTreinador && !perfil.isAdmin) {
             throw new Error('FORBIDDEN: usuário sem perfil para atualizar treinos');
@@ -229,10 +234,15 @@ class TreinoService {
         }
 
         const adicionarExercicios = (dadosValidados.adicionar_exercicios ?? []) as TreinoExercicioPatchInput[];
+        const atualizarExercicios = (dadosValidados.atualizar_exercicios ?? []) as TreinoExercicioUpdateInput[];
         const removerExerciciosIds = dadosValidados.remover_exercicios_ids ?? [];
         let idsResolvidosParaRemocao: string[] = [];
 
-        const precisaEstadoAtualTreino = removerExerciciosIds.length > 0 || adicionarExercicios.length > 0;
+        const precisaEstadoAtualTreino =
+            removerExerciciosIds.length > 0 ||
+            adicionarExercicios.length > 0 ||
+            atualizarExercicios.length > 0;
+
         const treinoDetalhadoAtual = precisaEstadoAtualTreino
             ? await this.repository.findById(
                 id,
@@ -280,23 +290,75 @@ class TreinoService {
             idsResolvidosParaRemocao = Array.from(idsRemocao);
         }
 
-        if (adicionarExercicios.length > 0) {
+        if (atualizarExercicios.length > 0) {
+            const idsItemDoTreino = new Map(
+                treinoDetalhadoAtual!.exercicios.map((item) => [item.id, item]),
+            );
             const idsRemovidos = new Set(idsResolvidosParaRemocao);
+
+            const idsInvalidos = atualizarExercicios.filter(
+                (item) => !idsItemDoTreino.has(item.id) || idsRemovidos.has(item.id),
+            );
+            if (idsInvalidos.length > 0) {
+                throw new Error(
+                    'VALIDATION: um ou mais itens de atualizar_exercicios não pertencem a este treino ou estão sendo removidos',
+                );
+            }
+
+            const idsAtualizando = new Set(atualizarExercicios.map((item) => item.id));
             const ordensMantidas = new Set(
                 treinoDetalhadoAtual!.exercicios
-                    .filter((item) => !idsRemovidos.has(item.id))
+                    .filter((item) => !idsRemovidos.has(item.id) && !idsAtualizando.has(item.id))
+                    .map((item) => item.ordem_execucao),
+            );
+            const ordensAdicionando = new Set(adicionarExercicios.map((item) => item.ordem_execucao));
+
+            for (const update of atualizarExercicios) {
+                if (update.ordem_execucao !== undefined) {
+                    if (ordensMantidas.has(update.ordem_execucao) || ordensAdicionando.has(update.ordem_execucao)) {
+                        throw new Error('VALIDATION: ordem_execucao conflita com outro item do treino');
+                    }
+                }
+            }
+        }
+
+        if (adicionarExercicios.length > 0) {
+            const idsRemovidos = new Set(idsResolvidosParaRemocao);
+            const idsAtualizando = new Set(atualizarExercicios.map((item) => item.id));
+
+            const novasOrdensAtualizacao = new Set(
+                atualizarExercicios
+                    .filter((item) => item.ordem_execucao !== undefined)
+                    .map((item) => item.ordem_execucao!),
+            );
+
+            const ordensMantidas = new Set(
+                treinoDetalhadoAtual!.exercicios
+                    .filter((item) => !idsRemovidos.has(item.id) && !idsAtualizando.has(item.id))
                     .map((item) => item.ordem_execucao),
             );
 
-            const conflitoOrdem = adicionarExercicios.some((item) => ordensMantidas.has(item.ordem_execucao));
+            const conflitoOrdem = adicionarExercicios.some(
+                (item) => ordensMantidas.has(item.ordem_execucao) || novasOrdensAtualizacao.has(item.ordem_execucao),
+            );
             if (conflitoOrdem) {
                 throw new Error('VALIDATION: ordem_execucao já utilizada por outro item do treino');
             }
         }
 
-        const payloadAtualizacao: Partial<Pick<type_treino, 'nome' | 'descricao'>> = {};
+        const payloadAtualizacao: Partial<Pick<type_treino, 'nome' | 'descricao' | 'treinador_id'>> = {};
         if (dadosValidados.nome !== undefined) payloadAtualizacao.nome = dadosValidados.nome;
         if (dadosValidados.descricao !== undefined) payloadAtualizacao.descricao = dadosValidados.descricao;
+
+        if (dadosValidados.treinador_id !== undefined) {
+            if (dadosValidados.treinador_id !== null) {
+                const treinadorExiste = await this.repository.verificarTreinadorExiste(dadosValidados.treinador_id);
+                if (!treinadorExiste) {
+                    throw new Error('VALIDATION: treinador não encontrado');
+                }
+            }
+            payloadAtualizacao.treinador_id = dadosValidados.treinador_id;
+        }
 
         if (Object.keys(payloadAtualizacao).length > 0) {
             const treinoAtualizado = await this.repository.update(id, payloadAtualizacao);
@@ -308,6 +370,10 @@ class TreinoService {
 
         if (idsResolvidosParaRemocao.length > 0) {
             await this.repository.removeExerciciosDoTreino(id, idsResolvidosParaRemocao);
+        }
+
+        if (atualizarExercicios.length > 0) {
+            await this.repository.updateExerciciosDoTreino(id, atualizarExercicios);
         }
 
         if (adicionarExercicios.length > 0) {
@@ -324,6 +390,47 @@ class TreinoService {
         }
 
         return treinoAtualizadoComExercicios;
+    }
+
+    async deleteTreino(
+        idParam: string,
+        query: unknown,
+        userId: string,
+    ): Promise<{ treino: type_treino; tipo_exclusao: 'soft' | 'hard' }> {
+        const id = treinoIdSchema.parse(idParam);
+        const { force } = treinoDeleteQuerySchema.parse(query);
+        const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
+
+        if (!perfil.isAluno && !perfil.isTreinador && !perfil.isAdmin) {
+            throw new Error('FORBIDDEN: usuário sem perfil para excluir treinos');
+        }
+
+        const treinoExistente = await this.repository.findBaseById(id);
+
+        if (!treinoExistente) {
+            throw new Error('Treino não encontrado');
+        }
+
+        const podeDeletar =
+            perfil.isAdmin ||
+            perfil.alunoId === treinoExistente.usuario_id ||
+            (perfil.treinadorId !== null && perfil.treinadorId === treinoExistente.treinador_id);
+
+        if (!podeDeletar) {
+            throw new Error('FORBIDDEN: você não tem permissão para excluir este treino');
+        }
+
+        if (force) {
+            if (!perfil.isAdmin) {
+                throw new Error('FORBIDDEN: apenas administradores podem forçar a exclusão permanente de treinos');
+            }
+
+            await this.repository.hardDelete(id);
+            return { treino: treinoExistente, tipo_exclusao: 'hard' };
+        }
+
+        const treinoDeletado = await this.repository.softDelete(id);
+        return { treino: treinoDeletado, tipo_exclusao: 'soft' };
     }
 }
 

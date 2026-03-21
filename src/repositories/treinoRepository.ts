@@ -1,7 +1,6 @@
 import { DataBase } from '../config/DbConnect';
 import {
     aluno,
-    treinador,
     treino,
     treino_exercicio,
     exercicio,
@@ -9,20 +8,13 @@ import {
     musculo,
     exercicio_aparelho,
     aparelho,
+    treinador,
 } from '../config/db/schema';
 import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { type_treino } from '../types/dbSchemas';
 import { parseDatabaseError } from '../utils/errors/DatabaseError';
 import TreinoFilterBuilder from './filters/TreinoFilterBuilder';
 import { TreinoDetalheQuery, TreinoListQuery } from '../utils/validations/treinoValidation';
-
-export interface PerfilAcessoTreino {
-    alunoId: string | null;
-    treinadorId: string | null;
-    isAluno: boolean;
-    isTreinador: boolean;
-    isAdmin: boolean;
-}
 
 export interface TreinoExercicioDetalhe {
     id: string;
@@ -65,9 +57,18 @@ export interface TreinoExercicioPatchInput {
     exercicio_id: string;
     series: number;
     repeticoes: string;
-    carga_sugerida?: number | string | null;
+    carga_sugerida?: number | null;
     tempo_descanso_segundos: number;
     ordem_execucao: number;
+}
+
+export interface TreinoExercicioUpdateInput {
+    id: string;
+    series?: number;
+    repeticoes?: string;
+    carga_sugerida?: number | null;
+    tempo_descanso_segundos?: number;
+    ordem_execucao?: number;
 }
 
 export interface ExercicioResumo {
@@ -81,6 +82,11 @@ class TreinoRepository {
 
     constructor() {
         this.db = DataBase;
+    }
+
+    private formatCargaSugerida(value: number | null | undefined): string | null {
+        if (value === null || value === undefined) return null;
+        return String(value);
     }
 
     async create(novoTreino: type_treino): Promise<type_treino> {
@@ -110,10 +116,7 @@ class TreinoRepository {
                         exercicio_id: item.exercicio_id,
                         series: item.series,
                         repeticoes: item.repeticoes,
-                        carga_sugerida:
-                            item.carga_sugerida === null || item.carga_sugerida === undefined
-                                ? null
-                                : String(item.carga_sugerida),
+                        carga_sugerida: this.formatCargaSugerida(item.carga_sugerida),
                         tempo_descanso_segundos: item.tempo_descanso_segundos,
                         ordem_execucao: item.ordem_execucao,
                     })),
@@ -128,12 +131,17 @@ class TreinoRepository {
         }
     }
 
-    async findBaseById(id: string): Promise<type_treino | null> {
+    async findBaseById(id: string, incluirInativo = false): Promise<type_treino | null> {
         try {
+            const condicoes = [eq(treino.id, id)];
+            if (!incluirInativo) {
+                condicoes.push(isNull(treino.deletado_em));
+            }
+
             const [treinoBase] = await this.db
                 .select()
                 .from(treino)
-                .where(and(eq(treino.id, id), isNull(treino.deletado_em)))
+                .where(and(...condicoes))
                 .limit(1);
 
             return treinoBase ?? null;
@@ -156,36 +164,17 @@ class TreinoRepository {
         }
     }
 
-    async buscarPerfilAcesso(userId: string): Promise<PerfilAcessoTreino> {
+    async verificarTreinadorExiste(treinadorId: string): Promise<boolean> {
         try {
-            const [treinadorResult, alunoResult] = await Promise.all([
-                this.db
-                    .select({ id: treinador.id, is_admin: treinador.is_admin })
-                    .from(treinador)
-                    .where(eq(treinador.user_id, userId))
-                    .limit(1),
-                this.db
-                    .select({ id: aluno.id, is_admin: aluno.is_admin })
-                    .from(aluno)
-                    .where(eq(aluno.user_id, userId))
-                    .limit(1),
-            ]);
+            const resultado = await this.db
+                .select({ id: treinador.id })
+                .from(treinador)
+                .where(eq(treinador.id, treinadorId))
+                .limit(1);
 
-            const isAluno = Boolean(alunoResult[0]);
-            const isTreinador = Boolean(treinadorResult[0]);
-            const isAdmin =
-                treinadorResult[0]?.is_admin === true ||
-                alunoResult[0]?.is_admin === true;
-
-            return {
-                alunoId: alunoResult[0]?.id ?? null,
-                treinadorId: treinadorResult[0]?.id ?? null,
-                isAluno,
-                isTreinador,
-                isAdmin,
-            };
+            return resultado.length > 0;
         } catch (error) {
-            throw parseDatabaseError(error, 'TreinoRepository.buscarPerfilAcesso');
+            throw parseDatabaseError(error, 'TreinoRepository.verificarTreinadorExiste');
         }
     }
 
@@ -304,7 +293,7 @@ class TreinoRepository {
 
     async findById(id: string, filtros: TreinoDetalheQuery): Promise<TreinoComExercicios | null> {
         try {
-            const treinoEncontrado = await this.findBaseById(id);
+            const treinoEncontrado = await this.findBaseById(id, filtros.incluir_treino_inativo);
 
             if (!treinoEncontrado) {
                 return null;
@@ -332,12 +321,19 @@ class TreinoRepository {
                 detalhes.tipo_ativacao,
             );
 
-            const baseWhere = new TreinoFilterBuilder()
-                .apenasTreinosAtivos()
+            // TODO: N+1 query - quando incluir_exercicios=true, gera 1 query por treino para buscar exercícios.
+            // Otimizar com batch query única (treino_id IN [...]) após todas as rotas estarem implementadas.
+
+            const filterBuilder = new TreinoFilterBuilder()
                 .comNomeTreino(filtros.nome)
                 .comUsuarioId(filtros.usuario_id)
-                .comTreinadorId(filtros.treinador_id)
-                .buildTreino();
+                .comTreinadorId(filtros.treinador_id);
+
+            if (!filtros.incluir_inativos) {
+                filterBuilder.apenasTreinosAtivos();
+            }
+
+            const baseWhere = filterBuilder.buildTreino();
 
             let where = baseWhere;
 
@@ -408,7 +404,11 @@ class TreinoRepository {
             throw parseDatabaseError(error, 'TreinoRepository.findAll');
         }
     }
-    async update(id: string, treinoData: Partial<Pick<type_treino, 'nome' | 'descricao'>>): Promise<type_treino | null> {
+
+    async update(
+        id: string,
+        treinoData: Partial<Pick<type_treino, 'nome' | 'descricao' | 'treinador_id'>>,
+    ): Promise<type_treino | null> {
         try {
             const [treinoAtualizado] = await this.db
                 .update(treino)
@@ -475,16 +475,53 @@ class TreinoRepository {
                     exercicio_id: item.exercicio_id,
                     series: item.series,
                     repeticoes: item.repeticoes,
-                    carga_sugerida:
-                        item.carga_sugerida === null || item.carga_sugerida === undefined
-                            ? null
-                            : String(item.carga_sugerida),
+                    carga_sugerida: this.formatCargaSugerida(item.carga_sugerida),
                     tempo_descanso_segundos: item.tempo_descanso_segundos,
                     ordem_execucao: item.ordem_execucao,
                 })),
             );
         } catch (error) {
             throw parseDatabaseError(error, 'TreinoRepository.addExerciciosAoTreino');
+        }
+    }
+
+    async updateExerciciosDoTreino(treinoId: string, atualizacoes: TreinoExercicioUpdateInput[]): Promise<void> {
+        try {
+            if (atualizacoes.length === 0) {
+                return;
+            }
+
+            await this.db.transaction(async (tx) => {
+                for (const item of atualizacoes) {
+                    const payload: Partial<{
+                        series: number;
+                        repeticoes: string;
+                        carga_sugerida: string | null;
+                        tempo_descanso_segundos: number;
+                        ordem_execucao: number;
+                    }> = {};
+
+                    if (item.series !== undefined) payload.series = item.series;
+                    if (item.repeticoes !== undefined) payload.repeticoes = item.repeticoes;
+                    if (item.carga_sugerida !== undefined) {
+                        payload.carga_sugerida = this.formatCargaSugerida(item.carga_sugerida);
+                    }
+                    if (item.tempo_descanso_segundos !== undefined) payload.tempo_descanso_segundos = item.tempo_descanso_segundos;
+                    if (item.ordem_execucao !== undefined) payload.ordem_execucao = item.ordem_execucao;
+
+                    if (Object.keys(payload).length === 0) continue;
+
+                    await tx
+                        .update(treino_exercicio)
+                        .set(payload)
+                        .where(and(
+                            eq(treino_exercicio.id, item.id),
+                            eq(treino_exercicio.treino_id, treinoId),
+                        ));
+                }
+            });
+        } catch (error) {
+            throw parseDatabaseError(error, 'TreinoRepository.updateExerciciosDoTreino');
         }
     }
 
@@ -502,6 +539,42 @@ class TreinoRepository {
                 ));
         } catch (error) {
             throw parseDatabaseError(error, 'TreinoRepository.removeExerciciosDoTreino');
+        }
+    }
+
+    async softDelete(id: string): Promise<type_treino> {
+        try {
+            const [resultado] = await this.db
+                .update(treino)
+                .set({ deletado_em: new Date() })
+                .where(and(eq(treino.id, id), isNull(treino.deletado_em)))
+                .returning();
+
+            if (!resultado) {
+                throw new Error('Treino não encontrado');
+            }
+
+            return resultado as type_treino;
+        } catch (error) {
+            if (error instanceof Error && error.message === 'Treino não encontrado') {
+                throw error;
+            }
+            throw parseDatabaseError(error, 'TreinoRepository.softDelete');
+        }
+    }
+
+    async hardDelete(id: string): Promise<void> {
+        try {
+            await this.db.transaction(async (tx) => {
+                await tx
+                    .delete(treino_exercicio)
+                    .where(eq(treino_exercicio.treino_id, id));
+                await tx
+                    .delete(treino)
+                    .where(eq(treino.id, id));
+            });
+        } catch (error) {
+            throw parseDatabaseError(error, 'TreinoRepository.hardDelete');
         }
     }
 }

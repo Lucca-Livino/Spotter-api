@@ -3,6 +3,42 @@ import { extendZodWithOpenApi } from '@asteasolutions/zod-to-openapi';
 
 extendZodWithOpenApi(z);
 
+const exercicioItemSchema = z.object({
+    exercicio_id: z
+        .string()
+        .uuid({ message: 'exercicio_id deve ser um UUID válido' })
+        .openapi({ description: 'UUID do exercício', example: '550e8400-e29b-41d4-a716-446655440030' }),
+    series: z
+        .number()
+        .int({ message: 'series deve ser inteiro' })
+        .min(1, { message: 'series deve ser maior que 0' })
+        .max(20, { message: 'series deve ser no máximo 20' })
+        .openapi({ description: 'Quantidade de séries', example: 4 }),
+    repeticoes: z
+        .string()
+        .trim()
+        .min(1, { message: 'repeticoes é obrigatório' })
+        .max(50, { message: 'repeticoes deve ter no máximo 50 caracteres' })
+        .openapi({ description: 'Faixa de repetições', example: '8-12' }),
+    carga_sugerida: z
+        .number()
+        .positive({ message: 'carga_sugerida deve ser positiva' })
+        .nullable()
+        .optional()
+        .openapi({ description: 'Carga sugerida em kg (opcional)', example: 30 }),
+    tempo_descanso_segundos: z
+        .number()
+        .int({ message: 'tempo_descanso_segundos deve ser inteiro' })
+        .min(0, { message: 'tempo_descanso_segundos não pode ser negativo' })
+        .max(3600, { message: 'tempo_descanso_segundos deve ser no máximo 3600' })
+        .openapi({ description: 'Tempo de descanso em segundos', example: 90 }),
+    ordem_execucao: z
+        .number()
+        .int({ message: 'ordem_execucao deve ser inteiro' })
+        .min(1, { message: 'ordem_execucao deve ser maior que 0' })
+        .openapi({ description: 'Ordem de execução no treino', example: 1 }),
+}).strict();
+
 const treinoSchema = z.object({
     nome: z
         .string()
@@ -21,45 +57,7 @@ const treinoSchema = z.object({
         .optional()
         .openapi({ description: 'UUID do aluno dono do treino', example: '550e8400-e29b-41d4-a716-446655440000' }),
     exercicios: z
-        .array(
-            z.object({
-                exercicio_id: z
-                    .string()
-                    .uuid({ message: 'exercicio_id deve ser um UUID válido' })
-                    .openapi({ description: 'UUID do exercício', example: '550e8400-e29b-41d4-a716-446655440030' }),
-                series: z
-                    .number()
-                    .int({ message: 'series deve ser inteiro' })
-                    .min(1, { message: 'series deve ser maior que 0' })
-                    .max(20, { message: 'series deve ser no máximo 20' })
-                    .openapi({ description: 'Quantidade de séries', example: 4 }),
-                repeticoes: z
-                    .string()
-                    .trim()
-                    .min(1, { message: 'repeticoes é obrigatório' })
-                    .max(50, { message: 'repeticoes deve ter no máximo 50 caracteres' })
-                    .openapi({ description: 'Faixa de repetições', example: '8-12' }),
-                carga_sugerida: z
-                    .union([
-                        z.number().positive({ message: 'carga_sugerida deve ser positiva' }),
-                        z.string().regex(/^\d+(\.\d{1,2})?$/, { message: 'carga_sugerida deve ser número válido com até 2 casas decimais' }),
-                    ])
-                    .nullable()
-                    .optional()
-                    .openapi({ description: 'Carga sugerida (opcional)', example: 30 }),
-                tempo_descanso_segundos: z
-                    .number()
-                    .int({ message: 'tempo_descanso_segundos deve ser inteiro' })
-                    .min(0, { message: 'tempo_descanso_segundos não pode ser negativo' })
-                    .max(3600, { message: 'tempo_descanso_segundos deve ser no máximo 3600' })
-                    .openapi({ description: 'Tempo de descanso em segundos', example: 90 }),
-                ordem_execucao: z
-                    .number()
-                    .int({ message: 'ordem_execucao deve ser inteiro' })
-                    .min(1, { message: 'ordem_execucao deve ser maior que 0' })
-                    .openapi({ description: 'Ordem de execução no treino', example: 1 }),
-            }).strict(),
-        )
+        .array(exercicioItemSchema)
         .optional()
         .openapi({ description: 'Composição inicial do treino' }),
 }).strict().superRefine((dados, ctx) => {
@@ -99,49 +97,69 @@ const treinoUpdateSchema = z.object({
         .nullable()
         .optional()
         .openapi({ description: 'Descrição do treino', example: 'Ajuste de foco para hipertrofia' }),
+    treinador_id: z
+        .string()
+        .uuid({ message: 'treinador_id deve ser um UUID válido' })
+        .nullable()
+        .optional()
+        .openapi({
+            description: 'UUID do novo treinador responsável. Envie null para desvincular o treinador atual.',
+            example: '550e8400-e29b-41d4-a716-446655440002',
+        }),
     adicionar_exercicios: z
+        .array(exercicioItemSchema)
+        .min(1, { message: 'adicionar_exercicios deve conter ao menos 1 item' })
+        .optional()
+        .openapi({ description: 'Lista de novos itens para adicionar ao treino' }),
+    atualizar_exercicios: z
         .array(
             z.object({
-                exercicio_id: z
+                id: z
                     .string()
-                    .uuid({ message: 'exercicio_id deve ser um UUID válido' })
-                    .openapi({ description: 'UUID do exercício a ser adicionado', example: '550e8400-e29b-41d4-a716-446655440030' }),
+                    .uuid({ message: 'id deve ser um UUID válido (treino_exercicio.id)' })
+                    .openapi({ description: 'ID do vínculo treino-exercício a atualizar', example: '550e8400-e29b-41d4-a716-446655440020' }),
                 series: z
                     .number()
                     .int({ message: 'series deve ser inteiro' })
                     .min(1, { message: 'series deve ser maior que 0' })
                     .max(20, { message: 'series deve ser no máximo 20' })
-                    .openapi({ description: 'Quantidade de séries', example: 4 }),
+                    .optional()
+                    .openapi({ description: 'Nova quantidade de séries', example: 5 }),
                 repeticoes: z
                     .string()
                     .trim()
                     .min(1, { message: 'repeticoes é obrigatório' })
                     .max(50, { message: 'repeticoes deve ter no máximo 50 caracteres' })
-                    .openapi({ description: 'Faixa de repetições', example: '8-12' }),
+                    .optional()
+                    .openapi({ description: 'Nova faixa de repetições', example: '10-15' }),
                 carga_sugerida: z
-                    .union([
-                        z.number().positive({ message: 'carga_sugerida deve ser positiva' }),
-                        z.string().regex(/^\d+(\.\d{1,2})?$/, { message: 'carga_sugerida deve ser número válido com até 2 casas decimais' }),
-                    ])
+                    .number()
+                    .positive({ message: 'carga_sugerida deve ser positiva' })
                     .nullable()
                     .optional()
-                    .openapi({ description: 'Carga sugerida (opcional)', example: 30 }),
+                    .openapi({ description: 'Nova carga sugerida em kg. Envie null para remover.', example: 35 }),
                 tempo_descanso_segundos: z
                     .number()
                     .int({ message: 'tempo_descanso_segundos deve ser inteiro' })
                     .min(0, { message: 'tempo_descanso_segundos não pode ser negativo' })
                     .max(3600, { message: 'tempo_descanso_segundos deve ser no máximo 3600' })
-                    .openapi({ description: 'Tempo de descanso em segundos', example: 90 }),
+                    .optional()
+                    .openapi({ description: 'Novo tempo de descanso em segundos', example: 60 }),
                 ordem_execucao: z
                     .number()
                     .int({ message: 'ordem_execucao deve ser inteiro' })
                     .min(1, { message: 'ordem_execucao deve ser maior que 0' })
-                    .openapi({ description: 'Ordem de execução no treino', example: 3 }),
-            }).strict(),
+                    .optional()
+                    .openapi({ description: 'Nova ordem de execução', example: 2 }),
+            }).strict().refine(
+                (data) => ['series', 'repeticoes', 'carga_sugerida', 'tempo_descanso_segundos', 'ordem_execucao']
+                    .some((k) => k in data && data[k as keyof typeof data] !== undefined),
+                { message: 'Informe ao menos um campo para atualizar além do id' },
+            ),
         )
-        .min(1, { message: 'adicionar_exercicios deve conter ao menos 1 item' })
+        .min(1, { message: 'atualizar_exercicios deve conter ao menos 1 item' })
         .optional()
-        .openapi({ description: 'Lista de novos itens para adicionar ao treino' }),
+        .openapi({ description: 'Lista de vínculos existentes para atualizar (séries, carga, repetições etc.)' }),
     remover_exercicios_ids: z
         .array(
             z.string().uuid({ message: 'Cada item de remover_exercicios_ids deve ser um UUID válido' }),
@@ -172,6 +190,30 @@ const treinoUpdateSchema = z.object({
         }
     }
 
+    if (dados.atualizar_exercicios) {
+        const ids = dados.atualizar_exercicios.map((item) => item.id);
+        const idsDuplicados = ids.filter((id, idx) => ids.indexOf(id) !== idx);
+        if (idsDuplicados.length > 0) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['atualizar_exercicios'],
+                message: 'Não é permitido repetir id em atualizar_exercicios',
+            });
+        }
+
+        const novasOrdens = dados.atualizar_exercicios
+            .filter((item) => item.ordem_execucao !== undefined)
+            .map((item) => item.ordem_execucao!);
+        const ordensDuplicadas = novasOrdens.filter((o, idx) => novasOrdens.indexOf(o) !== idx);
+        if (ordensDuplicadas.length > 0) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                path: ['atualizar_exercicios'],
+                message: 'Não é permitido repetir ordem_execucao em atualizar_exercicios',
+            });
+        }
+    }
+
     if (dados.remover_exercicios_ids) {
         const ids = dados.remover_exercicios_ids;
         const idsDuplicados = ids.filter((id, idx) => ids.indexOf(id) !== idx);
@@ -187,9 +229,11 @@ const treinoUpdateSchema = z.object({
     (dados) =>
         dados.nome !== undefined ||
         dados.descricao !== undefined ||
+        dados.treinador_id !== undefined ||
         (dados.adicionar_exercicios?.length ?? 0) > 0 ||
+        (dados.atualizar_exercicios?.length ?? 0) > 0 ||
         (dados.remover_exercicios_ids?.length ?? 0) > 0,
-    { message: 'Informe ao menos uma alteração: nome, descricao, adicionar_exercicios ou remover_exercicios_ids' },
+    { message: 'Informe ao menos uma alteração: nome, descricao, treinador_id, adicionar_exercicios, atualizar_exercicios ou remover_exercicios_ids' },
 ).openapi('TreinoUpdateInput');
 
 const treinoIdSchema = z
@@ -251,6 +295,14 @@ const treinoDetalheQuerySchema = z.object({
         .default(false)
         .openapi({
             description: 'Quando true, popula aparelhos vinculados de cada exercício',
+            example: false,
+        }),
+    incluir_treino_inativo: z
+        .coerce
+        .boolean()
+        .default(false)
+        .openapi({
+            description: 'Quando true, permite buscar um treino mesmo que esteja arquivado (deletado_em preenchido)',
             example: false,
         }),
 }).strict().openapi('TreinoDetalheQuery');
@@ -323,6 +375,14 @@ const treinoListQuerySchema = z.object({
             description: 'Quando true, retorna apenas treinos que possuem exercícios vinculados',
             example: true,
         }),
+    incluir_inativos: z
+        .coerce
+        .boolean()
+        .default(false)
+        .openapi({
+            description: 'Quando true, inclui treinos arquivados (soft-deleted) na listagem. Disponível para todos os perfis dentro do escopo de acesso.',
+            example: false,
+        }),
     nome_exercicio: treinoDetalheQuerySchema.shape.nome_exercicio,
     grupo_muscular: treinoDetalheQuerySchema.shape.grupo_muscular,
     tipo_ativacao: treinoDetalheQuerySchema.shape.tipo_ativacao,
@@ -334,5 +394,18 @@ const treinoListQuerySchema = z.object({
 
 type TreinoListQuery = z.infer<typeof treinoListQuerySchema>;
 
-export { treinoSchema, treinoUpdateSchema, treinoIdSchema, treinoDetalheQuerySchema, treinoListQuerySchema };
-export type { TreinoDetalheQuery, TreinoListQuery };
+const treinoDeleteQuerySchema = z.object({
+    force: z
+        .enum(['true', 'false'])
+        .default('false')
+        .transform((val) => val === 'true')
+        .openapi({
+            description: 'Quando true (somente admin), realiza hard delete em cascata removendo treino e todos os exercícios vinculados permanentemente',
+            example: false,
+        }),
+}).strict().openapi('TreinoDeleteQuery');
+
+type TreinoDeleteQuery = z.infer<typeof treinoDeleteQuerySchema>;
+
+export { treinoSchema, treinoUpdateSchema, treinoIdSchema, treinoDetalheQuerySchema, treinoListQuerySchema, treinoDeleteQuerySchema };
+export type { TreinoDetalheQuery, TreinoListQuery, TreinoDeleteQuery };

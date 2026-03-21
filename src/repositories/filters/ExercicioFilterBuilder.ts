@@ -11,7 +11,12 @@ class ExercicioFilterBuilder {
 
     constructor() {
         this.db = DataBase;
-        this.condicoes = [isNull(exercicio.deletado_em)];
+        this.condicoes = [];
+    }
+
+    apenasAtivos() {
+        this.condicoes.push(isNull(exercicio.deletado_em));
+        return this;
     }
 
     comNome(nome?: string) {

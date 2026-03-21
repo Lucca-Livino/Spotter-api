@@ -13,9 +13,12 @@ const ExercicioResponse = z.object({
     nome: z.string().openapi({ example: "Supino Reto" }),
     descricao: z.string().nullable().openapi({ example: "Exercício para peitorais" }),
     aluno_id: z.string().uuid().nullable().openapi({ example: null }),
+    deletado_em: z.coerce.date().nullable().openapi({ example: null }),
     musculos: z.array(z.object({
         musculo_id: z.string().uuid().openapi({ example: "550e8400-e29b-41d4-a716-446655440001" }),
-        tipo_ativacao: z.string().openapi({ example: "PRIMARIO" }),
+        tipo_ativacao: z.enum(['PRIMARIO', 'SECUNDARIO']).openapi({ example: "PRIMARIO" }),
+        nome: z.string().openapi({ example: "Peitoral Maior" }),
+        grupo_muscular: z.string().openapi({ example: "PEITO" }),
     })).openapi({ description: "Músculos associados" }),
 }).openapi("Exercicio");
 
@@ -24,7 +27,7 @@ exercicioRegistry.registerPath({
     method: "post",
     path: "/exercicios",
     summary: "Criar exercício",
-    description: "Cria um novo exercício. Requer autenticação.",
+    description: "Cria um novo exercício. Admin pode criar exercícios globais (sem `aluno_id`). Aluno pode criar exercícios pessoais apenas para si mesmo. Treinador pode criar exercícios pessoais para qualquer aluno existente.",
     tags: ["Exercicio"],
     security: [{ BearerAuth: [] }],
     request: {
@@ -61,7 +64,7 @@ exercicioRegistry.registerPath({
     method: "get",
     path: "/exercicios",
     summary: "Listar exercícios",
-    description: "Lista exercícios com paginação e filtros (escopo GLOBAL/PESSOAL/TODOS, tipo de ativação, grupo muscular, em uso em treinos e ordenação por nome). Requer autenticação.",
+    description: "Lista exercícios com paginação e filtros. Escopo GLOBAL=apenas globais, PESSOAL=apenas pessoais do aluno, TODOS=ambos. Use `incluir_inativos=true` (somente admin) para incluir exercícios desativados. Use `incluir_musculos=false` para resposta mais leve.",
     tags: ["Exercicio"],
     security: [{ BearerAuth: [] }],
     request: {
@@ -124,7 +127,7 @@ exercicioRegistry.registerPath({
     method: "patch",
     path: "/exercicios/{id}",
     summary: "Atualizar exercício",
-    description: "Atualiza um exercício existente. Requer autenticação.",
+    description: "Atualiza parcialmente um exercício. Ao informar `musculos`, a lista completa de vínculos musculares é substituída — envie todos os músculos desejados, não apenas os novos. Exercícios globais: somente admin. Exercícios pessoais: dono (aluno), treinador ou admin.",
     tags: ["Exercicio"],
     security: [{ BearerAuth: [] }],
     request: {
@@ -151,11 +154,11 @@ exercicioRegistry.registerPath({
                 },
             },
         },
-        400: { description: "Corpo da requisição é obrigatório" },
         401: { description: "Não autorizado" },
+        403: { description: "Sem permissão para editar este exercício" },
         404: { description: "Exercício não encontrado" },
         409: { description: "Já existe um exercício com este nome" },
-        422: { description: "Erro de validação" },
+        422: { description: "Erro de validação (incluindo corpo vazio ou sem campos)" },
     },
 });
 

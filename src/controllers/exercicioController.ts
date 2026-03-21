@@ -95,10 +95,6 @@ class ExercicioController {
     }
 
     updateExercicio = async (req: Request, res: Response) => {
-        if (!req.body || Object.keys(req.body).length === 0) {
-            return CommonResponse.error(res, HttpStatusCode.BAD_REQUEST.code, null, '', [], 'Corpo da requisição é obrigatório');
-        }
-
         try {
             const userId = (req as any).user?.id as string;
             const resposta = await this.service.updateExercicio(req.params.id as string, req.body, userId);
