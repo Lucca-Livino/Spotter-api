@@ -1,4 +1,4 @@
-import { enum_dia_semana, enum_sexo, enum_turnos } from "./enum";
+import { enum_dia_semana, enum_sexo, enum_status_serie, enum_status_sessao, enum_turnos } from "./enum";
 
 export type type_academia = {
     id?: string;
@@ -106,6 +106,34 @@ export type type_treino_exercicio = {
     ordem_execucao: number;
     treino_id: string;
     exercicio_id: string;
+}
+
+export type type_sessao_treino = {
+    id?: string;
+    aluno_id: string;
+    treino_id: string;
+    status?: enum_status_sessao;
+    inicio?: Date;
+    fim?: Date | null;
+    observacoes?: string | null;
+}
+
+export type type_sessao_exercicio = {
+    id?: string;
+    sessao_treino_id: string;
+    treino_exercicio_id: string;
+    concluido?: boolean;
+    observacoes?: string | null;
+}
+
+export type type_sessao_serie = {
+    id?: string;
+    sessao_exercicio_id: string;
+    numero_serie: number;
+    repeticoes_realizadas?: number | null;
+    carga_utilizada?: string | null;
+    status?: enum_status_serie;
+    observacoes?: string | null;
 }
 
 // Tipo do usuário autenticado

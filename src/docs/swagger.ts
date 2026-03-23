@@ -4,6 +4,7 @@ import { alunoRegistry } from "./alunoDoc";
 import { exercicioRegistry } from "./exercicioDoc";
 import { authRegistry } from "./authDoc";
 import { treinoRegistry } from "./treinoDoc";
+import { sessaoRegistry } from "./sessaoDoc";
 
 const registry = new OpenAPIRegistry([
     academiaRegistry,
@@ -11,6 +12,7 @@ const registry = new OpenAPIRegistry([
     exercicioRegistry,
     authRegistry,
     treinoRegistry,
+    sessaoRegistry,
 ]);
 
 registry.registerComponent("securitySchemes", "BearerAuth", {
@@ -38,5 +40,6 @@ export const openApiDocument = generator.generateDocument({
         { name: "Aluno", description: "CRUD de alunos" },
         { name: "Exercicio", description: "CRUD de exercícios" },
         { name: "Treino", description: "CRUD de treinos" },
+        { name: "Sessao", description: "Sessões de treino" },
     ],
 });

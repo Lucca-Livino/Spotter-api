@@ -341,3 +341,73 @@ export const treinoExercicioRelations = relations(treino_exercicio, ({ one }) =>
         references: [exercicio.id],
     }),
 }));
+
+// Enums de Sessão
+export const statusSessaoEnum = pgEnum('status_sessao', ['EM_ANDAMENTO', 'CONCLUIDA', 'CANCELADA']);
+export const statusSerieEnum = pgEnum('status_serie', ['PENDENTE', 'CONCLUIDA', 'PULADA']);
+
+// Tabelas de Sessão
+// Index parcial único em aluno_id WHERE status = 'EM_ANDAMENTO' é criado via SQL na migration
+export const sessao_treino = pgTable('sessao_treino', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    aluno_id: uuid('aluno_id').notNull().references(() => aluno.id),
+    treino_id: uuid('treino_id').notNull().references(() => treino.id),
+    status: statusSessaoEnum('status').notNull().default('EM_ANDAMENTO'),
+    inicio: timestamp('inicio').defaultNow().notNull(),
+    fim: timestamp('fim'),
+    observacoes: text('observacoes'),
+});
+
+export const sessao_exercicio = pgTable('sessao_exercicio', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    sessao_treino_id: uuid('sessao_treino_id').notNull().references(() => sessao_treino.id, { onDelete: 'cascade' }),
+    treino_exercicio_id: uuid('treino_exercicio_id').notNull().references(() => treino_exercicio.id),
+    concluido: boolean('concluido').notNull().default(false),
+    observacoes: text('observacoes'),
+});
+
+export const sessao_serie = pgTable('sessao_serie', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    sessao_exercicio_id: uuid('sessao_exercicio_id').notNull().references(() => sessao_exercicio.id, { onDelete: 'cascade' }),
+    numero_serie: integer('numero_serie').notNull(),
+    repeticoes_realizadas: integer('repeticoes_realizadas'),
+    carga_utilizada: decimal('carga_utilizada', { precision: 5, scale: 2 }),
+    status: statusSerieEnum('status').notNull().default('PENDENTE'),
+    observacoes: text('observacoes'),
+});
+
+// Relações de Sessão
+
+// 12. Sessão de Treino
+export const sessaoTreinoRelations = relations(sessao_treino, ({ one, many }) => ({
+    aluno: one(aluno, {
+        fields: [sessao_treino.aluno_id],
+        references: [aluno.id],
+    }),
+    treino: one(treino, {
+        fields: [sessao_treino.treino_id],
+        references: [treino.id],
+    }),
+    exercicios: many(sessao_exercicio),
+}));
+
+// 13. Sessão Exercício
+export const sessaoExercicioRelations = relations(sessao_exercicio, ({ one, many }) => ({
+    sessaoTreino: one(sessao_treino, {
+        fields: [sessao_exercicio.sessao_treino_id],
+        references: [sessao_treino.id],
+    }),
+    treinoExercicio: one(treino_exercicio, {
+        fields: [sessao_exercicio.treino_exercicio_id],
+        references: [treino_exercicio.id],
+    }),
+    series: many(sessao_serie),
+}));
+
+// 14. Sessão Série
+export const sessaoSerieRelations = relations(sessao_serie, ({ one }) => ({
+    sessaoExercicio: one(sessao_exercicio, {
+        fields: [sessao_serie.sessao_exercicio_id],
+        references: [sessao_exercicio.id],
+    }),
+}));
