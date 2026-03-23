@@ -327,7 +327,8 @@ class TreinoRepository {
             const filterBuilder = new TreinoFilterBuilder()
                 .comNomeTreino(filtros.nome)
                 .comUsuarioId(filtros.usuario_id)
-                .comTreinadorId(filtros.treinador_id);
+                .comTreinadorId(filtros.treinador_id)
+                .comDiasSemana(filtros.dias_semana);
 
             if (!filtros.incluir_inativos) {
                 filterBuilder.apenasTreinosAtivos();
@@ -364,9 +365,13 @@ class TreinoRepository {
                     .limit(filtros.limite)
                     .offset(offset)
                     .orderBy(
-                        filtros.ordem_data_criacao === 'asc'
-                            ? asc(treino.data_criacao)
-                            : desc(treino.data_criacao),
+                        filtros.ordem_treino === 'asc'
+                            ? sql`${treino.ordem} ASC NULLS LAST`
+                            : filtros.ordem_treino === 'desc'
+                                ? sql`${treino.ordem} DESC NULLS LAST`
+                                : filtros.ordem_data_criacao === 'asc'
+                                    ? asc(treino.data_criacao)
+                                    : desc(treino.data_criacao),
                     ),
                 this.db
                     .select({ count: sql<number>`count(*)` })
@@ -407,7 +412,7 @@ class TreinoRepository {
 
     async update(
         id: string,
-        treinoData: Partial<Pick<type_treino, 'nome' | 'descricao' | 'treinador_id'>>,
+        treinoData: Partial<Pick<type_treino, 'nome' | 'descricao' | 'treinador_id' | 'dias_semana' | 'ordem'>>,
     ): Promise<type_treino | null> {
         try {
             const [treinoAtualizado] = await this.db

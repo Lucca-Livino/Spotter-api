@@ -39,6 +39,8 @@ const exercicioItemSchema = z.object({
         .openapi({ description: 'Ordem de execução no treino', example: 1 }),
 }).strict();
 
+const diasSemanaEnum = z.enum(['SEGUNDA', 'TERCA', 'QUARTA', 'QUINTA', 'SEXTA', 'SABADO', 'DOMINGO']);
+
 const treinoSchema = z.object({
     nome: z
         .string()
@@ -56,6 +58,18 @@ const treinoSchema = z.object({
         .uuid({ message: 'O ID do aluno deve ser um UUID válido' })
         .optional()
         .openapi({ description: 'UUID do aluno dono do treino', example: '550e8400-e29b-41d4-a716-446655440000' }),
+    dias_semana: z
+        .array(diasSemanaEnum)
+        .nullable()
+        .optional()
+        .openapi({ description: 'Dias da semana em que o treino é executado', example: ['SEGUNDA', 'QUINTA'] }),
+    ordem: z
+        .number()
+        .int({ message: 'ordem deve ser inteiro' })
+        .min(1, { message: 'ordem deve ser maior que 0' })
+        .nullable()
+        .optional()
+        .openapi({ description: 'Posição do treino na rotina do aluno', example: 1 }),
     exercicios: z
         .array(exercicioItemSchema)
         .optional()
@@ -106,6 +120,18 @@ const treinoUpdateSchema = z.object({
             description: 'UUID do novo treinador responsável. Envie null para desvincular o treinador atual.',
             example: '550e8400-e29b-41d4-a716-446655440002',
         }),
+    dias_semana: z
+        .array(diasSemanaEnum)
+        .nullable()
+        .optional()
+        .openapi({ description: 'Dias da semana em que o treino é executado. Envie null para limpar.', example: ['SEGUNDA', 'QUINTA'] }),
+    ordem: z
+        .number()
+        .int({ message: 'ordem deve ser inteiro' })
+        .min(1, { message: 'ordem deve ser maior que 0' })
+        .nullable()
+        .optional()
+        .openapi({ description: 'Posição do treino na rotina do aluno. Envie null para limpar.', example: 1 }),
     adicionar_exercicios: z
         .array(exercicioItemSchema)
         .min(1, { message: 'adicionar_exercicios deve conter ao menos 1 item' })
@@ -230,10 +256,12 @@ const treinoUpdateSchema = z.object({
         dados.nome !== undefined ||
         dados.descricao !== undefined ||
         dados.treinador_id !== undefined ||
+        dados.dias_semana !== undefined ||
+        dados.ordem !== undefined ||
         (dados.adicionar_exercicios?.length ?? 0) > 0 ||
         (dados.atualizar_exercicios?.length ?? 0) > 0 ||
         (dados.remover_exercicios_ids?.length ?? 0) > 0,
-    { message: 'Informe ao menos uma alteração: nome, descricao, treinador_id, adicionar_exercicios, atualizar_exercicios ou remover_exercicios_ids' },
+    { message: 'Informe ao menos uma alteração: nome, descricao, treinador_id, dias_semana, ordem, adicionar_exercicios, atualizar_exercicios ou remover_exercicios_ids' },
 ).openapi('TreinoUpdateInput');
 
 const treinoIdSchema = z
@@ -390,6 +418,20 @@ const treinoListQuerySchema = z.object({
     apenas_ativos: treinoDetalheQuerySchema.shape.apenas_ativos,
     incluir_musculos: treinoDetalheQuerySchema.shape.incluir_musculos,
     incluir_aparelhos: treinoDetalheQuerySchema.shape.incluir_aparelhos,
+    dias_semana: z.preprocess(
+        (val) => (typeof val === 'string' && val.trim() ? val.split(',').map((v) => v.trim()) : undefined),
+        z.array(diasSemanaEnum).optional(),
+    ).openapi({
+        description: 'Filtra treinos que contenham ao menos um dos dias informados (overlap). Comma-separated.',
+        example: 'SEGUNDA,QUARTA',
+    }),
+    ordem_treino: z
+        .enum(['asc', 'desc'])
+        .optional()
+        .openapi({
+            description: 'Ordena treinos por ordem ASC/DESC (NULLs por último). Quando informado, substitui a ordenação por data_criacao.',
+            example: 'asc',
+        }),
 }).strict().openapi('TreinoListQuery');
 
 type TreinoListQuery = z.infer<typeof treinoListQuerySchema>;

@@ -6,6 +6,7 @@ export const sexoEnum = pgEnum('sexo', ['M', 'F']);
 export const tipoAtivacaoEnum = pgEnum('tipo_ativacao', ['PRIMARIO', 'SECUNDARIO']);
 export const turnoEnum = pgEnum('turno', ['MANHA', 'TARDE', 'NOITE']);
 export const grupoMuscularEnum = pgEnum('grupo_muscular', ['PEITO', 'COSTAS', 'PERNAS', 'BRAÇOS', 'OMBROS', 'ABDOMEN']);
+export const diaSemanaEnum = pgEnum('dia_semana', ['SEGUNDA', 'TERCA', 'QUARTA', 'QUINTA', 'SEXTA', 'SABADO', 'DOMINGO']);
 
 // Tabelas do BetterAuth (autenticação)
 export const user = pgTable('user', {
@@ -186,6 +187,8 @@ export const treino = pgTable('treino', {
     deletado_em: timestamp('deletado_em'),
     usuario_id: uuid('usuario_id').notNull().references(() => aluno.id),
     treinador_id: uuid('treinador_id').references(() => treinador.id),
+    dias_semana: diaSemanaEnum('dias_semana').array(),
+    ordem: integer('ordem'),
 });
 
 export const treino_exercicio = pgTable('treino_exercicio', {

@@ -109,6 +109,8 @@ class TreinoService {
                 descricao: dadosValidados.descricao ?? null,
                 usuario_id: alunoIdDestino,
                 treinador_id: perfil.treinadorId,
+                dias_semana: dadosValidados.dias_semana ?? null,
+                ordem: dadosValidados.ordem ?? null,
             };
 
             const exerciciosIniciais = (dadosValidados.exercicios ?? []) as TreinoExercicioPatchInput[];
@@ -346,9 +348,11 @@ class TreinoService {
             }
         }
 
-        const payloadAtualizacao: Partial<Pick<type_treino, 'nome' | 'descricao' | 'treinador_id'>> = {};
+        const payloadAtualizacao: Partial<Pick<type_treino, 'nome' | 'descricao' | 'treinador_id' | 'dias_semana' | 'ordem'>> = {};
         if (dadosValidados.nome !== undefined) payloadAtualizacao.nome = dadosValidados.nome;
         if (dadosValidados.descricao !== undefined) payloadAtualizacao.descricao = dadosValidados.descricao;
+        if (dadosValidados.dias_semana !== undefined) payloadAtualizacao.dias_semana = dadosValidados.dias_semana;
+        if (dadosValidados.ordem !== undefined) payloadAtualizacao.ordem = dadosValidados.ordem;
 
         if (dadosValidados.treinador_id !== undefined) {
             if (dadosValidados.treinador_id !== null) {

@@ -1,9 +1,10 @@
-import { and, eq, ilike, inArray, isNull, SQL } from 'drizzle-orm';
+import { and, arrayOverlaps, eq, ilike, inArray, isNull, SQL } from 'drizzle-orm';
 import { DataBase } from '../../config/DbConnect';
 import { treino, treino_exercicio, exercicio, exercicio_musculo, musculo } from '../../config/db/schema';
 
 type GrupoMuscular = 'PEITO' | 'COSTAS' | 'PERNAS' | 'BRAÇOS' | 'OMBROS' | 'ABDOMEN';
 type TipoAtivacao = 'PRIMARIO' | 'SECUNDARIO';
+type DiaSemana = 'SEGUNDA' | 'TERCA' | 'QUARTA' | 'QUINTA' | 'SEXTA' | 'SABADO' | 'DOMINGO';
 
 class TreinoFilterBuilder {
     private treinoCondicoes: SQL[] = [];
@@ -42,6 +43,13 @@ class TreinoFilterBuilder {
 
     apenasTreinosAtivos() {
         this.treinoCondicoes.push(isNull(treino.deletado_em));
+        return this;
+    }
+
+    comDiasSemana(dias?: string[]) {
+        if (dias && dias.length > 0) {
+            this.treinoCondicoes.push(arrayOverlaps(treino.dias_semana, dias as DiaSemana[]));
+        }
         return this;
     }
 

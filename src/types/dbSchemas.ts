@@ -1,4 +1,4 @@
-import { enum_sexo, enum_turnos } from "./enum";
+import { enum_dia_semana, enum_sexo, enum_turnos } from "./enum";
 
 export type type_academia = {
     id?: string;
@@ -93,6 +93,8 @@ export type type_treino = {
     deletado_em?: Date | null;
     usuario_id: string;
     treinador_id: string | null;
+    dias_semana?: enum_dia_semana[] | null;
+    ordem?: number | null;
 }
 
 export type type_treino_exercicio = {

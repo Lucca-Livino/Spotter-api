@@ -18,6 +18,11 @@ const TreinoResponse = z.object({
     deletado_em: z.coerce.date().nullable().openapi({ example: null }),
     usuario_id: z.string().uuid().openapi({ example: '550e8400-e29b-41d4-a716-446655440000' }),
     treinador_id: z.string().uuid().nullable().openapi({ example: '550e8400-e29b-41d4-a716-446655440002' }),
+    dias_semana: z
+        .array(z.enum(['SEGUNDA', 'TERCA', 'QUARTA', 'QUINTA', 'SEXTA', 'SABADO', 'DOMINGO']))
+        .nullable()
+        .openapi({ example: ['SEGUNDA', 'QUARTA'] }),
+    ordem: z.number().nullable().openapi({ example: 1 }),
 }).openapi('Treino');
 
 const TreinoIdParam = z.object({
