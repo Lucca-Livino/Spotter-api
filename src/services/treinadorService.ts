@@ -22,6 +22,26 @@ class TreinadorService {
 
 		return treinadores;
 	}
+
+	async getTreinadorById(id: string): Promise<type_treinador> {
+		console.log(
+			`[TreinadorService] [getTreinadorById] Buscando treinador com ID: ${id}`,
+		);
+
+		treinadorIdSchema.parse(id);
+
+		const treinador = await this.repository.findById(id);
+
+		if (!treinador) {
+			throw new Error(`Treinador com ID ${id} não encontrado`);
+		}
+
+		console.log(
+			"[TreinadorService] [getTreinadorById] Treinador encontrado com sucesso",
+		);
+
+		return treinador;
+	}
 }
 
 export default TreinadorService;
