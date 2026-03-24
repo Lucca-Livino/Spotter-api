@@ -31,7 +31,33 @@ class TreinadorController {
 		}
 	};
 
+	getTreinadorById = async (req: Request, res: Response) => {
+		console.log("[TreinadorController] [getTreinadorById] Requisição recebida");
+		const id = this.getRequestIdParam(req);
 
+		if (!id) {
+			return CommonResponse.error(
+				res,
+				HttpStatusCode.BAD_REQUEST.code,
+				null,
+				"id",
+				[],
+				"O id é obrigatório",
+			);
+		}
+
+		try {
+			const treinador = await this.service.getTreinadorById(id);
+			return CommonResponse.success(
+				res,
+				treinador,
+				HttpStatusCode.OK.code,
+				"Treinador encontrado com sucesso",
+			);
+		} catch (error) {
+			return this.handleError(res, error, "getTreinadorById");
+		}
+	};
 
 	private handleError(res: Response, error: unknown, context: string) {
 		if (error instanceof ZodError) {
@@ -93,7 +119,14 @@ class TreinadorController {
 		);
 	}
 
+	private getRequestIdParam(req: Request): string | null {
+		const { id } = req.params;
+		if (Array.isArray(id)) {
+			return id[0] ?? null;
+		}
 
+		return id ?? null;
+	}
 }
 
 export default TreinadorController;
