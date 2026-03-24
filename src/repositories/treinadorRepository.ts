@@ -21,7 +21,23 @@ class TreinadorRepository {
 		}
 	}
 
+	async findById(id: string): Promise<type_treinador | null> {
+		try {
+			const resultado = await this.db
+				.select()
+				.from(treinador)
+				.where(eq(treinador.id, id))
+				.limit(1);
 
+			if (resultado.length === 0) {
+				return null;
+			}
+
+			return resultado[0] as unknown as type_treinador;
+		} catch (error) {
+			throw parseDatabaseError(error, "TreinadorRepository.findById");
+		}
+	}
 }
 
 export default TreinadorRepository;
