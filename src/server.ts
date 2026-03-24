@@ -11,6 +11,7 @@ import { openApiDocument } from "./docs/swagger";
 // importação das rotas
 import academiaRoutes from './routes/academiaRoutes';
 import alunoRoutes from './routes/alunoRoutes';
+import treinadorRoutes from './routes/treinadorRoutes';
 import exercicioRoutes from './routes/exercicioRoutes';
 import treinoRoutes from './routes/treinoRoutes';
 import authRoutes from "./routes/authRoutes";
@@ -71,6 +72,7 @@ app.get("/", (req, res) => {
 // rotas
 app.use('/api', academiaRoutes);
 app.use('/api', alunoRoutes);
+app.use('/api', treinadorRoutes);
 app.use('/api', exercicioRoutes);
 app.use('/api', treinoRoutes);
 app.use('/api', authRoutes);
