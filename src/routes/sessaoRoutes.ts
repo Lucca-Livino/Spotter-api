@@ -17,6 +17,12 @@ router.get('/sessoes/:id', authMiddleware, sessaoController.getSessaoById);
 // GET /sessoes/:id/resumo — campos calculados
 router.get('/sessoes/:id/resumo', authMiddleware, sessaoController.getSessaoResumo);
 
+// POST /sessoes/:id/finalizar — finaliza a sessão
+router.post('/sessoes/:id/finalizar', authMiddleware, sessaoController.finalizarSessao);
+
+// POST /sessoes/:id/cancelar — cancela a sessão
+router.post('/sessoes/:id/cancelar', authMiddleware, sessaoController.cancelarSessao);
+
 // PATCH /sessoes/:id — atualiza observações da sessão
 router.patch('/sessoes/:id', authMiddleware, sessaoController.updateSessao);
 
