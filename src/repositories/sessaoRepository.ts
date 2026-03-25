@@ -394,6 +394,64 @@ class SessaoRepository {
         }
     }
 
+    async findSessaoStatus(id: string): Promise<{ status: string; aluno_id: string } | null> {
+        try {
+            const rows = await this.db
+                .select({ status: sessao_treino.status, aluno_id: sessao_treino.aluno_id })
+                .from(sessao_treino)
+                .where(eq(sessao_treino.id, id))
+                .limit(1);
+
+            return rows[0] ?? null;
+        } catch (error) {
+            throw parseDatabaseError(error, 'SessaoRepository.findSessaoStatus');
+        }
+    }
+
+    async updateObservacoes(id: string, observacoes: string): Promise<void> {
+        try {
+            await this.db
+                .update(sessao_treino)
+                .set({ observacoes })
+                .where(eq(sessao_treino.id, id));
+        } catch (error) {
+            throw parseDatabaseError(error, 'SessaoRepository.updateObservacoes');
+        }
+    }
+
+    async updateSessaoExercicio(
+        sessaoExercicioId: string,
+        dados: { concluido: boolean; observacoes?: string | null },
+    ): Promise<void> {
+        try {
+            await this.db
+                .update(sessao_exercicio)
+                .set(dados)
+                .where(eq(sessao_exercicio.id, sessaoExercicioId));
+        } catch (error) {
+            throw parseDatabaseError(error, 'SessaoRepository.updateSessaoExercicio');
+        }
+    }
+
+    async findSessaoExercicio(sessaoId: string, exercicioId: string): Promise<{ id: string; sessao_treino_id: string } | null> {
+        try {
+            const rows = await this.db
+                .select({ id: sessao_exercicio.id, sessao_treino_id: sessao_exercicio.sessao_treino_id })
+                .from(sessao_exercicio)
+                .where(
+                    and(
+                        eq(sessao_exercicio.sessao_treino_id, sessaoId),
+                        eq(sessao_exercicio.id, exercicioId),
+                    ),
+                )
+                .limit(1);
+
+            return rows[0] ?? null;
+        } catch (error) {
+            throw parseDatabaseError(error, 'SessaoRepository.findSessaoExercicio');
+        }
+    }
+
     async buscarAlunosDoTreinador(treinadorId: string): Promise<string[]> {
         try {
             const rows = await this.db

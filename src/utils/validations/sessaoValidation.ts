@@ -60,5 +60,29 @@ const sessaoListQuerySchema = z.object({
 
 type SessaoListQuery = z.infer<typeof sessaoListQuerySchema>;
 
-export { sessaoSchema, sessaoIdSchema, sessaoListQuerySchema };
+const sessaoUpdateSchema = z.object({
+    observacoes: z
+        .string()
+        .max(1000, { message: 'Observações devem ter no máximo 1000 caracteres' })
+        .openapi({ description: "Observações gerais da sessão", example: "Treino pesado, senti dor no ombro direito" }),
+}).strict().openapi("SessaoUpdate");
+
+const sessaoExercicioUpdateSchema = z.object({
+    concluido: z
+        .boolean()
+        .openapi({ description: "Marca o exercício como concluído ou não concluído", example: true }),
+    observacoes: z
+        .string()
+        .max(1000, { message: 'Observações devem ter no máximo 1000 caracteres' })
+        .nullable()
+        .optional()
+        .openapi({ description: "Observações sobre o exercício", example: "Consegui manter a forma na última série" }),
+}).strict().openapi("SessaoExercicioUpdate");
+
+const exercicioIdSchema = z
+    .string()
+    .uuid('ID do exercício inválido, deve ser um UUID válido')
+    .openapi({ description: "UUID do exercício da sessão", example: "550e8400-e29b-41d4-a716-446655440005" });
+
+export { sessaoSchema, sessaoIdSchema, sessaoListQuerySchema, sessaoUpdateSchema, sessaoExercicioUpdateSchema, exercicioIdSchema };
 export type { SessaoListQuery };

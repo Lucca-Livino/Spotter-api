@@ -27,7 +27,7 @@ exercicioRegistry.registerPath({
     method: "post",
     path: "/exercicios",
     summary: "Criar exercício",
-    description: "Cria um novo exercício. Admin pode criar exercícios globais (sem `aluno_id`). Aluno pode criar exercícios pessoais apenas para si mesmo. Treinador pode criar exercícios pessoais para qualquer aluno existente.",
+    description: "Cria um novo exercício. Admin pode criar exercícios globais (sem aluno_id). Aluno pode criar exercícios pessoais apenas para si mesmo. Treinador pode criar exercícios pessoais para qualquer aluno existente.",
     tags: ["Exercicio"],
     security: [{ BearerAuth: [] }],
     request: {
@@ -64,7 +64,7 @@ exercicioRegistry.registerPath({
     method: "get",
     path: "/exercicios",
     summary: "Listar exercícios",
-    description: "Lista exercícios com paginação e filtros. Escopo GLOBAL=apenas globais, PESSOAL=apenas pessoais do aluno, TODOS=ambos. Use `incluir_inativos=true` (somente admin) para incluir exercícios desativados. Use `incluir_musculos=false` para resposta mais leve.",
+    description: "Lista exercícios com paginação e filtros. Escopo GLOBAL=apenas globais, PESSOAL=apenas pessoais do aluno, TODOS=ambos. Use incluir_inativos=true (somente admin) para incluir exercícios desativados. Use incluir_musculos=false para resposta mais leve.",
     tags: ["Exercicio"],
     security: [{ BearerAuth: [] }],
     request: {
@@ -127,7 +127,7 @@ exercicioRegistry.registerPath({
     method: "patch",
     path: "/exercicios/{id}",
     summary: "Atualizar exercício",
-    description: "Atualiza parcialmente um exercício. Ao informar `musculos`, a lista completa de vínculos musculares é substituída — envie todos os músculos desejados, não apenas os novos. Exercícios globais: somente admin. Exercícios pessoais: dono (aluno), treinador ou admin.",
+    description: "Atualiza parcialmente um exercício. Ao informar musculos, a lista completa de vínculos musculares é substituída — envie todos os músculos desejados, não apenas os novos. Exercícios globais: somente admin. Exercícios pessoais: dono (aluno), treinador ou admin.",
     tags: ["Exercicio"],
     security: [{ BearerAuth: [] }],
     request: {
@@ -172,8 +172,8 @@ exercicioRegistry.registerPath({
 **Comportamento padrão:** Remove permanentemente o exercício se ele não estiver vinculado a nenhuma rotina de treino.
 
 **Quando o exercício está vinculado a rotinas:**
-- \`?soft=true\` — Desativa o exercício sem removê-lo (soft delete). As rotinas existentes são preservadas.
-- \`?force=true\` — Exclui permanentemente o exercício junto com todas as rotinas vinculadas. **Requer perfil admin.**
+- ?soft=true — Desativa o exercício sem removê-lo (soft delete). As rotinas existentes são preservadas.
+- ?force=true — Exclui permanentemente o exercício junto com todas as rotinas vinculadas. **Requer perfil admin.**
 
 Se nenhum parâmetro for informado e o exercício estiver vinculado, a requisição retornará erro 409.`,
     tags: ["Exercicio"],
@@ -182,11 +182,11 @@ Se nenhum parâmetro for informado e o exercício estiver vinculado, a requisiç
         params: idParam,
         query: z.object({
             soft: z.enum(["true", "false"]).optional().openapi({
-                description: "Se `true`, desativa o exercício sem remover do banco (soft delete). As rotinas vinculadas são preservadas.",
+                description: "Se true, desativa o exercício sem remover do banco (soft delete). As rotinas vinculadas são preservadas.",
                 example: "true",
             }),
             force: z.enum(["true", "false"]).optional().openapi({
-                description: "Se `true`, exclui permanentemente o exercício e todas as rotinas vinculadas. **Requer perfil admin.**",
+                description: "Se true, exclui permanentemente o exercício e todas as rotinas vinculadas. **Requer perfil admin.**",
                 example: "false",
             }),
         }),

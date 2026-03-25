@@ -113,7 +113,7 @@ treinoRegistry.registerPath({
     method: 'get',
     path: '/treinos/{id}',
     summary: 'Buscar treino por ID',
-    description: 'Retorna um treino com seus exercícios. Suporta filtros por nome/grupo muscular/tipo de ativação, ordenação e populates opcionais. Use `incluir_treino_inativo=true` para buscar treinos arquivados. Acesso permitido ao aluno dono, treinador vinculado ou admin.',
+    description: 'Retorna um treino com seus exercícios. Suporta filtros por nome/grupo muscular/tipo de ativação, ordenação e populates opcionais. Use incluir_treino_inativo=true para buscar treinos arquivados. Acesso permitido ao aluno dono, treinador vinculado ou admin.',
     tags: ['Treino'],
     security: [{ BearerAuth: [] }],
     request: {
@@ -147,7 +147,7 @@ treinoRegistry.registerPath({
     method: 'get',
     path: '/treinos',
     summary: 'Listar treinos',
-    description: 'Lista treinos com paginação e filtros. Use `incluir_inativos=true` para incluir treinos arquivados (soft-deleted). Filtros de exercício restringem os treinos retornados aos que possuem match. Aluno vê apenas seus treinos; treinador vê apenas os seus; admin vê todos.',
+    description: 'Lista treinos com paginação e filtros. Use incluir_inativos=true para incluir treinos arquivados (soft-deleted). Filtros de exercício restringem os treinos retornados aos que possuem match. Aluno vê apenas seus treinos; treinador vê apenas os seus; admin vê todos.',
     tags: ['Treino'],
     security: [{ BearerAuth: [] }],
     request: {
@@ -179,7 +179,7 @@ treinoRegistry.registerPath({
     method: 'patch',
     path: '/treinos/{id}',
     summary: 'Atualizar treino',
-    description: 'Atualiza parcialmente um treino e sua composição de exercícios. Permite: alterar nome/descricao, associar/desvincular treinador via `treinador_id` (null para desvincular), adicionar novos exercícios, atualizar dados de exercícios existentes (séries, carga, repetições etc.) e remover exercícios por ID.',
+    description: 'Atualiza parcialmente um treino e sua composição de exercícios. Permite: alterar nome/descricao, associar/desvincular treinador via treinador_id (null para desvincular), adicionar novos exercícios, atualizar dados de exercícios existentes (séries, carga, repetições etc.) e remover exercícios por ID.',
     tags: ['Treino'],
     security: [{ BearerAuth: [] }],
     request: {
