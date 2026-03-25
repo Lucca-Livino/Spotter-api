@@ -394,6 +394,17 @@ class SessaoRepository {
         }
     }
 
+    async updateStatusFim(id: string, status: 'CONCLUIDA' | 'CANCELADA'): Promise<void> {
+        try {
+            await this.db
+                .update(sessao_treino)
+                .set({ status, fim: new Date() })
+                .where(eq(sessao_treino.id, id));
+        } catch (error) {
+            throw parseDatabaseError(error, 'SessaoRepository.updateStatusFim');
+        }
+    }
+
     async findSessaoStatus(id: string): Promise<{ status: string; aluno_id: string } | null> {
         try {
             const rows = await this.db

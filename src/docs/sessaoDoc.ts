@@ -372,3 +372,95 @@ sessaoRegistry.registerPath({
         422: { description: "Erro de validação" },
     },
 });
+
+const SessaoFinalizadaResponse = SessaoResponse.extend({
+    resumo: z.object({
+        duracao_minutos: z.number().nullable().openapi({ example: 65 }),
+        exercicios_concluidos: z.number().openapi({ example: 4 }),
+        exercicios_total: z.number().openapi({ example: 5 }),
+        series_concluidas: z.number().openapi({ example: 16 }),
+        series_total: z.number().openapi({ example: 20 }),
+        volume_total_kg: z.number().openapi({ example: 4800.5 }),
+        taxa_conclusao: z.number().openapi({ example: 80 }),
+    }),
+}).openapi("SessaoFinalizada");
+
+// POST /sessoes/:id/finalizar
+sessaoRegistry.registerPath({
+    method: "post",
+    path: "/sessoes/{id}/finalizar",
+    summary: "Finalizar sessão de treino",
+    description: `Finaliza a sessão, definindo status CONCLUIDA e registrando o horário de fim.
+
+Retorna a sessão atualizada com o resumo calculado (duração, volume, taxa de conclusão).
+
+**Regras:**
+- Só permitido se a sessão estiver EM_ANDAMENTO
+- Retorna 422 se a sessão já estiver finalizada ou cancelada`,
+    tags: ["Sessao"],
+    security: [{ BearerAuth: [] }],
+    request: {
+        params: z.object({
+            id: z.string().uuid().openapi({ example: "550e8400-e29b-41d4-a716-446655440000" }),
+        }),
+    },
+    responses: {
+        200: {
+            description: "Sessão finalizada com sucesso",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        error: z.boolean().openapi({ example: false }),
+                        code: z.number().openapi({ example: 200 }),
+                        message: z.string().nullable().openapi({ example: null }),
+                        data: SessaoFinalizadaResponse,
+                        errors: z.array(z.any()),
+                    }),
+                },
+            },
+        },
+        401: { description: "Não autorizado" },
+        403: { description: "Sem permissão para finalizar esta sessão" },
+        404: { description: "Sessão não encontrada" },
+        422: { description: "Sessão já finalizada ou cancelada / ID inválido" },
+    },
+});
+
+// POST /sessoes/:id/cancelar
+sessaoRegistry.registerPath({
+    method: "post",
+    path: "/sessoes/{id}/cancelar",
+    summary: "Cancelar sessão de treino",
+    description: `Cancela a sessão, definindo status CANCELADA e registrando o horário de fim.
+
+**Regras:**
+- Só permitido se a sessão estiver EM_ANDAMENTO
+- Retorna 422 se a sessão já estiver finalizada ou cancelada`,
+    tags: ["Sessao"],
+    security: [{ BearerAuth: [] }],
+    request: {
+        params: z.object({
+            id: z.string().uuid().openapi({ example: "550e8400-e29b-41d4-a716-446655440000" }),
+        }),
+    },
+    responses: {
+        200: {
+            description: "Sessão cancelada com sucesso",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        error: z.boolean().openapi({ example: false }),
+                        code: z.number().openapi({ example: 200 }),
+                        message: z.string().nullable().openapi({ example: null }),
+                        data: SessaoResponse,
+                        errors: z.array(z.any()),
+                    }),
+                },
+            },
+        },
+        401: { description: "Não autorizado" },
+        403: { description: "Sem permissão para cancelar esta sessão" },
+        404: { description: "Sessão não encontrada" },
+        422: { description: "Sessão já finalizada ou cancelada / ID inválido" },
+    },
+});

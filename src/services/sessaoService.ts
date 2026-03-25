@@ -226,6 +226,75 @@ class SessaoService {
         return await this.repository.findById(id) as SessaoComDetalhe;
     }
 
+    private async _verificarAcessoSessao(userId: string, sessaoAlunoId: string): Promise<void> {
+        const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
+
+        if (!perfil.isAdmin) {
+            if (perfil.isAluno && perfil.alunoId !== sessaoAlunoId) {
+                throw new Error('FORBIDDEN: você não tem permissão para acessar esta sessão');
+            }
+            if (perfil.isTreinador && !perfil.isAluno) {
+                const alunosDoTreinador = await this.repository.buscarAlunosDoTreinador(perfil.treinadorId!);
+                if (!alunosDoTreinador.includes(sessaoAlunoId)) {
+                    throw new Error('FORBIDDEN: você não tem permissão para acessar esta sessão');
+                }
+            }
+        }
+    }
+
+    async finalizarSessao(idParam: string, userId: string): Promise<SessaoComDetalhe & {
+        resumo: {
+            duracao_minutos: number | null;
+            exercicios_concluidos: number;
+            exercicios_total: number;
+            series_concluidas: number;
+            series_total: number;
+            volume_total_kg: number;
+            taxa_conclusao: number;
+        };
+    }> {
+        const id = sessaoIdSchema.parse(idParam);
+
+        const sessaoStatus = await this.repository.findSessaoStatus(id);
+        if (!sessaoStatus) {
+            throw new Error('Sessão não encontrada');
+        }
+
+        if (sessaoStatus.status !== 'EM_ANDAMENTO') {
+            throw new Error('UNPROCESSABLE: a sessão já foi finalizada ou cancelada');
+        }
+
+        await this._verificarAcessoSessao(userId, sessaoStatus.aluno_id);
+
+        await this.repository.updateStatusFim(id, 'CONCLUIDA');
+
+        const [sessao, resumo] = await Promise.all([
+            this.repository.findById(id) as Promise<SessaoComDetalhe>,
+            this.repository.getSessaoResumo(id),
+        ]);
+
+        return { ...sessao, resumo: resumo! };
+    }
+
+    async cancelarSessao(idParam: string, userId: string): Promise<SessaoComDetalhe> {
+        const id = sessaoIdSchema.parse(idParam);
+
+        const sessaoStatus = await this.repository.findSessaoStatus(id);
+        if (!sessaoStatus) {
+            throw new Error('Sessão não encontrada');
+        }
+
+        if (sessaoStatus.status !== 'EM_ANDAMENTO') {
+            throw new Error('UNPROCESSABLE: a sessão já foi finalizada ou cancelada');
+        }
+
+        await this._verificarAcessoSessao(userId, sessaoStatus.aluno_id);
+
+        await this.repository.updateStatusFim(id, 'CANCELADA');
+
+        return await this.repository.findById(id) as SessaoComDetalhe;
+    }
+
     async getSessaoResumo(idParam: string, userId: string): Promise<{
         duracao_minutos: number | null;
         exercicios_concluidos: number;
