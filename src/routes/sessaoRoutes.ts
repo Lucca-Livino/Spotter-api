@@ -17,4 +17,10 @@ router.get('/sessoes/:id', authMiddleware, sessaoController.getSessaoById);
 // GET /sessoes/:id/resumo — campos calculados
 router.get('/sessoes/:id/resumo', authMiddleware, sessaoController.getSessaoResumo);
 
+// PATCH /sessoes/:id — atualiza observações da sessão
+router.patch('/sessoes/:id', authMiddleware, sessaoController.updateSessao);
+
+// PATCH /sessoes/:id/exercicios/:exercicioId — atualiza exercício da sessão
+router.patch('/sessoes/:id/exercicios/:exercicioId', authMiddleware, sessaoController.updateSessaoExercicio);
+
 export default router;

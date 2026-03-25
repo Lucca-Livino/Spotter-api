@@ -1,6 +1,6 @@
 import SessaoRepository, { SessaoComDetalhe } from '../repositories/sessaoRepository';
 import UsuarioRepository from '../repositories/usuarioRepository';
-import { sessaoSchema, sessaoIdSchema, sessaoListQuerySchema, SessaoListQuery } from '../utils/validations/sessaoValidation';
+import { sessaoSchema, sessaoIdSchema, sessaoListQuerySchema, SessaoListQuery, sessaoUpdateSchema, sessaoExercicioUpdateSchema, exercicioIdSchema } from '../utils/validations/sessaoValidation';
 import { ZodError } from 'zod';
 import { type_sessao_exercicio, type_sessao_serie, type_sessao_treino } from '../types/dbSchemas';
 
@@ -144,6 +144,86 @@ class SessaoService {
         }
 
         return this.repository.findEmAndamento(perfil.alunoId);
+    }
+
+    async updateSessao(idParam: string, body: any, userId: string): Promise<SessaoComDetalhe> {
+        const id = sessaoIdSchema.parse(idParam);
+        const dados = sessaoUpdateSchema.parse(body);
+
+        const sessaoStatus = await this.repository.findSessaoStatus(id);
+        if (!sessaoStatus) {
+            throw new Error('Sessão não encontrada');
+        }
+
+        if (sessaoStatus.status !== 'EM_ANDAMENTO') {
+            throw new Error('CONFLICT: apenas sessões em andamento podem ser atualizadas');
+        }
+
+        const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
+
+        if (!perfil.isAdmin) {
+            if (perfil.isAluno && perfil.alunoId !== sessaoStatus.aluno_id) {
+                throw new Error('FORBIDDEN: você não tem permissão para atualizar esta sessão');
+            }
+            if (perfil.isTreinador && !perfil.isAluno) {
+                const alunosDoTreinador = await this.repository.buscarAlunosDoTreinador(perfil.treinadorId!);
+                if (!alunosDoTreinador.includes(sessaoStatus.aluno_id)) {
+                    throw new Error('FORBIDDEN: você não tem permissão para atualizar esta sessão');
+                }
+            }
+        }
+
+        await this.repository.updateObservacoes(id, dados.observacoes);
+
+        return await this.repository.findById(id) as SessaoComDetalhe;
+    }
+
+    async updateSessaoExercicio(
+        idParam: string,
+        exercicioIdParam: string,
+        body: any,
+        userId: string,
+    ): Promise<SessaoComDetalhe> {
+        const id = sessaoIdSchema.parse(idParam);
+        const exercicioId = exercicioIdSchema.parse(exercicioIdParam);
+        const dados = sessaoExercicioUpdateSchema.parse(body);
+
+        const sessaoStatus = await this.repository.findSessaoStatus(id);
+        if (!sessaoStatus) {
+            throw new Error('Sessão não encontrada');
+        }
+
+        if (sessaoStatus.status !== 'EM_ANDAMENTO') {
+            throw new Error('CONFLICT: apenas sessões em andamento podem ser atualizadas');
+        }
+
+        const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
+
+        if (!perfil.isAdmin) {
+            if (perfil.isAluno && perfil.alunoId !== sessaoStatus.aluno_id) {
+                throw new Error('FORBIDDEN: você não tem permissão para atualizar esta sessão');
+            }
+            if (perfil.isTreinador && !perfil.isAluno) {
+                const alunosDoTreinador = await this.repository.buscarAlunosDoTreinador(perfil.treinadorId!);
+                if (!alunosDoTreinador.includes(sessaoStatus.aluno_id)) {
+                    throw new Error('FORBIDDEN: você não tem permissão para atualizar esta sessão');
+                }
+            }
+        }
+
+        const sessaoExercicio = await this.repository.findSessaoExercicio(id, exercicioId);
+        if (!sessaoExercicio) {
+            throw new Error('Exercício não encontrado nesta sessão');
+        }
+
+        const updateData: { concluido: boolean; observacoes?: string | null } = { concluido: dados.concluido };
+        if (dados.observacoes !== undefined) {
+            updateData.observacoes = dados.observacoes;
+        }
+
+        await this.repository.updateSessaoExercicio(exercicioId, updateData);
+
+        return await this.repository.findById(id) as SessaoComDetalhe;
     }
 
     async getSessaoResumo(idParam: string, userId: string): Promise<{
