@@ -1,6 +1,9 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
-import { treinadorIdSchema } from "../utils/validations/treinadorValidation";
+import {
+  treinadorCreateSchema,
+  treinadorIdSchema,
+} from "../utils/validations/treinadorValidation";
 
 export const treinadorRegistry = new OpenAPIRegistry();
 
@@ -95,5 +98,46 @@ treinadorRegistry.registerPath({
     401: { description: "Não autorizado" },
     404: { description: "Treinador não encontrado" },
     422: { description: "ID inválido" },
+  },
+});
+
+// POST /treinadores
+treinadorRegistry.registerPath({
+  method: "post",
+  path: "/treinadores",
+  summary: "Criar treinador",
+  description: "Cria um novo treinador.",
+  tags: ["Treinador"],
+  security: [{ BearerAuth: [] }],
+  request: {
+    body: {
+      required: true,
+      content: {
+        "application/json": { schema: treinadorCreateSchema },
+      },
+    },
+  },
+  responses: {
+    201: {
+      description: "Treinador criado com sucesso",
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.boolean().openapi({ example: false }),
+            code: z.number().openapi({ example: 201 }),
+            message: z
+              .string()
+              .nullable()
+              .openapi({ example: "Recurso criado com sucesso" }),
+            data: TreinadorResponse,
+            errors: z.array(z.any()),
+          }),
+        },
+      },
+    },
+    400: { description: "Dados obrigatórios ausentes" },
+    401: { description: "Não autorizado" },
+    409: { description: "Usuário autenticado já possui perfil de treinador" },
+    422: { description: "Erro de validação" },
   },
 });
