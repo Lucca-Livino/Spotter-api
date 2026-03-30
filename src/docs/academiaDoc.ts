@@ -1,6 +1,6 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
-import { academiaSchema, academiaUpdateSchema } from "../utils/validations/academiaValidation";
+import { academiaSchema, academiaUpdateSchema, academiaQuerySchema } from "../utils/validations/academiaValidation";
 
 export const academiaRegistry = new OpenAPIRegistry();
 
@@ -74,19 +74,33 @@ academiaRegistry.registerPath({
     method: "get",
     path: "/academia",
     summary: "Listar academias",
-    description: "Retorna todas as academias. Requer autenticação.",
+    description: "Retorna academias com paginação. Requer autenticação.",
     tags: ["Academia"],
     security: [{ BearerAuth: [] }],
+    request: { query: academiaQuerySchema },
     responses: {
         200: {
-            description: "Lista de academias",
+            description: "Lista paginada de academias",
             content: {
                 "application/json": {
-                    schema: z.array(AcademiaResponse),
+                    schema: z.object({
+                        error: z.boolean().openapi({ example: false }),
+                        code: z.number().openapi({ example: 200 }),
+                        message: z.string().nullable(),
+                        data: z.object({
+                            dados: z.array(AcademiaResponse),
+                            total: z.number().openapi({ example: 5 }),
+                            page: z.number().openapi({ example: 1 }),
+                            limite: z.number().openapi({ example: 10 }),
+                            totalPages: z.number().openapi({ example: 1 }),
+                        }),
+                        errors: z.array(z.any()),
+                    }),
                 },
             },
         },
         401: { description: "Não autorizado" },
+        422: { description: "Erro de validação nos query params" },
     },
 });
 

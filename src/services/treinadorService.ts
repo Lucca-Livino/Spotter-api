@@ -1,6 +1,6 @@
 import TreinadorRepository from "../repositories/treinadorRepository";
 import { type_treinador } from "../types/dbSchemas";
-import { treinadorIdSchema, treinadorSchema } from "../utils/validations/treinadorValidation";
+import { treinadorIdSchema, treinadorSchema, treinadorQuerySchema } from "../utils/validations/treinadorValidation";
 import { ZodError } from "zod";
 import { DatabaseError } from "../utils/errors/DatabaseError";
 import HttpStatusCode from "../utils/helpers/httpStatusCode";
@@ -12,18 +12,12 @@ class TreinadorService {
 		this.repository = new TreinadorRepository();
 	}
 
-	async getAllTreinadores(): Promise<type_treinador[]> {
-		console.log(
-			"[TreinadorService] [getAllTreinadores] Buscando todos os treinadores",
-		);
-
-		const treinadores = await this.repository.getAllTreinadores();
-
-		console.log(
-			`[TreinadorService] [getAllTreinadores] ${treinadores.length} treinador(es) encontrado(s)`,
-		);
-
-		return treinadores;
+	async getAllTreinadores(query: any) {
+		console.log("[TreinadorService] [getAllTreinadores] Buscando todos os treinadores");
+		const { page, limite } = treinadorQuerySchema.parse(query);
+		const resultado = await this.repository.getAllTreinadores(page, limite);
+		console.log(`[TreinadorService] [getAllTreinadores] ${resultado.total} treinador(es) encontrado(s)`);
+		return resultado;
 	}
 
 	async createTreinador(novoTreinador: type_treinador): Promise<type_treinador> {

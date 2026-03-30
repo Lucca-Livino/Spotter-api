@@ -80,4 +80,19 @@ const treinadorSchema = treinadorCreateBaseSchema
 	})
 	.openapi("TreinadorInput");
 
-export { treinadorIdSchema, treinadorSchema, treinadorCreateSchema };
+const treinadorQuerySchema = z.object({
+    page: z
+        .string()
+        .optional()
+        .transform((val) => (val ? parseInt(val, 10) : 1))
+        .refine((val) => Number.isInteger(val) && val > 0, { message: 'page deve ser maior que 0' })
+        .openapi({ description: "Número da página", example: "1" }),
+    limite: z
+        .string()
+        .optional()
+        .transform((val) => (val ? parseInt(val, 10) : 10))
+        .refine((val) => Number.isInteger(val) && val > 0 && val <= 100, { message: 'limite deve ser entre 1 e 100' })
+        .openapi({ description: "Limite de resultados por página (máx. 100)", example: "10" }),
+}).openapi("TreinadorQuery");
+
+export { treinadorIdSchema, treinadorSchema, treinadorCreateSchema, treinadorQuerySchema };

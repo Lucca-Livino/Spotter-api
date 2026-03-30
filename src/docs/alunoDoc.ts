@@ -1,6 +1,6 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
-import { alunoSchema, alunoUpdateSchema } from "../utils/validations/alunoValidation";
+import { alunoSchema, alunoUpdateSchema, alunoQuerySchema } from "../utils/validations/alunoValidation";
 
 export const alunoRegistry = new OpenAPIRegistry();
 
@@ -24,26 +24,33 @@ alunoRegistry.registerPath({
     method: "get",
     path: "/alunos",
     summary: "Listar alunos",
-    description: "Retorna todos os alunos cadastrados.",
+    description: "Retorna alunos com paginação.",
     tags: ["Aluno"],
+    security: [{ BearerAuth: [] }],
+    request: { query: alunoQuerySchema },
     responses: {
         200: {
-            description: "Lista de alunos",
+            description: "Lista paginada de alunos",
             content: {
                 "application/json": {
                     schema: z.object({
                         error: z.boolean().openapi({ example: false }),
                         code: z.number().openapi({ example: 200 }),
-                        message: z.string().nullable().openapi({ example: "2 aluno(s) encontrado(s)" }),
+                        message: z.string().nullable(),
                         data: z.object({
-                            total: z.number().openapi({ example: 2 }),
-                            alunos: z.array(AlunoResponse),
+                            dados: z.array(AlunoResponse),
+                            total: z.number().openapi({ example: 10 }),
+                            page: z.number().openapi({ example: 1 }),
+                            limite: z.number().openapi({ example: 10 }),
+                            totalPages: z.number().openapi({ example: 1 }),
                         }),
                         errors: z.array(z.any()),
                     }),
                 },
             },
         },
+        401: { description: "Não autorizado" },
+        422: { description: "Erro de validação nos query params" },
     },
 });
 

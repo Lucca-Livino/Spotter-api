@@ -17,16 +17,8 @@ class TreinadorController {
 		console.log("[TreinadorController] [getAllTreinadores] Requisição recebida");
 
 		try {
-			const treinadores = await this.service.getAllTreinadores();
-			return CommonResponse.success(
-				res,
-				{
-					total: treinadores.length,
-					treinadores,
-				},
-				HttpStatusCode.OK.code,
-				`${treinadores.length} treinador(es) encontrado(s)`,
-			);
+			const resultado = await this.service.getAllTreinadores(req.query);
+			return CommonResponse.success(res, resultado, HttpStatusCode.OK.code);
 		} catch (error) {
 			return this.handleError(res, error, "getAllTreinadores");
 		}
