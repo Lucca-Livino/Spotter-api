@@ -1,7 +1,7 @@
 import AlunosRepository from "../repositories/alunoRepository";
 import { type_aluno } from "../types/dbSchemas";
 import { type_physical_data } from "../types/userSchemas";
-import { alunoSchema, alunoUpdateSchema, alunoIdSchema } from "../utils/validations/alunoValidation";
+import { alunoSchema, alunoUpdateSchema, alunoIdSchema, alunoQuerySchema } from "../utils/validations/alunoValidation";
 import { ZodError } from "zod";
 
 class AlunoService {
@@ -31,15 +31,12 @@ class AlunoService {
     return Aluno;
   }
 
-  async getAllAlunos(): Promise<type_aluno[]> {
+  async getAllAlunos(query: any) {
     console.log("[AlunoService] [getAllAlunos] Buscando todos os alunos");
-
-    const Alunos = await this.repository.getAllAlunos();
-
-    console.log(
-      `[AlunoService] [getAllAlunos] ${Alunos.length} aluno(s) encontrado(s)`,
-    );
-    return Alunos;
+    const { page, limite } = alunoQuerySchema.parse(query);
+    const resultado = await this.repository.getAllAlunos(page, limite);
+    console.log(`[AlunoService] [getAllAlunos] ${resultado.total} aluno(s) encontrado(s)`);
+    return resultado;
   }
 
   async createAluno(novoAluno: type_aluno): Promise<type_aluno> {

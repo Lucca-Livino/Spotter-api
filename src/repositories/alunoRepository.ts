@@ -1,5 +1,5 @@
 import { DataBase } from "../config/DbConnect";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { aluno, user } from "../config/db/schema";
 import { type_aluno } from "../types/dbSchemas";
 import { parseDatabaseError } from "../utils/errors/DatabaseError";
@@ -34,11 +34,15 @@ class AlunoRepository {
     }
   }
 
-  async getAllAlunos(): Promise<type_aluno[]> {
+  async getAllAlunos(page: number, limite: number): Promise<{ dados: type_aluno[]; total: number; page: number; limite: number; totalPages: number }> {
     try {
-      const resultado = await this.db.select().from(aluno);
-
-      return resultado as unknown as type_aluno[];
+      const offset = (page - 1) * limite;
+      const [dados, countResult] = await Promise.all([
+        this.db.select().from(aluno).limit(limite).offset(offset),
+        this.db.select({ count: sql<number>`count(*)` }).from(aluno),
+      ]);
+      const total = Number(countResult[0].count);
+      return { dados: dados as unknown as type_aluno[], total, page, limite, totalPages: Math.ceil(total / limite) };
     } catch (error) {
       throw parseDatabaseError(error, "AlunoRepository.getAllAlunos");
     }

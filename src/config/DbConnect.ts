@@ -16,6 +16,7 @@ export class DbConnect {
     static async connect(): Promise<void> {
         try {
             const client = await pool.connect();
+            await client.query('CREATE EXTENSION IF NOT EXISTS unaccent;');
             client.release();
             console.log(chalk.yellowBright(`STATUS DO BANCO DE DADOS... \n${chalk.greenBright('Conectado com sucesso!')}`));
             console.log(chalk.blueBright(`BANCO DE DADOS RODANDO EM: \n${chalk.greenBright(DbURL)}`))

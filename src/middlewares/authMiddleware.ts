@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { auth } from "../utils/auth";
 import { fromNodeHeaders } from "better-auth/node";
+import CommonResponse from "../utils/helpers/commonResponse";
 
 // Middleware de autenticação via BetterAuth.
 // Verifica a sessão do usuário através do header Authorization: Bearer <token>
@@ -16,10 +17,7 @@ export async function authMiddleware(
         });
 
         if (!session) {
-            res.status(401).json({
-                success: false,
-                message: "Não autorizado. Faça login para continuar.",
-            });
+            CommonResponse.error(res, 401, null, null, [], "Não autorizado. Faça login para continuar.");
             return;
         }
 
@@ -29,10 +27,7 @@ export async function authMiddleware(
 
         next();
     } catch (error) {
-        res.status(401).json({
-            success: false,
-            message: "Token inválido ou sessão expirada.",
-        });
+        CommonResponse.error(res, 401, null, null, [], "Token inválido ou sessão expirada.");
         return;
     }
 }

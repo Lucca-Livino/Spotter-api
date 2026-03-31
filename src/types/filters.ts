@@ -1,5 +1,23 @@
 import { type_exercicio } from './dbSchemas';
 
+export interface FiltrosMusculo {
+    nome?: string;
+    grupo_muscular?: string;
+    ordem?: 'nome_asc' | 'nome_desc' | 'popularidade_desc';
+    incluir_contagem_grupo?: boolean;
+    page?: number;
+    limite?: number;
+}
+
+export interface ResultadoPaginadoMusculo {
+    dados: { id: string; nome: string; grupo_muscular: string }[];
+    total: number;
+    page: number;
+    limite: number;
+    totalPages: number;
+    contagem_por_grupo?: Record<string, number>;
+}
+
 export interface FiltrosExercicio {
     nome?: string;
     grupo_muscular?: string;

@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { DataBase } from "../config/DbConnect";
 import { aluno, treinador } from "../config/db/schema";
 import { eq } from "drizzle-orm";
+import CommonResponse from "../utils/helpers/commonResponse";
 
 // Deve ser usado APÓS o authMiddleware, que já popula req.user
 export async function adminMiddleware(req: Request, res: Response, next: NextFunction) {
@@ -9,10 +10,7 @@ export async function adminMiddleware(req: Request, res: Response, next: NextFun
         const userId = (req as any).user?.id;
 
         if (!userId) {
-            res.status(401).json({
-                success: false,
-                message: "Não autorizado. Faça login para continuar.",
-            });
+            CommonResponse.error(res, 401, null, null, [], "Não autorizado. Faça login para continuar.");
             return;
         }
 
@@ -37,14 +35,8 @@ export async function adminMiddleware(req: Request, res: Response, next: NextFun
             return;
         }
 
-        res.status(403).json({
-            success: false,
-            message: "Acesso negado. Permissão de administrador necessária.",
-        });
+        CommonResponse.error(res, 403, null, null, [], "Acesso negado. Permissão de administrador necessária.");
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: "Erro interno ao verificar permissões.",
-        });
+        CommonResponse.serverError(res, error, "Erro interno ao verificar permissões.");
     }
 }

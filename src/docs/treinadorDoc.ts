@@ -3,6 +3,7 @@ import { z } from "zod";
 import {
   treinadorCreateSchema,
   treinadorIdSchema,
+  treinadorQuerySchema,
 } from "../utils/validations/treinadorValidation";
 
 export const treinadorRegistry = new OpenAPIRegistry();
@@ -38,24 +39,25 @@ treinadorRegistry.registerPath({
   method: "get",
   path: "/treinadores",
   summary: "Listar treinadores",
-  description: "Retorna todos os treinadores cadastrados.",
+  description: "Retorna treinadores com paginação.",
   tags: ["Treinador"],
   security: [{ BearerAuth: [] }],
+  request: { query: treinadorQuerySchema },
   responses: {
     200: {
-      description: "Lista de treinadores",
+      description: "Lista paginada de treinadores",
       content: {
         "application/json": {
           schema: z.object({
             error: z.boolean().openapi({ example: false }),
             code: z.number().openapi({ example: 200 }),
-            message: z
-              .string()
-              .nullable()
-              .openapi({ example: "2 treinador(es) encontrado(s)" }),
+            message: z.string().nullable(),
             data: z.object({
-              total: z.number().openapi({ example: 2 }),
-              treinadores: z.array(TreinadorResponse),
+              dados: z.array(TreinadorResponse),
+              total: z.number().openapi({ example: 5 }),
+              page: z.number().openapi({ example: 1 }),
+              limite: z.number().openapi({ example: 10 }),
+              totalPages: z.number().openapi({ example: 1 }),
             }),
             errors: z.array(z.any()),
           }),
@@ -63,6 +65,7 @@ treinadorRegistry.registerPath({
       },
     },
     401: { description: "Não autorizado" },
+    422: { description: "Erro de validação nos query params" },
   },
 });
 

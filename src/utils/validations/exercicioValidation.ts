@@ -131,7 +131,7 @@ const exercicioQuerySchema = z.object({
             message: 'limite deve ser entre 1 e 100',
         })
         .openapi({ description: "Limite de resultados por página", example: "10" }),
-}).openapi("ExercicioQuery");
+}).strict().openapi("ExercicioQuery");
 
 const exercicioIdSchema = z
     .string()

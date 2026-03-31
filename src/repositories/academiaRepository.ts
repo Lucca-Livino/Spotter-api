@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { DataBase } from "../config/DbConnect";
 import { academia } from "../config/db/schema";
 import { type_academia } from "../types/dbSchemas"
@@ -19,12 +19,17 @@ class AcademiaRepository {
         }
     }
 
-    async getAllAcademias(): Promise<type_academia[]> {
+    async getAllAcademias(page: number, limite: number): Promise<{ dados: type_academia[]; total: number; page: number; limite: number; totalPages: number }> {
         try {
-            const resposta = await this.db.select().from(academia);
-            return resposta;
+            const offset = (page - 1) * limite;
+            const [dados, countResult] = await Promise.all([
+                this.db.select().from(academia).limit(limite).offset(offset),
+                this.db.select({ count: sql<number>`count(*)` }).from(academia),
+            ]);
+            const total = Number(countResult[0].count);
+            return { dados: dados as type_academia[], total, page, limite, totalPages: Math.ceil(total / limite) };
         } catch (error) {
-            throw new Error(`Erro ao buscar academias: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+            throw parseDatabaseError(error, 'AcademiaRepository.getAllAcademias');
         }
     }
 

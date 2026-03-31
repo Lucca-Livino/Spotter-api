@@ -1,5 +1,5 @@
 import { DataBase } from "../config/DbConnect";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { treinador } from "../config/db/schema";
 import { type_treinador } from "../types/dbSchemas";
 import { parseDatabaseError } from "../utils/errors/DatabaseError";
@@ -25,11 +25,15 @@ class TreinadorRepository {
 		}
 	}
 
-	async getAllTreinadores(): Promise<type_treinador[]> {
+	async getAllTreinadores(page: number, limite: number): Promise<{ dados: type_treinador[]; total: number; page: number; limite: number; totalPages: number }> {
 		try {
-			const resultado = await this.db.select().from(treinador);
-
-			return resultado as unknown as type_treinador[];
+			const offset = (page - 1) * limite;
+			const [dados, countResult] = await Promise.all([
+				this.db.select().from(treinador).limit(limite).offset(offset),
+				this.db.select({ count: sql<number>`count(*)` }).from(treinador),
+			]);
+			const total = Number(countResult[0].count);
+			return { dados: dados as unknown as type_treinador[], total, page, limite, totalPages: Math.ceil(total / limite) };
 		} catch (error) {
 			throw parseDatabaseError(error, "TreinadorRepository.getAllTreinadores");
 		}

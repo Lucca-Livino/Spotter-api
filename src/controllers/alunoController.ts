@@ -17,16 +17,8 @@ class AlunoController {
     console.log("[AlunoController] [getAllAlunos] Requisição recebida");
 
     try {
-      const Alunos = await this.service.getAllAlunos();
-      return CommonResponse.success(
-        res,
-        {
-          total: Alunos.length,
-          alunos: Alunos,
-        },
-        HttpStatusCode.OK.code,
-        `${Alunos.length} aluno(s) encontrado(s)`,
-      );
+      const resultado = await this.service.getAllAlunos(req.query);
+      return CommonResponse.success(res, resultado, HttpStatusCode.OK.code);
     } catch (error) {
       return this.handleError(res, error, "getAllAlunos");
     }

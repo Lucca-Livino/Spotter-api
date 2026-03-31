@@ -81,13 +81,17 @@ class AcademiaController {
 
   getAllAcademia = async (req: Request, res: Response) => {
     try {
-      const resposta = await this.service.getAllAcademias();
-      res.status(200).json(resposta);
+      const resposta = await this.service.getAllAcademias(req.query);
+      return CommonResponse.success(res, resposta, HttpStatusCode.OK.code);
     } catch (error) {
-      if (error instanceof Error) {
-        return CommonResponse.error(res, 400, null, null, []);
+      if (error instanceof ZodError) {
+        return CommonResponse.error(res, HttpStatusCode.UNPROCESSABLE_ENTITY.code, null, null, error.issues, HttpStatusCode.UNPROCESSABLE_ENTITY.message);
       }
-      return CommonResponse.serverError(res, error);
+      if (error instanceof DatabaseError) {
+        return CommonResponse.error(res, error.statusCode, null, null, [error.toJSON()], error.message);
+      }
+      const msg = error instanceof Error ? error.message : 'Erro desconhecido';
+      return CommonResponse.serverError(res, { message: msg }, HttpStatusCode.INTERNAL_SERVER_ERROR.message);
     }
   };
 
