@@ -30,7 +30,11 @@ class ExercicioController {
                 if (error.message === 'Já existe um exercício com este nome') {
                     return CommonResponse.error(res, HttpStatusCode.CONFLICT.code, null, 'nome', [], error.message);
                 }
-                if (error.message === 'Aluno não encontrado' || error.message.startsWith('Músculo(s) não encontrado(s)')) {
+                if (
+                    error.message === 'Aluno não encontrado' ||
+                    error.message.startsWith('Músculo(s) não encontrado(s)') ||
+                    error.message.startsWith('Aparelho(s) não encontrado(s)')
+                ) {
                     return CommonResponse.error(res, HttpStatusCode.UNPROCESSABLE_ENTITY.code, null, null, [], error.message);
                 }
             }
@@ -116,7 +120,10 @@ class ExercicioController {
                 if (error.message === 'Já existe um exercício com este nome') {
                     return CommonResponse.error(res, HttpStatusCode.CONFLICT.code, null, 'nome', [], error.message);
                 }
-                if (error.message.startsWith('Músculo(s) não encontrado(s)')) {
+                if (
+                    error.message.startsWith('Músculo(s) não encontrado(s)') ||
+                    error.message.startsWith('Aparelho(s) não encontrado(s)')
+                ) {
                     return CommonResponse.error(res, HttpStatusCode.UNPROCESSABLE_ENTITY.code, null, null, [], error.message);
                 }
             }

@@ -34,6 +34,13 @@ const exercicioSchema = z.object({
         }).strict())
         .min(1, { message: "É obrigatório informar ao menos um músculo associado" })
         .openapi({ description: "Lista de músculos associados ao exercício" }),
+    aparelhos: z
+        .array(z.object({
+            aparelho_id: z.string().uuid({ message: "O ID do aparelho deve ser um UUID válido" })
+                .openapi({ description: "UUID do aparelho", example: "550e8400-e29b-41d4-a716-446655440002" }),
+        }).strict())
+        .optional()
+        .openapi({ description: "Lista de aparelhos associados ao exercício (opcional — exercícios de peso livre podem não usar aparelho)" }),
 }).strict().openapi("ExercicioInput");
 
 const exercicioUpdateSchema = z.object({
@@ -59,6 +66,13 @@ const exercicioUpdateSchema = z.object({
         .min(1, { message: "É obrigatório informar ao menos um músculo associado" })
         .optional()
         .openapi({ description: "Lista de músculos associados ao exercício (substitui todos os vínculos existentes)" }),
+    aparelhos: z
+        .array(z.object({
+            aparelho_id: z.string().uuid({ message: "O ID do aparelho deve ser um UUID válido" })
+                .openapi({ description: "UUID do aparelho", example: "550e8400-e29b-41d4-a716-446655440002" }),
+        }).strict())
+        .optional()
+        .openapi({ description: "Lista de aparelhos associados ao exercício (substitui todos os vínculos existentes; array vazio remove todos)" }),
 }).strict().refine(
     (data) => Object.keys(data).length > 0,
     { message: 'Ao menos um campo deve ser informado para atualização' },
@@ -105,6 +119,14 @@ const exercicioQuerySchema = z.object({
         .transform(v => v === 'true')
         .openapi({
             description: "Quando false, não popula músculos na listagem (resposta mais leve)",
+            example: "true",
+        }),
+    incluir_aparelhos: z
+        .enum(['true', 'false'])
+        .default('true')
+        .transform(v => v === 'true')
+        .openapi({
+            description: "Quando false, não popula aparelhos na listagem (resposta mais leve)",
             example: "true",
         }),
     incluir_inativos: z

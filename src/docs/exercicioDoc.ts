@@ -20,6 +20,11 @@ const ExercicioResponse = z.object({
         nome: z.string().openapi({ example: "Peitoral Maior" }),
         grupo_muscular: z.string().openapi({ example: "PEITO" }),
     })).openapi({ description: "Músculos associados" }),
+    aparelhos: z.array(z.object({
+        aparelho_id: z.string().uuid().openapi({ example: "550e8400-e29b-41d4-a716-446655440002" }),
+        nome: z.string().openapi({ example: "Barra Reta" }),
+        descricao: z.string().openapi({ example: "Barra longa usada em exercícios compostos" }),
+    })).openapi({ description: "Aparelhos necessários para o exercício" }),
 }).openapi("Exercicio");
 
 // POST /exercicios
@@ -64,7 +69,7 @@ exercicioRegistry.registerPath({
     method: "get",
     path: "/exercicios",
     summary: "Listar exercícios",
-    description: "Lista exercícios com paginação e filtros. Escopo GLOBAL=apenas globais, PESSOAL=apenas pessoais do aluno, TODOS=ambos. Use incluir_inativos=true (somente admin) para incluir exercícios desativados. Use incluir_musculos=false para resposta mais leve.",
+    description: "Lista exercícios com paginação e filtros. Escopo GLOBAL=apenas globais, PESSOAL=apenas pessoais do aluno, TODOS=ambos. Use incluir_inativos=true (somente admin) para incluir exercícios desativados. Use incluir_musculos=false ou incluir_aparelhos=false para resposta mais leve (útil em listagens onde não se precisa dos vínculos completos).",
     tags: ["Exercicio"],
     security: [{ BearerAuth: [] }],
     request: {
@@ -127,7 +132,7 @@ exercicioRegistry.registerPath({
     method: "patch",
     path: "/exercicios/{id}",
     summary: "Atualizar exercício",
-    description: "Atualiza parcialmente um exercício. Ao informar musculos, a lista completa de vínculos musculares é substituída — envie todos os músculos desejados, não apenas os novos. Exercícios globais: somente admin. Exercícios pessoais: dono (aluno), treinador ou admin.",
+    description: "Atualiza parcialmente um exercício. Ao informar musculos, a lista completa de vínculos musculares é substituída — envie todos os músculos desejados, não apenas os novos. O mesmo vale para aparelhos: ao informar aparelhos, todos os vínculos existentes são substituídos (array vazio remove todos). Exercícios globais: somente admin. Exercícios pessoais: dono (aluno), treinador ou admin.",
     tags: ["Exercicio"],
     security: [{ BearerAuth: [] }],
     request: {

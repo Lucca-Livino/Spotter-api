@@ -50,6 +50,17 @@ class ExercicioService {
                 );
             }
 
+            if (dadosValidados.aparelhos && dadosValidados.aparelhos.length > 0) {
+                const verificacaoAparelhos = await this.repository.verificarAparelhosExistem(
+                    dadosValidados.aparelhos.map((a) => a.aparelho_id),
+                );
+                if (!verificacaoAparelhos.validos) {
+                    throw new Error(
+                        `Aparelho(s) não encontrado(s): ${verificacaoAparelhos.inexistentes.join(', ')}`,
+                    );
+                }
+            }
+
             const exercicioExistente = await this.repository.findByNome(
                 dadosValidados.nome,
                 dadosValidados.aluno_id,
@@ -68,6 +79,7 @@ class ExercicioService {
             const exercicioCriado = await this.repository.createExercicio(
                 novoExercicio,
                 dadosValidados.musculos,
+                dadosValidados.aparelhos,
             );
 
             return await this.repository.getByIdExercicio(exercicioCriado.id!) as ExercicioComMusculos;
@@ -92,6 +104,7 @@ class ExercicioService {
                 em_uso,
                 ordem_nome,
                 incluir_musculos,
+                incluir_aparelhos,
                 incluir_inativos,
             } = exercicioQuerySchema.parse(query);
 
@@ -135,7 +148,7 @@ class ExercicioService {
             if (ordem_nome) filtros.ordem_nome = ordem_nome;
             if (incluir_inativos) filtros.incluir_inativos = true;
 
-            return await this.repository.getAllExercicios(filtros, page, limite, incluir_musculos);
+            return await this.repository.getAllExercicios(filtros, page, limite, incluir_musculos, incluir_aparelhos);
         } catch (error) {
             if (error instanceof ZodError) {
                 console.warn('[ExercicioService] [getAllExercicios] Falha na validação Zod:', error.issues);
@@ -198,6 +211,17 @@ class ExercicioService {
                 }
             }
 
+            if (dadosValidados.aparelhos && dadosValidados.aparelhos.length > 0) {
+                const verificacaoAparelhos = await this.repository.verificarAparelhosExistem(
+                    dadosValidados.aparelhos.map((a) => a.aparelho_id),
+                );
+                if (!verificacaoAparelhos.validos) {
+                    throw new Error(
+                        `Aparelho(s) não encontrado(s): ${verificacaoAparelhos.inexistentes.join(', ')}`,
+                    );
+                }
+            }
+
             if (dadosValidados.nome && dadosValidados.nome !== exercicioExistente.nome) {
                 const duplicado = await this.repository.findByNome(
                     dadosValidados.nome,
@@ -209,12 +233,12 @@ class ExercicioService {
                 }
             }
 
-            const { musculos, ...camposExercicio } = dadosValidados;
+            const { musculos, aparelhos, ...camposExercicio } = dadosValidados;
             const dadosParaAtualizar: Partial<type_exercicio> = {};
             if (camposExercicio.nome !== undefined) dadosParaAtualizar.nome = camposExercicio.nome;
             if (camposExercicio.descricao !== undefined) dadosParaAtualizar.descricao = camposExercicio.descricao;
 
-            await this.repository.updateExercicio(id, dadosParaAtualizar, musculos);
+            await this.repository.updateExercicio(id, dadosParaAtualizar, musculos, aparelhos);
 
             return await this.repository.getByIdExercicio(id) as ExercicioComMusculos;
         } catch (error) {

@@ -1,5 +1,6 @@
 import { DataBase } from "../config/DbConnect";
-import { musculo, exercicio, exercicio_musculo } from "../config/db/schema";
+import { musculo, exercicio, exercicio_musculo, aparelho, exercicio_aparelho } from "../config/db/schema";
+import { seedAparelhos } from "./aparelhoSeeds";
 
 export async function seedExercicios(): Promise<string[]> {
     // 1. Inserir Músculos
@@ -10,7 +11,12 @@ export async function seedExercicios(): Promise<string[]> {
         { nome: "Deltóide Anterior", grupo_muscular: "OMBROS" },
     ]).returning({ id: musculo.id });
 
-    // 2. Inserir Exercícios Globais (aluno_id = NULL — disponíveis para todos)
+    // 2. Inserir Aparelhos
+    const aparelhoIds = await seedAparelhos();
+    // Índices: 0=Barra Reta, 1=Halter, 2=Máquina Smith, 3=Polia/Cabo, 4=Leg Press,
+    //          5=Banco Reto, 6=Banco Inclinado, 7=Banco Declinado, 8=Barra EZ
+
+    // 3. Inserir Exercícios Globais (aluno_id = NULL — disponíveis para todos)
     const exerciciosCriados = await DataBase.insert(exercicio).values([
         { nome: "Supino Reto com Barra", descricao: "Exercício clássico de peito com barra." },
         { nome: "Tríceps Testa", descricao: "Exercício isolador para tríceps." },
@@ -18,7 +24,7 @@ export async function seedExercicios(): Promise<string[]> {
         { nome: "Desenvolvimento com Halteres", descricao: "Exercício para deltóides com halteres." },
     ]).returning({ id: exercicio.id });
 
-    // 3. Criar o vínculo N:M (Exercicio x Musculo)
+    // 4. Criar o vínculo N:M (Exercicio x Musculo)
     await DataBase.insert(exercicio_musculo).values([
         {
             exercicio_id: exerciciosCriados[0].id, // Supino Reto
@@ -39,6 +45,30 @@ export async function seedExercicios(): Promise<string[]> {
             exercicio_id: exerciciosCriados[3].id, // Desenvolvimento
             musculo_id: musculosCriados[3].id,     // Deltóide Anterior
             tipo_ativacao: "PRIMARIO"
+        },
+    ]);
+
+    // 5. Criar o vínculo N:M (Exercicio x Aparelho)
+    await DataBase.insert(exercicio_aparelho).values([
+        {
+            exercicio_id: exerciciosCriados[0].id, // Supino Reto com Barra
+            aparelho_id: aparelhoIds[0],           // Barra Reta
+        },
+        {
+            exercicio_id: exerciciosCriados[0].id, // Supino Reto com Barra
+            aparelho_id: aparelhoIds[5],           // Banco Reto
+        },
+        {
+            exercicio_id: exerciciosCriados[1].id, // Tríceps Testa
+            aparelho_id: aparelhoIds[8],           // Barra EZ
+        },
+        {
+            exercicio_id: exerciciosCriados[1].id, // Tríceps Testa
+            aparelho_id: aparelhoIds[5],           // Banco Reto
+        },
+        {
+            exercicio_id: exerciciosCriados[3].id, // Desenvolvimento com Halteres
+            aparelho_id: aparelhoIds[1],           // Halter
         },
     ]);
 
