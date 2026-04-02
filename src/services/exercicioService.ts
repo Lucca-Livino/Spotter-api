@@ -25,18 +25,20 @@ class ExercicioService {
 
             const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
 
-            if (!dadosValidados.aluno_id && !perfil.isAdmin) {
+            const alunoId = dadosValidados.aluno_id ?? (perfil.alunoId || undefined);
+
+            if (!alunoId && !perfil.isAdmin) {
                 throw new Error('FORBIDDEN: apenas administradores podem criar exercícios globais');
             }
 
-            if (dadosValidados.aluno_id) {
-                const alunoExiste = await this.repository.verificarAlunoExiste(dadosValidados.aluno_id);
+            if (alunoId) {
+                const alunoExiste = await this.repository.verificarAlunoExiste(alunoId);
                 if (!alunoExiste) {
                     throw new Error('Aluno não encontrado');
                 }
 
                 // Aluno só pode criar exercícios para si mesmo; treinador e admin podem criar para qualquer aluno
-                if (!perfil.isAdmin && !perfil.isTreinador && perfil.alunoId !== dadosValidados.aluno_id) {
+                if (!perfil.isAdmin && !perfil.isTreinador && perfil.alunoId !== alunoId) {
                     throw new Error('FORBIDDEN: você não pode criar exercícios para outro aluno');
                 }
             }
@@ -63,7 +65,7 @@ class ExercicioService {
 
             const exercicioExistente = await this.repository.findByNome(
                 dadosValidados.nome,
-                dadosValidados.aluno_id,
+                alunoId,
             );
 
             if (exercicioExistente) {
@@ -73,7 +75,7 @@ class ExercicioService {
             const novoExercicio: type_exercicio = {
                 nome: dadosValidados.nome,
                 descricao: dadosValidados.descricao ?? null,
-                aluno_id: dadosValidados.aluno_id ?? null,
+                aluno_id: alunoId ?? null,
             };
 
             const exercicioCriado = await this.repository.createExercicio(
