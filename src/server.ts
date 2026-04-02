@@ -22,7 +22,7 @@ import authRoutes from "./routes/authRoutes";
 
 dotenv.config();
 
-const app = express();
+export const app = express();
 const PORT = process.env.PORT || 1350;
 
 app.use(cors());
@@ -103,4 +103,6 @@ async function startServer() {
   }
 }
 
-startServer();
+if (process.env.NODE_ENV !== 'test') {
+  startServer();
+}
