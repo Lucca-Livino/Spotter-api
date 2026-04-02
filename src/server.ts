@@ -19,6 +19,7 @@ import historicoRoutes from './routes/historicoRoutes';
 import musculoRoutes from './routes/musculoRoutes';
 import aparelhoRoutes from './routes/aparelhoRoutes';
 import authRoutes from "./routes/authRoutes";
+import uploadRoutes from "./routes/uploadRoutes";
 
 dotenv.config();
 
@@ -84,6 +85,7 @@ app.use('/api', historicoRoutes);
 app.use('/api', musculoRoutes);
 app.use('/api', aparelhoRoutes);
 app.use('/api', authRoutes);
+app.use('/api', uploadRoutes);
 
 //função para iniciar o servidor
 async function startServer() {

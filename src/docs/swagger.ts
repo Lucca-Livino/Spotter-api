@@ -9,6 +9,7 @@ import { sessaoRegistry } from "./sessaoDoc";
 import { historicoRegistry } from "./historicoDoc";
 import { musculoRegistry } from "./musculoDoc";
 import { aparelhoRegistry } from "./aparelhoDoc";
+import { uploadRegistry } from "./uploadDoc";
 
 const registry = new OpenAPIRegistry([
     academiaRegistry,
@@ -21,6 +22,7 @@ const registry = new OpenAPIRegistry([
     historicoRegistry,
     musculoRegistry,
     aparelhoRegistry,
+    uploadRegistry,
 ]);
 
 registry.registerComponent("securitySchemes", "BearerAuth", {
@@ -53,5 +55,6 @@ export const openApiDocument = generator.generateDocument({
         { name: "Historico", description: "Histórico e estatísticas de treinos" },
         { name: "Musculo", description: "Listagem de músculos" },
         { name: "Aparelho", description: "Listagem de aparelhos de academia" },
+        { name: "Upload", description: "Upload de arquivos para o bucket S3 (GarageHQ)" },
     ],
 });
