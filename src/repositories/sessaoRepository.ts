@@ -27,6 +27,9 @@ export interface SessaoExercicioDetalhe {
     treino_exercicio_id: string;
     concluido: boolean;
     observacoes: string | null;
+    ordem: number;
+    inicio: Date | null;
+    fim: Date | null;
     exercicio: {
         id: string;
         nome: string;
@@ -126,6 +129,9 @@ class SessaoRepository {
                     treino_exercicio_id: sessao_exercicio.treino_exercicio_id,
                     concluido: sessao_exercicio.concluido,
                     sessao_exercicio_observacoes: sessao_exercicio.observacoes,
+                    sessao_exercicio_ordem: sessao_exercicio.ordem,
+                    sessao_exercicio_inicio: sessao_exercicio.inicio,
+                    sessao_exercicio_fim: sessao_exercicio.fim,
                     te_series: treino_exercicio.series,
                     te_repeticoes: treino_exercicio.repeticoes,
                     te_carga_sugerida: treino_exercicio.carga_sugerida,
@@ -139,7 +145,7 @@ class SessaoRepository {
                 .innerJoin(treino_exercicio, eq(sessao_exercicio.treino_exercicio_id, treino_exercicio.id))
                 .innerJoin(exercicio, eq(treino_exercicio.exercicio_id, exercicio.id))
                 .where(eq(sessao_exercicio.sessao_treino_id, id))
-                .orderBy(treino_exercicio.ordem_execucao);
+                .orderBy(sessao_exercicio.ordem);
 
             const exercicioIds = exerciciosRows.map((r) => r.sessao_exercicio_id);
 
@@ -171,6 +177,9 @@ class SessaoRepository {
                 treino_exercicio_id: r.treino_exercicio_id,
                 concluido: r.concluido,
                 observacoes: r.sessao_exercicio_observacoes,
+                ordem: r.sessao_exercicio_ordem,
+                inicio: r.sessao_exercicio_inicio,
+                fim: r.sessao_exercicio_fim,
                 exercicio: {
                     id: r.exercicio_id,
                     nome: r.exercicio_nome,
@@ -459,7 +468,7 @@ class SessaoRepository {
 
     async updateSessaoExercicio(
         sessaoExercicioId: string,
-        dados: { concluido: boolean; observacoes?: string | null },
+        dados: { concluido: boolean; observacoes?: string | null; inicio?: Date | null; fim?: Date | null },
     ): Promise<void> {
         try {
             await this.db
@@ -468,6 +477,19 @@ class SessaoRepository {
                 .where(eq(sessao_exercicio.id, sessaoExercicioId));
         } catch (error) {
             throw parseDatabaseError(error, 'SessaoRepository.updateSessaoExercicio');
+        }
+    }
+
+    async findSessaoExercicioInicio(sessaoExercicioId: string): Promise<{ inicio: Date | null } | null> {
+        try {
+            const rows = await this.db
+                .select({ inicio: sessao_exercicio.inicio })
+                .from(sessao_exercicio)
+                .where(eq(sessao_exercicio.id, sessaoExercicioId))
+                .limit(1);
+            return rows[0] ?? null;
+        } catch (error) {
+            throw parseDatabaseError(error, 'SessaoRepository.findSessaoExercicioInicio');
         }
     }
 
@@ -490,6 +512,56 @@ class SessaoRepository {
         }
     }
 
+    async reordenarExercicios(
+        sessaoId: string,
+        itens: { sessao_exercicio_id: string; ordem: number }[],
+    ): Promise<void> {
+        try {
+            await this.db.transaction(async (tx) => {
+                for (const item of itens) {
+                    await tx
+                        .update(sessao_exercicio)
+                        .set({ ordem: item.ordem })
+                        .where(and(
+                            eq(sessao_exercicio.id, item.sessao_exercicio_id),
+                            eq(sessao_exercicio.sessao_treino_id, sessaoId),
+                        ));
+                }
+            });
+        } catch (error) {
+            throw parseDatabaseError(error, 'SessaoRepository.reordenarExercicios');
+        }
+    }
+
+    async contarExerciciosDaSessao(sessaoId: string): Promise<number> {
+        try {
+            const resultado = await this.db
+                .select({ count: sql<number>`count(*)` })
+                .from(sessao_exercicio)
+                .where(eq(sessao_exercicio.sessao_treino_id, sessaoId));
+            return Number(resultado[0].count);
+        } catch (error) {
+            throw parseDatabaseError(error, 'SessaoRepository.contarExerciciosDaSessao');
+        }
+    }
+
+    async verificarExerciciosDaSessao(sessaoId: string, ids: string[]): Promise<{ validos: boolean; invalidos: string[] }> {
+        try {
+            const encontrados = await this.db
+                .select({ id: sessao_exercicio.id })
+                .from(sessao_exercicio)
+                .where(and(
+                    eq(sessao_exercicio.sessao_treino_id, sessaoId),
+                    inArray(sessao_exercicio.id, ids),
+                ));
+            const idsEncontrados = new Set(encontrados.map((e) => e.id));
+            const invalidos = ids.filter((id) => !idsEncontrados.has(id));
+            return { validos: invalidos.length === 0, invalidos };
+        } catch (error) {
+            throw parseDatabaseError(error, 'SessaoRepository.verificarExerciciosDaSessao');
+        }
+    }
+
     async buscarAlunosDoTreinador(treinadorId: string): Promise<string[]> {
         try {
             const rows = await this.db
@@ -505,7 +577,7 @@ class SessaoRepository {
 
     async buscarTreinoComExercicios(treinoId: string, alunoId: string): Promise<{
         treino_id: string;
-        exercicios: { treino_exercicio_id: string; series: number }[];
+        exercicios: { treino_exercicio_id: string; series: number; ordem_execucao: number }[];
     } | null> {
         try {
             const treinoResult = await this.db
@@ -525,6 +597,7 @@ class SessaoRepository {
                 .select({
                     treino_exercicio_id: treino_exercicio.id,
                     series: treino_exercicio.series,
+                    ordem_execucao: treino_exercicio.ordem_execucao,
                 })
                 .from(treino_exercicio)
                 .where(eq(treino_exercicio.treino_id, treinoId))

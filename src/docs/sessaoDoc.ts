@@ -1,6 +1,6 @@
 import { OpenAPIRegistry } from "@asteasolutions/zod-to-openapi";
 import { z } from "zod";
-import { sessaoSchema, sessaoUpdateSchema, sessaoExercicioUpdateSchema, sessaoSeriesUpdateSchema } from "../utils/validations/sessaoValidation";
+import { sessaoSchema, sessaoUpdateSchema, sessaoExercicioUpdateSchema, sessaoSeriesUpdateSchema, reordenarExerciciosSchema } from "../utils/validations/sessaoValidation";
 
 export const sessaoRegistry = new OpenAPIRegistry();
 
@@ -18,6 +18,9 @@ const SessaoExercicioResponse = z.object({
     treino_exercicio_id: z.string().uuid().openapi({ example: "550e8400-e29b-41d4-a716-446655440002" }),
     concluido: z.boolean().openapi({ example: false }),
     observacoes: z.string().nullable().openapi({ example: null }),
+    ordem: z.number().openapi({ example: 1 }),
+    inicio: z.coerce.date().nullable().openapi({ example: null }),
+    fim: z.coerce.date().nullable().openapi({ example: null }),
     exercicio: z.object({
         id: z.string().uuid().openapi({ example: "550e8400-e29b-41d4-a716-446655440003" }),
         nome: z.string().openapi({ example: "Supino Reto" }),
@@ -330,12 +333,13 @@ sessaoRegistry.registerPath({
     method: "patch",
     path: "/sessoes/{id}/exercicios/{exercicioId}",
     summary: "Atualizar exercício de uma sessão",
-    description: `Marca um exercício da sessão como concluído ou não concluído e atualiza observações.
+    description: `Marca um exercício da sessão como concluído ou não concluído e atualiza observações, início e fim.
 
 **Regras:**
 - Apenas sessões com status EM_ANDAMENTO podem ser atualizadas
 - O exercício deve pertencer à sessão informada
-- Retorna 409 se a sessão já estiver finalizada ou cancelada`,
+- Retorna 409 se a sessão já estiver finalizada ou cancelada
+- Se \`concluido=true\` e \`fim\` não for informado, o fim é registrado automaticamente como o momento atual`,
     tags: ["Sessao"],
     security: [{ BearerAuth: [] }],
     request: {
@@ -512,5 +516,52 @@ Idempotente: enviar o mesmo payload múltiplas vezes produz o mesmo resultado. P
         403: { description: "Sem permissão para modificar esta sessão" },
         404: { description: "Sessão ou exercício não encontrado" },
         422: { description: "Sessão não está em andamento / numero_serie duplicado / erro de validação" },
+    },
+});
+
+// PATCH /sessoes/:id/exercicios/reordenar
+sessaoRegistry.registerPath({
+    method: "patch",
+    path: "/sessoes/{id}/exercicios/reordenar",
+    summary: "Reordenar exercícios de uma sessão",
+    description: `Define a nova ordem de exibição dos exercícios em uma sessão de treino.
+
+**Regras:**
+- Apenas sessões com status EM_ANDAMENTO podem ter exercícios reordenados
+- Todos os \`sessao_exercicio_id\` devem pertencer à sessão informada
+- O campo \`ordem\` deve ser único dentro do array enviado (sem duplicatas)
+- \`ordem\` deve ser maior que 0`,
+    tags: ["Sessao"],
+    security: [{ BearerAuth: [] }],
+    request: {
+        params: z.object({
+            id: z.string().uuid().openapi({ example: "550e8400-e29b-41d4-a716-446655440000" }),
+        }),
+        body: {
+            required: true,
+            content: {
+                "application/json": { schema: reordenarExerciciosSchema },
+            },
+        },
+    },
+    responses: {
+        200: {
+            description: "Exercícios reordenados com sucesso",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        error: z.boolean().openapi({ example: false }),
+                        code: z.number().openapi({ example: 200 }),
+                        message: z.string().nullable().openapi({ example: null }),
+                        data: SessaoResponse,
+                        errors: z.array(z.any()),
+                    }),
+                },
+            },
+        },
+        401: { description: "Não autorizado" },
+        403: { description: "Sem permissão para modificar esta sessão" },
+        404: { description: "Sessão não encontrada" },
+        422: { description: "Sessão não está em andamento / exercício não pertence à sessão / ordem duplicada / erro de validação" },
     },
 });

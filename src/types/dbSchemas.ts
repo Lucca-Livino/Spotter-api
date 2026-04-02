@@ -124,6 +124,9 @@ export type type_sessao_exercicio = {
     treino_exercicio_id: string;
     concluido?: boolean;
     observacoes?: string | null;
+    ordem?: number;
+    inicio?: Date | null;
+    fim?: Date | null;
 }
 
 export type type_sessao_serie = {

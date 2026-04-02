@@ -1,6 +1,6 @@
 import SessaoRepository, { SessaoComDetalhe } from '../repositories/sessaoRepository';
 import UsuarioRepository from '../repositories/usuarioRepository';
-import { sessaoSchema, sessaoIdSchema, sessaoListQuerySchema, SessaoListQuery, sessaoUpdateSchema, sessaoExercicioUpdateSchema, exercicioIdSchema, sessaoSeriesUpdateSchema, SessaoSeriesUpdate } from '../utils/validations/sessaoValidation';
+import { sessaoSchema, sessaoIdSchema, sessaoListQuerySchema, SessaoListQuery, sessaoUpdateSchema, sessaoExercicioUpdateSchema, exercicioIdSchema, sessaoSeriesUpdateSchema, SessaoSeriesUpdate, reordenarExerciciosSchema, ReordenarExerciciosInput } from '../utils/validations/sessaoValidation';
 import { ZodError } from 'zod';
 import { type_sessao_exercicio, type_sessao_serie, type_sessao_treino } from '../types/dbSchemas';
 
@@ -42,9 +42,10 @@ class SessaoService {
                 treino_id: dadosValidados.treino_id,
             };
 
-            const sessaoExercicios: type_sessao_exercicio[] = treinoComExercicios.exercicios.map((te) => ({
-                sessao_treino_id: '', 
+            const sessaoExercicios: type_sessao_exercicio[] = treinoComExercicios.exercicios.map((te, idx) => ({
+                sessao_treino_id: '',
                 treino_exercicio_id: te.treino_exercicio_id,
+                ordem: idx + 1,
             }));
 
             const sessaoSeries: type_sessao_serie[] = [];
@@ -216,9 +217,24 @@ class SessaoService {
             throw new Error('Exercício não encontrado nesta sessão');
         }
 
-        const updateData: { concluido: boolean; observacoes?: string | null } = { concluido: dados.concluido };
+        const updateData: { concluido: boolean; observacoes?: string | null; inicio?: Date | null; fim?: Date | null } = { concluido: dados.concluido };
         if (dados.observacoes !== undefined) {
             updateData.observacoes = dados.observacoes;
+        }
+        if (dados.inicio !== undefined) {
+            updateData.inicio = dados.inicio ? new Date(dados.inicio) : null;
+        }
+        if (dados.fim !== undefined) {
+            updateData.fim = dados.fim ? new Date(dados.fim) : null;
+        } else if (dados.concluido === true) {
+            updateData.fim = new Date();
+        }
+
+        if (updateData.fim !== undefined && updateData.fim !== null) {
+            const inicioInfo = await this.repository.findSessaoExercicioInicio(exercicioId);
+            if (inicioInfo && inicioInfo.inicio === null && updateData.inicio === undefined) {
+                updateData.inicio = updateData.fim;
+            }
         }
 
         await this.repository.updateSessaoExercicio(exercicioId, updateData);
@@ -258,7 +274,7 @@ class SessaoService {
         }
 
         if (sessaoStatus.status !== 'EM_ANDAMENTO') {
-            throw new Error('UNPROCESSABLE: a sessão não está em andamento');
+            throw new Error('CONFLICT: a sessão não está em andamento');
         }
 
         await this._verificarAcessoSessao(userId, sessaoStatus.aluno_id);
@@ -266,6 +282,11 @@ class SessaoService {
         const sessaoExercicio = await this.repository.findSessaoExercicio(id, exercicioId);
         if (!sessaoExercicio) {
             throw new Error('Exercício não encontrado nesta sessão');
+        }
+
+        const exercicioInicioInfo = await this.repository.findSessaoExercicioInicio(exercicioId);
+        if (exercicioInicioInfo && exercicioInicioInfo.inicio === null) {
+            await this.repository.updateSessaoExercicio(exercicioId, { concluido: false, inicio: new Date() });
         }
 
         await this.repository.replaceSeriesDoExercicio(exercicioId, dados.series);
@@ -292,7 +313,7 @@ class SessaoService {
         }
 
         if (sessaoStatus.status !== 'EM_ANDAMENTO') {
-            throw new Error('UNPROCESSABLE: a sessão já foi finalizada ou cancelada');
+            throw new Error('CONFLICT: a sessão já foi finalizada ou cancelada');
         }
 
         await this._verificarAcessoSessao(userId, sessaoStatus.aluno_id);
@@ -316,12 +337,46 @@ class SessaoService {
         }
 
         if (sessaoStatus.status !== 'EM_ANDAMENTO') {
-            throw new Error('UNPROCESSABLE: a sessão já foi finalizada ou cancelada');
+            throw new Error('CONFLICT: a sessão já foi finalizada ou cancelada');
         }
 
         await this._verificarAcessoSessao(userId, sessaoStatus.aluno_id);
 
         await this.repository.updateStatusFim(id, 'CANCELADA');
+
+        return await this.repository.findById(id) as SessaoComDetalhe;
+    }
+
+    async reordenarExercicios(
+        idParam: string,
+        body: any,
+        userId: string,
+    ): Promise<SessaoComDetalhe> {
+        const id = sessaoIdSchema.parse(idParam);
+        const dados: ReordenarExerciciosInput = reordenarExerciciosSchema.parse(body);
+
+        const sessaoStatus = await this.repository.findSessaoStatus(id);
+        if (!sessaoStatus) throw new Error('Sessão não encontrada');
+        if (sessaoStatus.status !== 'EM_ANDAMENTO') {
+            throw new Error('CONFLICT: apenas sessões em andamento podem ter exercícios reordenados');
+        }
+
+        await this._verificarAcessoSessao(userId, sessaoStatus.aluno_id);
+
+        const totalExercicios = await this.repository.contarExerciciosDaSessao(id);
+        if (dados.exercicios.length !== totalExercicios) {
+            throw new Error(
+                `UNPROCESSABLE: a reordenação deve incluir todos os ${totalExercicios} exercício(s) da sessão. Foram enviados ${dados.exercicios.length}.`,
+            );
+        }
+
+        const ids = dados.exercicios.map((e) => e.sessao_exercicio_id);
+        const verificacao = await this.repository.verificarExerciciosDaSessao(id, ids);
+        if (!verificacao.validos) {
+            throw new Error(`UNPROCESSABLE: exercício(s) não pertencem a esta sessão: ${verificacao.invalidos.join(', ')}`);
+        }
+
+        await this.repository.reordenarExercicios(id, dados.exercicios);
 
         return await this.repository.findById(id) as SessaoComDetalhe;
     }

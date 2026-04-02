@@ -29,6 +29,9 @@ router.post('/sessoes/:id/cancelar', authMiddleware, sessaoController.cancelarSe
 // PATCH /sessoes/:id — atualiza observações da sessão
 router.patch('/sessoes/:id', authMiddleware, sessaoController.updateSessao);
 
+// PATCH /sessoes/:id/exercicios/reordenar — reordena exercícios da sessão
+router.patch('/sessoes/:id/exercicios/reordenar', authMiddleware, sessaoController.reordenarExercicios);
+
 // PATCH /sessoes/:id/exercicios/:exercicioId — atualiza exercício da sessão
 router.patch('/sessoes/:id/exercicios/:exercicioId', authMiddleware, sessaoController.updateSessaoExercicio);
 

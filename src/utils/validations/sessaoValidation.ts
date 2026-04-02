@@ -77,6 +77,18 @@ const sessaoExercicioUpdateSchema = z.object({
         .nullable()
         .optional()
         .openapi({ description: "Observações sobre o exercício", example: "Consegui manter a forma na última série" }),
+    inicio: z
+        .string()
+        .datetime({ message: 'inicio deve ser ISO 8601 válido' })
+        .nullable()
+        .optional()
+        .openapi({ description: "Timestamp de início do exercício (ISO 8601). Se omitido e concluido=true, o fim é registrado automaticamente", example: "2026-03-31T10:00:00.000Z" }),
+    fim: z
+        .string()
+        .datetime({ message: 'fim deve ser ISO 8601 válido' })
+        .nullable()
+        .optional()
+        .openapi({ description: "Timestamp de fim do exercício (ISO 8601). Se omitido e concluido=true, registrado automaticamente como now()", example: "2026-03-31T10:15:00.000Z" }),
 }).strict().openapi("SessaoExercicioUpdate");
 
 const exercicioIdSchema = z
@@ -133,5 +145,25 @@ const sessaoSeriesUpdateSchema = z.object({
 
 type SessaoSeriesUpdate = z.infer<typeof sessaoSeriesUpdateSchema>;
 
-export { sessaoSchema, sessaoIdSchema, sessaoListQuerySchema, sessaoUpdateSchema, sessaoExercicioUpdateSchema, exercicioIdSchema, sessaoSeriesUpdateSchema };
-export type { SessaoListQuery, SessaoSeriesUpdate };
+const reordenarExerciciosSchema = z.object({
+    exercicios: z
+        .array(z.object({
+            sessao_exercicio_id: z.string().uuid({ message: 'sessao_exercicio_id deve ser UUID válido' })
+                .openapi({ description: "UUID do sessao_exercicio", example: "550e8400-e29b-41d4-a716-446655440005" }),
+            ordem: z.number().int().min(1, { message: 'ordem deve ser maior que 0' })
+                .openapi({ description: "Nova posição do exercício na sessão", example: 1 }),
+        }).strict())
+        .min(1, { message: 'exercicios deve conter ao menos um item' })
+        .openapi({ description: "Lista de exercícios com nova ordem" }),
+}).strict().superRefine((val, ctx) => {
+    const ordens = val.exercicios.map((e) => e.ordem);
+    const duplicados = ordens.filter((o, i) => ordens.indexOf(o) !== i);
+    if (duplicados.length > 0) {
+        ctx.addIssue({ code: 'custom', path: ['exercicios'], message: `ordem deve ser única. Duplicados: ${[...new Set(duplicados)].join(', ')}` });
+    }
+}).openapi('ReordenarExerciciosInput');
+
+type ReordenarExerciciosInput = z.infer<typeof reordenarExerciciosSchema>;
+
+export { sessaoSchema, sessaoIdSchema, sessaoListQuerySchema, sessaoUpdateSchema, sessaoExercicioUpdateSchema, exercicioIdSchema, sessaoSeriesUpdateSchema, reordenarExerciciosSchema };
+export type { SessaoListQuery, SessaoSeriesUpdate, ReordenarExerciciosInput };

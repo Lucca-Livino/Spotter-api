@@ -367,6 +367,9 @@ export const sessao_exercicio = pgTable('sessao_exercicio', {
     treino_exercicio_id: uuid('treino_exercicio_id').notNull().references(() => treino_exercicio.id),
     concluido: boolean('concluido').notNull().default(false),
     observacoes: text('observacoes'),
+    ordem: integer('ordem').notNull().default(0),
+    inicio: timestamp('inicio'),
+    fim: timestamp('fim'),
 });
 
 export const sessao_serie = pgTable('sessao_serie', {
