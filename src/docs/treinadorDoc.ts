@@ -4,6 +4,7 @@ import {
   treinadorCreateSchema,
   treinadorIdSchema,
   treinadorQuerySchema,
+  treinadorUpdateSchema,
 } from "../utils/validations/treinadorValidation";
 
 export const treinadorRegistry = new OpenAPIRegistry();
@@ -141,6 +142,48 @@ treinadorRegistry.registerPath({
     400: { description: "Dados obrigatórios ausentes" },
     401: { description: "Não autorizado" },
     409: { description: "Usuário autenticado já possui perfil de treinador" },
+    422: { description: "Erro de validação" },
+  },
+});
+
+// PATCH /treinadores/{id}
+treinadorRegistry.registerPath({
+  method: "patch",
+  path: "/treinadores/{id}",
+  summary: "Atualizar treinador",
+  description: "Atualiza parcialmente os dados de um treinador existente.",
+  tags: ["Treinador"],
+  security: [{ BearerAuth: [] }],
+  request: {
+    params: idParam,
+    body: {
+      required: true,
+      content: {
+        "application/json": { schema: treinadorUpdateSchema },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: "Treinador atualizado com sucesso",
+      content: {
+        "application/json": {
+          schema: z.object({
+            error: z.boolean().openapi({ example: false }),
+            code: z.number().openapi({ example: 200 }),
+            message: z
+              .string()
+              .nullable()
+              .openapi({ example: "Treinador atualizado com sucesso" }),
+            data: TreinadorResponse,
+            errors: z.array(z.any()),
+          }),
+        },
+      },
+    },
+    400: { description: "Corpo da requisição é obrigatório" },
+    401: { description: "Não autorizado" },
+    404: { description: "Treinador não encontrado" },
     422: { description: "Erro de validação" },
   },
 });
