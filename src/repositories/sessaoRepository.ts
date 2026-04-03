@@ -7,6 +7,7 @@ import {
     treino,
     treino_exercicio,
     exercicio,
+    aluno,
 } from '../config/db/schema';
 import { type_sessao_treino, type_sessao_exercicio, type_sessao_serie } from '../types/dbSchemas';
 import { parseDatabaseError } from '../utils/errors/DatabaseError';
@@ -565,9 +566,9 @@ class SessaoRepository {
     async buscarAlunosDoTreinador(treinadorId: string): Promise<string[]> {
         try {
             const rows = await this.db
-                .select({ aluno_id: treino.usuario_id })
-                .from(treino)
-                .where(eq(treino.treinador_id, treinadorId));
+                .select({ aluno_id: aluno.id })
+                .from(aluno)
+                .where(eq(aluno.treinador_id, treinadorId));
 
             return [...new Set(rows.map((r) => r.aluno_id))];
         } catch (error) {
