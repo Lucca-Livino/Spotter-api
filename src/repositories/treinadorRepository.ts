@@ -74,6 +74,27 @@ class TreinadorRepository {
 			throw parseDatabaseError(error, "TreinadorRepository.findByUserId");
 		}
 	}
+
+	async update(
+		id: string,
+		treinadorEditado: Partial<type_treinador>,
+	): Promise<type_treinador | null> {
+		try {
+			const resultado = await this.db
+				.update(treinador)
+				.set(treinadorEditado)
+				.where(eq(treinador.id, id))
+				.returning();
+
+			if (resultado.length === 0) {
+				return null;
+			}
+
+			return resultado[0] as unknown as type_treinador;
+		} catch (error) {
+			throw parseDatabaseError(error, "TreinadorRepository.update");
+		}
+	}
 }
 
 export default TreinadorRepository;
