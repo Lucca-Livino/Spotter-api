@@ -14,7 +14,8 @@
     "migrate:studio": "npx drizzle-kit studio",
     "test": "jest --coverage",
     "test:e2e": "jest --testPathPattern=routes",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test:setup": "node scripts/setup-test-db.cjs"
   },
   "repository": {
     "type": "git",
