@@ -104,6 +104,17 @@ class TreinoService {
                 throw new Error('Aluno não encontrado');
             }
 
+            if (perfil.isTreinador && !perfil.isAdmin && perfil.treinadorId) {
+                const vinculado = await this.usuarioRepository.alunoVinculadoAoTreinador(
+                    alunoIdDestino,
+                    perfil.treinadorId,
+                );
+
+                if (!vinculado) {
+                    throw new Error('FORBIDDEN: treinador só pode criar treino para aluno vinculado ao seu perfil');
+                }
+            }
+
             const novoTreino: type_treino = {
                 nome: dadosValidados.nome,
                 descricao: dadosValidados.descricao ?? null,
@@ -157,7 +168,12 @@ class TreinoService {
         const podeVisualizar =
             perfil.isAdmin ||
             perfil.alunoId === treinoEncontrado.usuario_id ||
-            (perfil.treinadorId !== null && perfil.treinadorId === treinoEncontrado.treinador_id);
+            (perfil.treinadorId !== null && perfil.treinadorId === treinoEncontrado.treinador_id) ||
+            (perfil.isTreinador && perfil.treinadorId !== null &&
+                await this.usuarioRepository.alunoVinculadoAoTreinador(
+                    treinoEncontrado.usuario_id,
+                    perfil.treinadorId,
+                ));
 
         if (!podeVisualizar) {
             throw new Error('FORBIDDEN: você não tem permissão para visualizar este treino');
@@ -169,6 +185,7 @@ class TreinoService {
     async getAllTreinos(query: unknown, userId: string): Promise<ResultadoPaginadoTreino> {
         const filtrosLista = treinoListQuerySchema.parse(query);
         const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
+        let usuarioIdsPermitidos: string[] | undefined;
         const possuiFiltroDeExercicio = Boolean(
             filtrosLista.nome_exercicio ||
             filtrosLista.grupo_muscular ||
@@ -184,7 +201,30 @@ class TreinoService {
                 if (filtrosLista.treinador_id && filtrosLista.treinador_id !== perfil.treinadorId) {
                     throw new Error('FORBIDDEN: treinador só pode listar os próprios treinos');
                 }
-                filtrosLista.treinador_id = perfil.treinadorId ?? undefined;
+
+                const alunosVinculados = await this.usuarioRepository.listarAlunosVinculadosAoTreinador(
+                    perfil.treinadorId!,
+                );
+
+                if (alunosVinculados.length === 0) {
+                    return {
+                        dados: [],
+                        total: 0,
+                        page: filtrosLista.page,
+                        limite: filtrosLista.limite,
+                        totalPages: 0,
+                    };
+                }
+
+                if (filtrosLista.usuario_id && !alunosVinculados.includes(filtrosLista.usuario_id)) {
+                    throw new Error('FORBIDDEN: treinador só pode listar treinos de alunos vinculados ao seu perfil');
+                }
+
+                usuarioIdsPermitidos = filtrosLista.usuario_id
+                    ? [filtrosLista.usuario_id]
+                    : alunosVinculados;
+
+                filtrosLista.treinador_id = undefined;
             } else if (perfil.isAluno) {
                 if (filtrosLista.usuario_id && filtrosLista.usuario_id !== perfil.alunoId) {
                     throw new Error('FORBIDDEN: aluno só pode listar os próprios treinos');
@@ -208,7 +248,7 @@ class TreinoService {
             incluir_aparelhos: filtrosLista.incluir_aparelhos,
         });
 
-        return this.repository.findAll(filtrosLista, filtrosDetalhe);
+        return this.repository.findAll(filtrosLista, filtrosDetalhe, usuarioIdsPermitidos);
     }
 
     async updateTreino(idParam: string, body: unknown, userId: string): Promise<TreinoComExercicios> {
@@ -229,7 +269,12 @@ class TreinoService {
         const podeAtualizar =
             perfil.isAdmin ||
             perfil.alunoId === treinoAtual.usuario_id ||
-            (perfil.treinadorId !== null && perfil.treinadorId === treinoAtual.treinador_id);
+            (perfil.treinadorId !== null && perfil.treinadorId === treinoAtual.treinador_id) ||
+            (perfil.isTreinador && perfil.treinadorId !== null &&
+                await this.usuarioRepository.alunoVinculadoAoTreinador(
+                    treinoAtual.usuario_id,
+                    perfil.treinadorId,
+                ));
 
         if (!podeAtualizar) {
             throw new Error('FORBIDDEN: você não tem permissão para atualizar este treino');
@@ -418,7 +463,12 @@ class TreinoService {
         const podeDeletar =
             perfil.isAdmin ||
             perfil.alunoId === treinoExistente.usuario_id ||
-            (perfil.treinadorId !== null && perfil.treinadorId === treinoExistente.treinador_id);
+            (perfil.treinadorId !== null && perfil.treinadorId === treinoExistente.treinador_id) ||
+            (perfil.isTreinador && perfil.treinadorId !== null &&
+                await this.usuarioRepository.alunoVinculadoAoTreinador(
+                    treinoExistente.usuario_id,
+                    perfil.treinadorId,
+                ));
 
         if (!podeDeletar) {
             throw new Error('FORBIDDEN: você não tem permissão para excluir este treino');

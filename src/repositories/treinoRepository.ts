@@ -313,6 +313,7 @@ class TreinoRepository {
     async findAll(
         filtros: TreinoListQuery,
         detalhes: TreinoDetalheQuery,
+        usuarioIdsPermitidos?: string[],
     ): Promise<ResultadoPaginadoTreino> {
         try {
             const possuiFiltroDeExercicio = Boolean(
@@ -327,6 +328,7 @@ class TreinoRepository {
             const filterBuilder = new TreinoFilterBuilder()
                 .comNomeTreino(filtros.nome)
                 .comUsuarioId(filtros.usuario_id)
+                .comUsuarioIds(usuarioIdsPermitidos)
                 .comTreinadorId(filtros.treinador_id)
                 .comDiasSemana(filtros.dias_semana);
 
