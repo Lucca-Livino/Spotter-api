@@ -71,6 +71,10 @@ const treinadorCreateBaseSchema = z
 
 const treinadorCreateSchema = treinadorCreateBaseSchema.openapi("TreinadorCreateInput");
 
+const treinadorUpdateSchema = treinadorCreateBaseSchema
+	.partial()
+	.openapi("TreinadorUpdateInput");
+
 const treinadorSchema = treinadorCreateBaseSchema
 	.extend({
 		user_id: z
