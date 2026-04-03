@@ -72,6 +72,35 @@ class TreinadorService {
 
 		return treinador;
 	}
+
+	async updateTreinador(
+		id: string,
+		treinadorEditado: Partial<type_treinador>,
+	): Promise<type_treinador> {
+		console.log(
+			`[TreinadorService] [updateTreinador] Atualizando treinador com ID: ${id}`,
+		);
+
+		treinadorIdSchema.parse(id);
+
+		if (Object.keys(treinadorEditado).length === 0) {
+			throw new Error("Corpo da requisição é obrigatório");
+		}
+
+		treinadorUpdateSchema.parse(treinadorEditado);
+
+		const treinadorAtualizado = await this.repository.update(id, treinadorEditado);
+
+		if (!treinadorAtualizado) {
+			throw new Error(`Treinador com ID ${id} não encontrado`);
+		}
+
+		console.log(
+			"[TreinadorService] [updateTreinador] Treinador atualizado com sucesso",
+		);
+
+		return treinadorAtualizado;
+	}
 }
 
 export default TreinadorService;
