@@ -99,4 +99,10 @@ const treinadorQuerySchema = z.object({
         .openapi({ description: "Limite de resultados por página (máx. 100)", example: "10" }),
 }).strict().openapi("TreinadorQuery");
 
-export { treinadorIdSchema, treinadorSchema, treinadorCreateSchema, treinadorQuerySchema };
+export {
+	treinadorIdSchema,
+	treinadorSchema,
+	treinadorCreateSchema,
+	treinadorUpdateSchema,
+	treinadorQuerySchema,
+};

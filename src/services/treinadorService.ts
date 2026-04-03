@@ -1,6 +1,11 @@
 import TreinadorRepository from "../repositories/treinadorRepository";
 import { type_treinador } from "../types/dbSchemas";
-import { treinadorIdSchema, treinadorSchema, treinadorQuerySchema } from "../utils/validations/treinadorValidation";
+import {
+	treinadorIdSchema,
+	treinadorSchema,
+	treinadorQuerySchema,
+	treinadorUpdateSchema,
+} from "../utils/validations/treinadorValidation";
 import { ZodError } from "zod";
 import { DatabaseError } from "../utils/errors/DatabaseError";
 import HttpStatusCode from "../utils/helpers/httpStatusCode";
