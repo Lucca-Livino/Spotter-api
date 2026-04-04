@@ -6,12 +6,16 @@
   "scripts": {
     "dev:docker": "docker compose -f docker-compose-dev.yml up --build --force-recreate",
     "dev": "tsx watch src/server.ts",
-    "build": "rm -rf dist && tsc",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "seed": "tsx src/seeds/index.ts",
     "start": "node dist/server.js",
     "migrate": "npx drizzle-kit generate",
     "migrate:push": "npx drizzle-kit push",
-    "migrate:studio": "npx drizzle-kit studio"
+    "migrate:studio": "npx drizzle-kit studio",
+    "test": "jest --coverage",
+    "test:e2e": "jest --testPathPattern=routes",
+    "test:watch": "jest --watch",
+    "test:setup": "node scripts/setup-test-db.cjs"
   },
   "repository": {
     "type": "git",
@@ -38,12 +42,63 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.2",
+    "@babel/preset-typescript": "^7.28.5",
+    "@jest/globals": "^30.3.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.16.0",
+    "@types/supertest": "^7.2.0",
     "@types/swagger-ui-express": "^4.1.8",
+    "babel-jest": "^29.7.0",
+    "babel-plugin-transform-import-meta": "^2.3.3",
     "drizzle-kit": "^0.31.9",
+    "eslint-plugin-jest": "^29.15.1",
+    "jest": "^29.7.0",
+    "supertest": "^7.2.2",
     "tsx": "^4.21.0"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.(ts|js|mjs)$": "babel-jest"
+    },
+    "testEnvironment": "node",
+    "verbose": true,
+    "transformIgnorePatterns": [
+      "/node_modules/(?!node-fetch)/"
+    ],
+    "moduleNameMapper": {
+      "^chalk$": "<rootDir>/src/tests/__mocks__/chalk.js"
+    },
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.js"
+    ],
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/src/config/",
+      "/src/docs/",
+      "/src/seeds/",
+      "/src/utils/auth.ts",
+      "/src/middlewares/authMiddleware.ts",
+      "/src/middlewares/adminMiddleware.ts"
+    ]
+  },
+  "babel": {
+    "presets": [
+      [
+        "@babel/preset-env",
+        {
+          "targets": {
+            "node": "current"
+          }
+        }
+      ],
+      "@babel/preset-typescript"
+    ],
+    "plugins": [
+      "babel-plugin-transform-import-meta"
+    ]
   }
 }
