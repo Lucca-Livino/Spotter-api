@@ -41,6 +41,18 @@ const exercicioItemSchema = z.object({
 
 const diasSemanaEnum = z.enum(['SEGUNDA', 'TERCA', 'QUARTA', 'QUINTA', 'SEXTA', 'SABADO', 'DOMINGO']);
 
+const boolParam = (defaultVal: boolean) =>
+    z.preprocess(
+        (val) => {
+            if (typeof val === 'string') {
+                if (val === 'false' || val === '0') return false;
+                if (val === 'true' || val === '1') return true;
+            }
+            return val;
+        },
+        z.boolean().default(defaultVal),
+    );
+
 const treinoSchema = z.object({
     nome: z
         .string()
@@ -301,34 +313,22 @@ const treinoDetalheQuerySchema = z.object({
             description: 'Define ordenação da lista de exercícios por ordem_execucao',
             example: 'asc',
         }),
-    apenas_ativos: z
-        .coerce
-        .boolean()
-        .default(true)
+    apenas_ativos: boolParam(true)
         .openapi({
             description: 'Quando true, retorna apenas exercícios ativos (deletado_em nulo)',
             example: true,
         }),
-    incluir_musculos: z
-        .coerce
-        .boolean()
-        .default(false)
+    incluir_musculos: boolParam(false)
         .openapi({
             description: 'Quando true, popula músculos vinculados de cada exercício',
             example: true,
         }),
-    incluir_aparelhos: z
-        .coerce
-        .boolean()
-        .default(false)
+    incluir_aparelhos: boolParam(false)
         .openapi({
             description: 'Quando true, popula aparelhos vinculados de cada exercício',
             example: false,
         }),
-    incluir_treino_inativo: z
-        .coerce
-        .boolean()
-        .default(false)
+    incluir_treino_inativo: boolParam(false)
         .openapi({
             description: 'Quando true, permite buscar um treino mesmo que esteja arquivado (deletado_em preenchido)',
             example: false,
@@ -387,26 +387,17 @@ const treinoListQuerySchema = z.object({
             description: 'Ordena por data_criacao do treino',
             example: 'desc',
         }),
-    incluir_exercicios: z
-        .coerce
-        .boolean()
-        .default(false)
+    incluir_exercicios: boolParam(false)
         .openapi({
             description: 'Quando true, inclui os exercícios de cada treino na listagem',
             example: false,
         }),
-    somente_com_exercicios: z
-        .coerce
-        .boolean()
-        .default(false)
+    somente_com_exercicios: boolParam(false)
         .openapi({
             description: 'Quando true, retorna apenas treinos que possuem exercícios vinculados',
             example: true,
         }),
-    incluir_inativos: z
-        .coerce
-        .boolean()
-        .default(false)
+    incluir_inativos: boolParam(false)
         .openapi({
             description: 'Quando true, inclui treinos arquivados (soft-deleted) na listagem. Disponível para todos os perfis dentro do escopo de acesso.',
             example: false,
