@@ -106,6 +106,49 @@ class TreinadorController {
 		}
 	};
 
+	updateTreinador = async (req: Request, res: Response) => {
+		console.log("[TreinadorController] [updateTreinador] Requisição recebida");
+		const id = this.getRequestIdParam(req);
+		const treinadorEditadoBody = req.body;
+
+		if (!id) {
+			return CommonResponse.error(
+				res,
+				HttpStatusCode.BAD_REQUEST.code,
+				null,
+				"id",
+				[],
+				"O id é obrigatório",
+			);
+		}
+
+		if (!treinadorEditadoBody || Object.keys(treinadorEditadoBody).length === 0) {
+			return CommonResponse.error(
+				res,
+				HttpStatusCode.BAD_REQUEST.code,
+				null,
+				"",
+				[],
+				"Corpo da requisição é obrigatório",
+			);
+		}
+
+		try {
+			const treinadorAtualizado = await this.service.updateTreinador(
+				id,
+				treinadorEditadoBody,
+			);
+			return CommonResponse.success(
+				res,
+				treinadorAtualizado,
+				HttpStatusCode.OK.code,
+				"Treinador atualizado com sucesso",
+			);
+		} catch (error) {
+			return this.handleError(res, error, "updateTreinador");
+		}
+	};
+
 	private handleError(res: Response, error: unknown, context: string) {
 		if (error instanceof ZodError) {
 			console.warn(
