@@ -309,6 +309,8 @@ afterAll(async () => {
     }
 
     // 3. Músculos e aparelho de teste
+    await DataBase.delete(exercicio_musculo).where(eq(exercicio_musculo.musculo_id, musculoId)).catch(() => {});
+    await DataBase.delete(exercicio_musculo).where(eq(exercicio_musculo.musculo_id, musculo2Id)).catch(() => {});
     await DataBase.delete(musculo).where(eq(musculo.id, musculoId));
     await DataBase.delete(musculo).where(eq(musculo.id, musculo2Id));
     await DataBase.delete(aparelho).where(eq(aparelho.id, aparelhoId));
@@ -694,7 +696,7 @@ describe('GET /exercicios', () => {
 
     it('aluno lista exercícios com escopo padrão (TODOS) → 200 com globais e pessoais', async () => {
         asAluno();
-        const res = await request(app).get('/api/exercicios');
+        const res = await request(app).get('/api/exercicios?limite=100');
 
         expect(res.status).toBe(200);
         expect(res.body.data).toHaveProperty('dados');
@@ -875,7 +877,7 @@ describe('GET /exercicios', () => {
             .where(eq(exercicio.id, exSoftId));
 
         asAdmin();
-        const res = await request(app).get('/api/exercicios?escopo=GLOBAL&incluir_inativos=true');
+        const res = await request(app).get('/api/exercicios?escopo=GLOBAL&incluir_inativos=true&limite=100');
 
         expect(res.status).toBe(200);
         const ids = res.body.data.dados.map((e: any) => e.id);
