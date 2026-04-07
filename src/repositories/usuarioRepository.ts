@@ -1,6 +1,6 @@
 import { DataBase } from '../config/DbConnect';
 import { aluno, treinador } from '../config/db/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { parseDatabaseError } from '../utils/errors/DatabaseError';
 
 export interface PerfilAcesso {
@@ -48,6 +48,33 @@ class UsuarioRepository {
             };
         } catch (error) {
             throw parseDatabaseError(error, 'UsuarioRepository.buscarPerfilAcesso');
+        }
+    }
+
+    async listarAlunosVinculadosAoTreinador(treinadorId: string): Promise<string[]> {
+        try {
+            const alunos = await this.db
+                .select({ id: aluno.id })
+                .from(aluno)
+                .where(eq(aluno.treinador_id, treinadorId));
+
+            return alunos.map((item) => item.id);
+        } catch (error) {
+            throw parseDatabaseError(error, 'UsuarioRepository.listarAlunosVinculadosAoTreinador');
+        }
+    }
+
+    async alunoVinculadoAoTreinador(alunoId: string, treinadorId: string): Promise<boolean> {
+        try {
+            const resultado = await this.db
+                .select({ id: aluno.id })
+                .from(aluno)
+                .where(and(eq(aluno.id, alunoId), eq(aluno.treinador_id, treinadorId)))
+                .limit(1);
+
+            return resultado.length > 0;
+        } catch (error) {
+            throw parseDatabaseError(error, 'UsuarioRepository.alunoVinculadoAoTreinador');
         }
     }
 }

@@ -17,6 +17,11 @@ const AlunoResponse = z.object({
     url_foto: z.string().nullable().openapi({ example: "https://example.com/foto.jpg" }),
     status_conta: z.boolean().openapi({ example: true }),
     academia_id: z.string().uuid().openapi({ example: "550e8400-e29b-41d4-a716-446655440000" }),
+    treinador_id: z
+        .string()
+        .uuid()
+        .nullable()
+        .openapi({ example: "550e8400-e29b-41d4-a716-446655440002" }),
 }).openapi("Aluno");
 
 // GET /alunos

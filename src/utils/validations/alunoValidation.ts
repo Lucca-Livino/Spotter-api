@@ -43,6 +43,15 @@ const alunoSchema = z.object({
         .string()
         .uuid({ message: "O ID da academia deve ser um UUID válido" })
         .openapi({ description: "UUID da academia", example: "550e8400-e29b-41d4-a716-446655440000" }),
+    treinador_id: z
+        .string()
+        .uuid({ message: "O ID do treinador deve ser um UUID válido" })
+        .nullable()
+        .optional()
+        .openapi({
+            description: "UUID do treinador vinculado ao aluno (opcional)",
+            example: "550e8400-e29b-41d4-a716-446655440002",
+        }),
 }).openapi("AlunoInput");
 
 const alunoUpdateSchema = alunoSchema.partial().openapi("AlunoUpdateInput");

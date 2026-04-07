@@ -34,6 +34,13 @@ class TreinoFilterBuilder {
         return this;
     }
 
+    comUsuarioIds(usuarioIds?: string[]) {
+        if (usuarioIds && usuarioIds.length > 0) {
+            this.treinoCondicoes.push(inArray(treino.usuario_id, usuarioIds));
+        }
+        return this;
+    }
+
     comTreinadorId(treinadorId?: string) {
         if (treinadorId?.trim()) {
             this.treinoCondicoes.push(eq(treino.treinador_id, treinadorId.trim()));

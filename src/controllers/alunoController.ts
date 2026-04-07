@@ -67,6 +67,7 @@ class AlunoController {
       url_foto: req.body.url_foto || null,
       status_conta: req.body.status_conta ?? true,
       academia_id: req.body.academia_id,
+      treinador_id: req.body.treinador_id ?? null,
     };
 
     console.log(

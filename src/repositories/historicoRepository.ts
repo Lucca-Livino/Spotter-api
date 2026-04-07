@@ -9,6 +9,7 @@ import {
     exercicio,
     exercicio_musculo,
     musculo,
+    aluno,
 } from '../config/db/schema';
 import { parseDatabaseError } from '../utils/errors/DatabaseError';
 
@@ -217,9 +218,9 @@ class HistoricoRepository {
     async buscarAlunosDoTreinador(treinadorId: string): Promise<string[]> {
         try {
             const rows = await this.db
-                .select({ aluno_id: treino.usuario_id })
-                .from(treino)
-                .where(eq(treino.treinador_id, treinadorId));
+                .select({ aluno_id: aluno.id })
+                .from(aluno)
+                .where(eq(aluno.treinador_id, treinadorId));
 
             return [...new Set(rows.map((r) => r.aluno_id))];
         } catch (error) {

@@ -22,6 +22,7 @@ export type type_aluno = {
     status_conta?: boolean;
     created_at?: Date;
     academia_id: string;
+    treinador_id?: string | null;
 }
 
 export type type_avaliacao_fisica = {

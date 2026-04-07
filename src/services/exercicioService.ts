@@ -19,6 +19,14 @@ class ExercicioService {
         this.usuarioRepository = new UsuarioRepository();
     }
 
+    private async treinadorPossuiAcessoAoAluno(perfil: Awaited<ReturnType<UsuarioRepository['buscarPerfilAcesso']>>, alunoId: string): Promise<boolean> {
+        if (!perfil.isTreinador || !perfil.treinadorId) {
+            return false;
+        }
+
+        return this.usuarioRepository.alunoVinculadoAoTreinador(alunoId, perfil.treinadorId);
+    }
+
     async createExercicio(body: any, userId: string): Promise<ExercicioComMusculos> {
         try {
             const dadosValidados = exercicioSchema.parse(body);
@@ -40,6 +48,13 @@ class ExercicioService {
                 // Aluno só pode criar exercícios para si mesmo; treinador e admin podem criar para qualquer aluno
                 if (!perfil.isAdmin && !perfil.isTreinador && perfil.alunoId !== alunoId) {
                     throw new Error('FORBIDDEN: você não pode criar exercícios para outro aluno');
+                }
+
+                if (!perfil.isAdmin && perfil.isTreinador) {
+                    const possuiAcesso = await this.treinadorPossuiAcessoAoAluno(perfil, alunoId);
+                    if (!possuiAcesso) {
+                        throw new Error('FORBIDDEN: treinador só pode criar exercícios para alunos vinculados ao seu perfil');
+                    }
                 }
             }
 
@@ -120,9 +135,15 @@ class ExercicioService {
             }
 
             if (aluno_id) {
-                if (!perfil.isAdmin && !perfil.alunoId) {
-                } else if (!perfil.isAdmin && perfil.alunoId !== aluno_id) {
+                if (!perfil.isAdmin && perfil.isAluno && perfil.alunoId !== aluno_id) {
                     throw new Error('FORBIDDEN: você não pode listar exercícios de outro aluno');
+                }
+
+                if (!perfil.isAdmin && perfil.isTreinador) {
+                    const possuiAcesso = await this.treinadorPossuiAcessoAoAluno(perfil, aluno_id);
+                    if (!possuiAcesso) {
+                        throw new Error('FORBIDDEN: treinador só pode listar exercícios de alunos vinculados ao seu perfil');
+                    }
                 }
             }
 
@@ -171,7 +192,11 @@ class ExercicioService {
         // Exercício pessoal: apenas o dono, qualquer treinador ou admin pode visualizar
         if (exercicioEncontrado.aluno_id) {
             const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
-            if (!perfil.isAdmin && !perfil.isTreinador && perfil.alunoId !== exercicioEncontrado.aluno_id) {
+            const treinadorComAcesso = !perfil.isAdmin && perfil.isTreinador
+                ? await this.treinadorPossuiAcessoAoAluno(perfil, exercicioEncontrado.aluno_id)
+                : false;
+
+            if (!perfil.isAdmin && !treinadorComAcesso && perfil.alunoId !== exercicioEncontrado.aluno_id) {
                 throw new Error('FORBIDDEN: você não tem permissão para visualizar este exercício');
             }
         }
@@ -197,9 +222,16 @@ class ExercicioService {
                 throw new Error('FORBIDDEN: apenas administradores podem editar exercícios globais');
             }
 
-            // Exercício pessoal: dono (aluno), qualquer treinador ou admin podem editar
-            if (exercicioExistente.aluno_id && !perfil.isAdmin && !perfil.isTreinador && perfil.alunoId !== exercicioExistente.aluno_id) {
-                throw new Error('FORBIDDEN: você não tem permissão para editar este exercício');
+            // Exercício pessoal: dono, admin ou treinador vinculado ao aluno
+            if (exercicioExistente.aluno_id && !perfil.isAdmin) {
+                const ehDono = perfil.alunoId === exercicioExistente.aluno_id;
+                const treinadorComAcesso = perfil.isTreinador
+                    ? await this.treinadorPossuiAcessoAoAluno(perfil, exercicioExistente.aluno_id)
+                    : false;
+
+                if (!ehDono && !treinadorComAcesso) {
+                    throw new Error('FORBIDDEN: você não tem permissão para editar este exercício');
+                }
             }
 
             if (dadosValidados.musculos && dadosValidados.musculos.length > 0) {
@@ -270,9 +302,16 @@ class ExercicioService {
             throw new Error('FORBIDDEN: apenas administradores podem excluir exercícios globais');
         }
 
-        // Exercício pessoal: dono (aluno), qualquer treinador ou admin podem deletar
-        if (exercicioExistente.aluno_id && !perfil.isAdmin && !perfil.isTreinador && perfil.alunoId !== exercicioExistente.aluno_id) {
-            throw new Error('FORBIDDEN: você não tem permissão para excluir este exercício');
+        // Exercício pessoal: dono, admin ou treinador vinculado ao aluno
+        if (exercicioExistente.aluno_id && !perfil.isAdmin) {
+            const ehDono = perfil.alunoId === exercicioExistente.aluno_id;
+            const treinadorComAcesso = perfil.isTreinador
+                ? await this.treinadorPossuiAcessoAoAluno(perfil, exercicioExistente.aluno_id)
+                : false;
+
+            if (!ehDono && !treinadorComAcesso) {
+                throw new Error('FORBIDDEN: você não tem permissão para excluir este exercício');
+            }
         }
 
         const totalReferencias = await this.repository.contarReferenciasEmRotina(id);

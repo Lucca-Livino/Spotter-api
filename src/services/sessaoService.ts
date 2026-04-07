@@ -127,13 +127,13 @@ class SessaoService {
             if (alunosDoTreinador.length === 0) {
                 return { dados: [], total: 0, page: filtros.page, limite: filtros.limite, totalPages: 0 };
             }
-            const alunoIds = filtros.aluno_id
-                ? (alunosDoTreinador.includes(filtros.aluno_id) ? [filtros.aluno_id] : null)
-                : alunosDoTreinador;
-
-            if (alunoIds === null) {
-                return { dados: [], total: 0, page: filtros.page, limite: filtros.limite, totalPages: 0 };
+            if (filtros.aluno_id && !alunosDoTreinador.includes(filtros.aluno_id)) {
+                throw new Error('FORBIDDEN: você não tem permissão para visualizar sessões deste aluno');
             }
+
+            const alunoIds = filtros.aluno_id
+                ? [filtros.aluno_id]
+                : alunosDoTreinador;
 
             return this.repository.findAll(filtros, alunoIds);
         }

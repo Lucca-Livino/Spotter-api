@@ -101,6 +101,7 @@ export const aluno = pgTable('aluno', {
     status_conta: boolean('status_conta').notNull().default(true),
     created_at: timestamp('created_at').defaultNow().notNull(),
     academia_id: uuid('academia_id').notNull().references(() => academia.id),
+    treinador_id: uuid('treinador_id').references(() => treinador.id),
 });
 
 export const aluno_academia = pgTable('aluno_academia', {
@@ -220,6 +221,10 @@ export const alunoRelations = relations(aluno, ({ one, many }) => ({
         fields: [aluno.academia_id],
         references: [academia.id],
     }),
+    treinadorVinculado: one(treinador, {
+        fields: [aluno.treinador_id],
+        references: [treinador.id],
+    }),
     alunoAcademias: many(aluno_academia),
     avaliacoesFisicas: many(avaliacao_fisica),
     treinos: many(treino),
@@ -258,6 +263,7 @@ export const treinadorRelations = relations(treinador, ({ one, many }) => ({
     }),
     treinadorAcademias: many(treinador_academia),
     treinosCriados: many(treino),
+    alunosVinculados: many(aluno),
 }));
 
 // 4.1. Treinador <-> Academia
