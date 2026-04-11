@@ -7,3 +7,5 @@ export type enum_dia_semana = 'SEGUNDA' | 'TERCA' | 'QUARTA' | 'QUINTA' | 'SEXTA
 export type enum_status_sessao = 'EM_ANDAMENTO' | 'CONCLUIDA' | 'CANCELADA';
 
 export type enum_status_serie = 'PENDENTE' | 'CONCLUIDA' | 'PULADA';
+
+export type enum_remetente_tipo = 'ALUNO' | 'TREINADOR';
