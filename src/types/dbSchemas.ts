@@ -1,4 +1,4 @@
-import { enum_dia_semana, enum_sexo, enum_status_serie, enum_status_sessao, enum_turnos } from "./enum";
+import { enum_dia_semana, enum_remetente_tipo, enum_sexo, enum_status_serie, enum_status_sessao, enum_turnos } from "./enum";
 
 export type type_academia = {
     id?: string;
@@ -48,6 +48,27 @@ export type type_treinador = {
     status_conta?: boolean;
     created_at?: Date;
     academia_id: string;
+}
+
+export type type_conversa = {
+    id?: string;
+    treinador_id: string;
+    aluno_id: string;
+    ativa?: boolean;
+    ultima_mensagem_em?: Date | null;
+    created_at?: Date;
+}
+
+export type type_mensagem_conversa = {
+    id?: string;
+    conversa_id: string;
+    remetente_tipo: enum_remetente_tipo;
+    remetente_user_id: string;
+    conteudo: string;
+    enviada_em?: Date;
+    lida_em?: Date | null;
+    lida_por_user_id?: string | null;
+    ativa?: boolean;
 }
 
 export type type_grupo_muscular = 'PEITO' | 'COSTAS' | 'PERNAS' | 'BRAÇOS' | 'OMBROS' | 'ABDOMEN';
