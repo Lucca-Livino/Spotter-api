@@ -305,6 +305,9 @@ beforeAll(async () => {
     }).returning({ id: treinador.id });
     treinadorRecId = treinadorRec.id;
 
+    // Vincula aluno1 ao treinador (aluno2 permanece sem treinador para testar restrição de acesso)
+    await DataBase.update(aluno).set({ treinador_id: treinadorRecId }).where(eq(aluno.id, alunoId));
+
     // Usuário sem perfil
     semPerfilUserId = randomUUID();
     await DataBase.insert(user).values({

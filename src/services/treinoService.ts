@@ -104,7 +104,8 @@ class TreinoService {
                 throw new Error('Aluno não encontrado');
             }
 
-            if (perfil.isTreinador && !perfil.isAdmin && perfil.treinadorId) {
+            // Pula verificação de vínculo quando o treinador está criando treino para o próprio perfil de aluno (usuário híbrido)
+            if (perfil.isTreinador && !perfil.isAdmin && perfil.treinadorId && alunoIdDestino !== perfil.alunoId) {
                 const vinculado = await this.usuarioRepository.alunoVinculadoAoTreinador(
                     alunoIdDestino,
                     perfil.treinadorId,
@@ -224,7 +225,7 @@ class TreinoService {
                     ? [filtrosLista.usuario_id]
                     : alunosVinculados;
 
-                filtrosLista.treinador_id = undefined;
+                filtrosLista.treinador_id = perfil.treinadorId ?? undefined;
             } else if (perfil.isAluno) {
                 if (filtrosLista.usuario_id && filtrosLista.usuario_id !== perfil.alunoId) {
                     throw new Error('FORBIDDEN: aluno só pode listar os próprios treinos');

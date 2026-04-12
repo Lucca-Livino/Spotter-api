@@ -258,6 +258,9 @@ beforeAll(async () => {
     }).returning({ id: treinador.id });
     treinadorRecId = treinadorRec.id;
 
+    // Vincula aluno1 ao treinador (aluno2 permanece sem treinador para testar restrição de acesso)
+    await DataBase.update(aluno).set({ treinador_id: treinadorRecId }).where(eq(aluno.id, alunoId));
+
     // Músculos
     const [m1] = await DataBase.insert(musculo).values({
         nome: `Peitoral Teste ${RUN_ID}`,
@@ -316,6 +319,8 @@ afterAll(async () => {
     await DataBase.delete(aparelho).where(eq(aparelho.id, aparelhoId));
 
     // 4. Perfis (treinadores e alunos)
+    // Nullifica treinador_id antes de deletar treinador para evitar violação de FK
+    await DataBase.update(aluno).set({ treinador_id: null }).where(inArray(aluno.id, [alunoId, aluno2Id])).catch(() => {});
     await DataBase.delete(treinador).where(inArray(treinador.id, [adminTreinadorId, treinadorRecId]));
     await DataBase.delete(aluno).where(inArray(aluno.id, [alunoId, aluno2Id]));
 

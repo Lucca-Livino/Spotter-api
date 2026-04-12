@@ -128,7 +128,7 @@ class SessaoService {
                 return { dados: [], total: 0, page: filtros.page, limite: filtros.limite, totalPages: 0 };
             }
             if (filtros.aluno_id && !alunosDoTreinador.includes(filtros.aluno_id)) {
-                throw new Error('FORBIDDEN: você não tem permissão para visualizar sessões deste aluno');
+                return { dados: [], total: 0, page: filtros.page, limite: filtros.limite, totalPages: 0 };
             }
 
             const alunoIds = filtros.aluno_id
