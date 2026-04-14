@@ -20,6 +20,7 @@ import historicoRoutes from './routes/historicoRoutes';
 import musculoRoutes from './routes/musculoRoutes';
 import aparelhoRoutes from './routes/aparelhoRoutes';
 import authRoutes from "./routes/authRoutes";
+import uploadRoutes from "./routes/uploadRoutes";
 import conversaRoutes from './routes/conversaRoutes';
 import { initSocketIO } from './config/socketIo';
 
@@ -87,6 +88,7 @@ app.use('/api', historicoRoutes);
 app.use('/api', musculoRoutes);
 app.use('/api', aparelhoRoutes);
 app.use('/api', authRoutes);
+app.use('/api', uploadRoutes);
 app.use('/api', conversaRoutes);
 
 //função para iniciar o servidor
