@@ -1,4 +1,5 @@
 import ExercicioService from "../services/exercicioService";
+import UploadService from "../services/uploadService";
 import { Request, Response } from "express";
 import CommonResponse from "../utils/helpers/commonResponse";
 import { ZodError } from "zod";
@@ -7,16 +8,55 @@ import { DatabaseError } from "../utils/errors/DatabaseError";
 
 class ExercicioController {
     private service: ExercicioService;
+    private uploadService: UploadService;
+
     constructor() {
         this.service = new ExercicioService();
+        this.uploadService = new UploadService();
+    }
+
+    private async parseMultipartData(req: Request) {
+        if (req.body.data) {
+            try {
+                return JSON.parse(req.body.data);
+            } catch (e) {
+                throw new Error('VALIDATION: Campo "data" deve ser um JSON válido');
+            }
+        }
+        return req.body;
+    }
+
+    private async uploadAnimacao(req: Request): Promise<string | null> {
+        if (!req.file) return null;
+        const uploaded = await this.uploadService.uploadFiles('animacoes', [req.file as any]);
+        return uploaded[0].url;
+    }
+
+    private async deleteAnimacao(url: string | null) {
+        if (!url) return;
+        try {
+            const urlParts = url.split('/');
+            const fileName = urlParts[urlParts.length - 1];
+            await this.uploadService.deleteFile('animacoes', fileName);
+        } catch (error) {
+            console.error('[ExercicioController] Erro ao deletar animação órfã:', error);
+        }
     }
 
     createExercicio = async (req: Request, res: Response) => {
+        let animacaoUrl: string | null = null;
         try {
             const userId = (req as any).user?.id as string;
-            const resposta = await this.service.createExercicio(req.body, userId);
+            const body = await this.parseMultipartData(req);
+
+            animacaoUrl = await this.uploadAnimacao(req);
+            const dadosParaCriar = { ...body, animacao_url: animacaoUrl || body.animacao_url };
+
+            const resposta = await this.service.createExercicio(dadosParaCriar, userId);
             return CommonResponse.created(res, resposta, HttpStatusCode.CREATED.message);
         } catch (error) {
+            if (animacaoUrl) await this.deleteAnimacao(animacaoUrl);
+
             if (error instanceof ZodError) {
                 return CommonResponse.error(res, HttpStatusCode.UNPROCESSABLE_ENTITY.code, null, null, error.issues, HttpStatusCode.UNPROCESSABLE_ENTITY.message);
             }
@@ -99,11 +139,19 @@ class ExercicioController {
     }
 
     updateExercicio = async (req: Request, res: Response) => {
+        let animacaoUrl: string | null = null;
         try {
             const userId = (req as any).user?.id as string;
-            const resposta = await this.service.updateExercicio(req.params.id as string, req.body, userId);
+            const body = await this.parseMultipartData(req);
+
+            animacaoUrl = await this.uploadAnimacao(req);
+            const dadosParaAtualizar = { ...body, animacao_url: animacaoUrl || body.animacao_url };
+
+            const resposta = await this.service.updateExercicio(req.params.id as string, dadosParaAtualizar, userId);
             return CommonResponse.success(res, resposta, HttpStatusCode.OK.code);
         } catch (error) {
+            if (animacaoUrl) await this.deleteAnimacao(animacaoUrl);
+
             if (error instanceof ZodError) {
                 return CommonResponse.error(res, HttpStatusCode.UNPROCESSABLE_ENTITY.code, null, null, error.issues, HttpStatusCode.UNPROCESSABLE_ENTITY.message);
             }
