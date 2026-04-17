@@ -184,6 +184,7 @@ export const exercicio = pgTable('exercicio', {
     id: uuid('id').defaultRandom().primaryKey(),
     nome: varchar('nome', { length: 255 }).notNull(),
     descricao: text('descricao'),
+    animacao_url: varchar('animacao_url', { length: 255 }),
     aluno_id: uuid('aluno_id').references(() => aluno.id),
     deletado_em: timestamp('deletado_em'),
     created_at: timestamp('created_at').defaultNow().notNull(),

@@ -89,6 +89,7 @@ export type type_exercicio = {
     id?: string;
     nome: string;
     descricao?: string | null;
+    animacao_url?: string | null;
     aluno_id?: string | null;
     deletado_em?: Date | null;
     created_at?: Date;

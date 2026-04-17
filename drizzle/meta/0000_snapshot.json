@@ -1,0 +1,1842 @@
+{
+  "id": "06d0bb5f-30a3-4fc6-9cb6-7d26ccafc3fb",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.academia": {
+      "name": "academia",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nome": {
+          "name": "nome",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "endereco_numero": {
+          "name": "endereco_numero",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "endereco_rua": {
+          "name": "endereco_rua",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "endereco_bairro": {
+          "name": "endereco_bairro",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "endereco_cidade": {
+          "name": "endereco_cidade",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "endereco_estado": {
+          "name": "endereco_estado",
+          "type": "varchar(2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.account": {
+      "name": "account",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "account_id": {
+          "name": "account_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "access_token": {
+          "name": "access_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refresh_token": {
+          "name": "refresh_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id_token": {
+          "name": "id_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "access_token_expires_at": {
+          "name": "access_token_expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "refresh_token_expires_at": {
+          "name": "refresh_token_expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "scope": {
+          "name": "scope",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "account_user_id_user_id_fk": {
+          "name": "account_user_id_user_id_fk",
+          "tableFrom": "account",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.aluno": {
+      "name": "aluno",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "url_foto": {
+          "name": "url_foto",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nome": {
+          "name": "nome",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data_nascimento": {
+          "name": "data_nascimento",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sexo": {
+          "name": "sexo",
+          "type": "sexo",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_admin": {
+          "name": "is_admin",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "status_conta": {
+          "name": "status_conta",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "academia_id": {
+          "name": "academia_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "treinador_id": {
+          "name": "treinador_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "aluno_user_id_user_id_fk": {
+          "name": "aluno_user_id_user_id_fk",
+          "tableFrom": "aluno",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "aluno_academia_id_academia_id_fk": {
+          "name": "aluno_academia_id_academia_id_fk",
+          "tableFrom": "aluno",
+          "tableTo": "academia",
+          "columnsFrom": [
+            "academia_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "aluno_treinador_id_treinador_id_fk": {
+          "name": "aluno_treinador_id_treinador_id_fk",
+          "tableFrom": "aluno",
+          "tableTo": "treinador",
+          "columnsFrom": [
+            "treinador_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "aluno_user_id_unique": {
+          "name": "aluno_user_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.aluno_academia": {
+      "name": "aluno_academia",
+      "schema": "",
+      "columns": {
+        "aluno_id": {
+          "name": "aluno_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "academia_id": {
+          "name": "academia_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "aluno_academia_aluno_id_aluno_id_fk": {
+          "name": "aluno_academia_aluno_id_aluno_id_fk",
+          "tableFrom": "aluno_academia",
+          "tableTo": "aluno",
+          "columnsFrom": [
+            "aluno_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "aluno_academia_academia_id_academia_id_fk": {
+          "name": "aluno_academia_academia_id_academia_id_fk",
+          "tableFrom": "aluno_academia",
+          "tableTo": "academia",
+          "columnsFrom": [
+            "academia_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "aluno_academia_aluno_id_academia_id_pk": {
+          "name": "aluno_academia_aluno_id_academia_id_pk",
+          "columns": [
+            "aluno_id",
+            "academia_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.aparelho": {
+      "name": "aparelho",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nome": {
+          "name": "nome",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descricao": {
+          "name": "descricao",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.avaliacao_fisica": {
+      "name": "avaliacao_fisica",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "data_avaliacao": {
+          "name": "data_avaliacao",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "CURRENT_DATE"
+        },
+        "peso_kg": {
+          "name": "peso_kg",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "altura_m": {
+          "name": "altura_m",
+          "type": "numeric(3, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aluno_id": {
+          "name": "aluno_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "avaliacao_fisica_aluno_id_aluno_id_fk": {
+          "name": "avaliacao_fisica_aluno_id_aluno_id_fk",
+          "tableFrom": "avaliacao_fisica",
+          "tableTo": "aluno",
+          "columnsFrom": [
+            "aluno_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.conversa": {
+      "name": "conversa",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "treinador_id": {
+          "name": "treinador_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aluno_id": {
+          "name": "aluno_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ativa": {
+          "name": "ativa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "ultima_mensagem_em": {
+          "name": "ultima_mensagem_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "conversa_treinador_aluno_unique": {
+          "name": "conversa_treinador_aluno_unique",
+          "columns": [
+            {
+              "expression": "treinador_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "aluno_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "conversa_treinador_id_treinador_id_fk": {
+          "name": "conversa_treinador_id_treinador_id_fk",
+          "tableFrom": "conversa",
+          "tableTo": "treinador",
+          "columnsFrom": [
+            "treinador_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "conversa_aluno_id_aluno_id_fk": {
+          "name": "conversa_aluno_id_aluno_id_fk",
+          "tableFrom": "conversa",
+          "tableTo": "aluno",
+          "columnsFrom": [
+            "aluno_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.exercicio": {
+      "name": "exercicio",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nome": {
+          "name": "nome",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descricao": {
+          "name": "descricao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "animacao_url": {
+          "name": "animacao_url",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aluno_id": {
+          "name": "aluno_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "deletado_em": {
+          "name": "deletado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "exercicio_aluno_id_aluno_id_fk": {
+          "name": "exercicio_aluno_id_aluno_id_fk",
+          "tableFrom": "exercicio",
+          "tableTo": "aluno",
+          "columnsFrom": [
+            "aluno_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.exercicio_aparelho": {
+      "name": "exercicio_aparelho",
+      "schema": "",
+      "columns": {
+        "exercicio_id": {
+          "name": "exercicio_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aparelho_id": {
+          "name": "aparelho_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "exercicio_aparelho_exercicio_id_exercicio_id_fk": {
+          "name": "exercicio_aparelho_exercicio_id_exercicio_id_fk",
+          "tableFrom": "exercicio_aparelho",
+          "tableTo": "exercicio",
+          "columnsFrom": [
+            "exercicio_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "exercicio_aparelho_aparelho_id_aparelho_id_fk": {
+          "name": "exercicio_aparelho_aparelho_id_aparelho_id_fk",
+          "tableFrom": "exercicio_aparelho",
+          "tableTo": "aparelho",
+          "columnsFrom": [
+            "aparelho_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "exercicio_aparelho_exercicio_id_aparelho_id_pk": {
+          "name": "exercicio_aparelho_exercicio_id_aparelho_id_pk",
+          "columns": [
+            "exercicio_id",
+            "aparelho_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.exercicio_musculo": {
+      "name": "exercicio_musculo",
+      "schema": "",
+      "columns": {
+        "tipo_ativacao": {
+          "name": "tipo_ativacao",
+          "type": "tipo_ativacao",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "exercicio_id": {
+          "name": "exercicio_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "musculo_id": {
+          "name": "musculo_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "exercicio_musculo_exercicio_id_exercicio_id_fk": {
+          "name": "exercicio_musculo_exercicio_id_exercicio_id_fk",
+          "tableFrom": "exercicio_musculo",
+          "tableTo": "exercicio",
+          "columnsFrom": [
+            "exercicio_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "exercicio_musculo_musculo_id_musculo_id_fk": {
+          "name": "exercicio_musculo_musculo_id_musculo_id_fk",
+          "tableFrom": "exercicio_musculo",
+          "tableTo": "musculo",
+          "columnsFrom": [
+            "musculo_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "exercicio_musculo_exercicio_id_musculo_id_pk": {
+          "name": "exercicio_musculo_exercicio_id_musculo_id_pk",
+          "columns": [
+            "exercicio_id",
+            "musculo_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.mensagem_conversa": {
+      "name": "mensagem_conversa",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "conversa_id": {
+          "name": "conversa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "remetente_tipo": {
+          "name": "remetente_tipo",
+          "type": "remetente_tipo",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "remetente_user_id": {
+          "name": "remetente_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "conteudo": {
+          "name": "conteudo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "enviada_em": {
+          "name": "enviada_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "lida_em": {
+          "name": "lida_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lida_por_user_id": {
+          "name": "lida_por_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ativa": {
+          "name": "ativa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "mensagem_conversa_conversa_id_conversa_id_fk": {
+          "name": "mensagem_conversa_conversa_id_conversa_id_fk",
+          "tableFrom": "mensagem_conversa",
+          "tableTo": "conversa",
+          "columnsFrom": [
+            "conversa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "mensagem_conversa_remetente_user_id_user_id_fk": {
+          "name": "mensagem_conversa_remetente_user_id_user_id_fk",
+          "tableFrom": "mensagem_conversa",
+          "tableTo": "user",
+          "columnsFrom": [
+            "remetente_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "mensagem_conversa_lida_por_user_id_user_id_fk": {
+          "name": "mensagem_conversa_lida_por_user_id_user_id_fk",
+          "tableFrom": "mensagem_conversa",
+          "tableTo": "user",
+          "columnsFrom": [
+            "lida_por_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.musculo": {
+      "name": "musculo",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nome": {
+          "name": "nome",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "grupo_muscular": {
+          "name": "grupo_muscular",
+          "type": "grupo_muscular",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sessao_exercicio": {
+      "name": "sessao_exercicio",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "sessao_treino_id": {
+          "name": "sessao_treino_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "treino_exercicio_id": {
+          "name": "treino_exercicio_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "concluido": {
+          "name": "concluido",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "observacoes": {
+          "name": "observacoes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ordem": {
+          "name": "ordem",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "inicio": {
+          "name": "inicio",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fim": {
+          "name": "fim",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "sessao_exercicio_sessao_treino_id_sessao_treino_id_fk": {
+          "name": "sessao_exercicio_sessao_treino_id_sessao_treino_id_fk",
+          "tableFrom": "sessao_exercicio",
+          "tableTo": "sessao_treino",
+          "columnsFrom": [
+            "sessao_treino_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "sessao_exercicio_treino_exercicio_id_treino_exercicio_id_fk": {
+          "name": "sessao_exercicio_treino_exercicio_id_treino_exercicio_id_fk",
+          "tableFrom": "sessao_exercicio",
+          "tableTo": "treino_exercicio",
+          "columnsFrom": [
+            "treino_exercicio_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sessao_serie": {
+      "name": "sessao_serie",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "sessao_exercicio_id": {
+          "name": "sessao_exercicio_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "numero_serie": {
+          "name": "numero_serie",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "repeticoes_realizadas": {
+          "name": "repeticoes_realizadas",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "carga_utilizada": {
+          "name": "carga_utilizada",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "status_serie",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'PENDENTE'"
+        },
+        "observacoes": {
+          "name": "observacoes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "sessao_serie_sessao_exercicio_id_sessao_exercicio_id_fk": {
+          "name": "sessao_serie_sessao_exercicio_id_sessao_exercicio_id_fk",
+          "tableFrom": "sessao_serie",
+          "tableTo": "sessao_exercicio",
+          "columnsFrom": [
+            "sessao_exercicio_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sessao_treino": {
+      "name": "sessao_treino",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "aluno_id": {
+          "name": "aluno_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "treino_id": {
+          "name": "treino_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "status_sessao",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'EM_ANDAMENTO'"
+        },
+        "inicio": {
+          "name": "inicio",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "fim": {
+          "name": "fim",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "observacoes": {
+          "name": "observacoes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "sessao_treino_aluno_em_andamento_idx": {
+          "name": "sessao_treino_aluno_em_andamento_idx",
+          "columns": [
+            {
+              "expression": "aluno_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"sessao_treino\".\"status\" = 'EM_ANDAMENTO'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "sessao_treino_aluno_id_aluno_id_fk": {
+          "name": "sessao_treino_aluno_id_aluno_id_fk",
+          "tableFrom": "sessao_treino",
+          "tableTo": "aluno",
+          "columnsFrom": [
+            "aluno_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "sessao_treino_treino_id_treino_id_fk": {
+          "name": "sessao_treino_treino_id_treino_id_fk",
+          "tableFrom": "sessao_treino",
+          "tableTo": "treino",
+          "columnsFrom": [
+            "treino_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.session": {
+      "name": "session",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "token": {
+          "name": "token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ip_address": {
+          "name": "ip_address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_agent": {
+          "name": "user_agent",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "session_user_id_user_id_fk": {
+          "name": "session_user_id_user_id_fk",
+          "tableFrom": "session",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "session_token_unique": {
+          "name": "session_token_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "token"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.treinador": {
+      "name": "treinador",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "url_foto": {
+          "name": "url_foto",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nome": {
+          "name": "nome",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data_nascimento": {
+          "name": "data_nascimento",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "sexo": {
+          "name": "sexo",
+          "type": "sexo",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cref": {
+          "name": "cref",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "turnos": {
+          "name": "turnos",
+          "type": "turno[]",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "especializacao": {
+          "name": "especializacao",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "graduacao": {
+          "name": "graduacao",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "is_admin": {
+          "name": "is_admin",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "status_conta": {
+          "name": "status_conta",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "academia_id": {
+          "name": "academia_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "treinador_user_id_user_id_fk": {
+          "name": "treinador_user_id_user_id_fk",
+          "tableFrom": "treinador",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "treinador_academia_id_academia_id_fk": {
+          "name": "treinador_academia_id_academia_id_fk",
+          "tableFrom": "treinador",
+          "tableTo": "academia",
+          "columnsFrom": [
+            "academia_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "treinador_user_id_unique": {
+          "name": "treinador_user_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "user_id"
+          ]
+        },
+        "treinador_cref_unique": {
+          "name": "treinador_cref_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "cref"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.treinador_academia": {
+      "name": "treinador_academia",
+      "schema": "",
+      "columns": {
+        "treinador_id": {
+          "name": "treinador_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "academia_id": {
+          "name": "academia_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "treinador_academia_treinador_id_treinador_id_fk": {
+          "name": "treinador_academia_treinador_id_treinador_id_fk",
+          "tableFrom": "treinador_academia",
+          "tableTo": "treinador",
+          "columnsFrom": [
+            "treinador_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "treinador_academia_academia_id_academia_id_fk": {
+          "name": "treinador_academia_academia_id_academia_id_fk",
+          "tableFrom": "treinador_academia",
+          "tableTo": "academia",
+          "columnsFrom": [
+            "academia_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "treinador_academia_treinador_id_academia_id_pk": {
+          "name": "treinador_academia_treinador_id_academia_id_pk",
+          "columns": [
+            "treinador_id",
+            "academia_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.treino": {
+      "name": "treino",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nome": {
+          "name": "nome",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descricao": {
+          "name": "descricao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_criacao": {
+          "name": "data_criacao",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deletado_em": {
+          "name": "deletado_em",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "usuario_id": {
+          "name": "usuario_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "treinador_id": {
+          "name": "treinador_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dias_semana": {
+          "name": "dias_semana",
+          "type": "dia_semana[]",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ordem": {
+          "name": "ordem",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "treino_usuario_id_aluno_id_fk": {
+          "name": "treino_usuario_id_aluno_id_fk",
+          "tableFrom": "treino",
+          "tableTo": "aluno",
+          "columnsFrom": [
+            "usuario_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "treino_treinador_id_treinador_id_fk": {
+          "name": "treino_treinador_id_treinador_id_fk",
+          "tableFrom": "treino",
+          "tableTo": "treinador",
+          "columnsFrom": [
+            "treinador_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.treino_exercicio": {
+      "name": "treino_exercicio",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "series": {
+          "name": "series",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "repeticoes": {
+          "name": "repeticoes",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "carga_sugerida": {
+          "name": "carga_sugerida",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tempo_descanso_segundos": {
+          "name": "tempo_descanso_segundos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ordem_execucao": {
+          "name": "ordem_execucao",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "treino_id": {
+          "name": "treino_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "exercicio_id": {
+          "name": "exercicio_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "treino_exercicio_treino_id_treino_id_fk": {
+          "name": "treino_exercicio_treino_id_treino_id_fk",
+          "tableFrom": "treino_exercicio",
+          "tableTo": "treino",
+          "columnsFrom": [
+            "treino_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "treino_exercicio_exercicio_id_exercicio_id_fk": {
+          "name": "treino_exercicio_exercicio_id_exercicio_id_fk",
+          "tableFrom": "treino_exercicio",
+          "tableTo": "exercicio",
+          "columnsFrom": [
+            "exercicio_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.user": {
+      "name": "user",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email_verified": {
+          "name": "email_verified",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "image": {
+          "name": "image",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "user_email_unique": {
+          "name": "user_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.verification": {
+      "name": "verification",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "identifier": {
+          "name": "identifier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.dia_semana": {
+      "name": "dia_semana",
+      "schema": "public",
+      "values": [
+        "SEGUNDA",
+        "TERCA",
+        "QUARTA",
+        "QUINTA",
+        "SEXTA",
+        "SABADO",
+        "DOMINGO"
+      ]
+    },
+    "public.grupo_muscular": {
+      "name": "grupo_muscular",
+      "schema": "public",
+      "values": [
+        "PEITO",
+        "COSTAS",
+        "PERNAS",
+        "BRAÇOS",
+        "OMBROS",
+        "ABDOMEN"
+      ]
+    },
+    "public.remetente_tipo": {
+      "name": "remetente_tipo",
+      "schema": "public",
+      "values": [
+        "ALUNO",
+        "TREINADOR"
+      ]
+    },
+    "public.sexo": {
+      "name": "sexo",
+      "schema": "public",
+      "values": [
+        "M",
+        "F"
+      ]
+    },
+    "public.status_serie": {
+      "name": "status_serie",
+      "schema": "public",
+      "values": [
+        "PENDENTE",
+        "CONCLUIDA",
+        "PULADA"
+      ]
+    },
+    "public.status_sessao": {
+      "name": "status_sessao",
+      "schema": "public",
+      "values": [
+        "EM_ANDAMENTO",
+        "CONCLUIDA",
+        "CANCELADA"
+      ]
+    },
+    "public.tipo_ativacao": {
+      "name": "tipo_ativacao",
+      "schema": "public",
+      "values": [
+        "PRIMARIO",
+        "SECUNDARIO"
+      ]
+    },
+    "public.turno": {
+      "name": "turno",
+      "schema": "public",
+      "values": [
+        "MANHA",
+        "TARDE",
+        "NOITE"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

@@ -19,6 +19,13 @@ const exercicioSchema = z.object({
         .nullable()
         .optional()
         .openapi({ description: "Descrição do exercício", example: "Exercício para peitorais" }),
+    animacao_url: z
+        .string()
+        .url({ message: "A URL da animação deve ser válida" })
+        .max(255, { message: "A URL da animação deve ter no máximo 255 caracteres" })
+        .nullable()
+        .optional()
+        .openapi({ description: "URL da animação (WebM) do exercício", example: "https://bucket.com/animacoes/supino.webm" }),
     aluno_id: z
         .string()
         .uuid({ message: "O ID do aluno deve ser um UUID válido" })
@@ -56,6 +63,13 @@ const exercicioUpdateSchema = z.object({
         .nullable()
         .optional()
         .openapi({ description: "Descrição do exercício", example: "Exercício para peitorais superiores" }),
+    animacao_url: z
+        .string()
+        .url({ message: "A URL da animação deve ser válida" })
+        .max(255, { message: "A URL da animação deve ter no máximo 255 caracteres" })
+        .nullable()
+        .optional()
+        .openapi({ description: "URL da animação (WebM) do exercício", example: "https://bucket.com/animacoes/supino.webm" }),
     musculos: z
         .array(z.object({
             musculo_id: z.string().uuid({ message: "O ID do músculo deve ser um UUID válido" })

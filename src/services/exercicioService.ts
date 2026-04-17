@@ -90,6 +90,7 @@ class ExercicioService {
             const novoExercicio: type_exercicio = {
                 nome: dadosValidados.nome,
                 descricao: dadosValidados.descricao ?? null,
+                animacao_url: dadosValidados.animacao_url ?? null,
                 aluno_id: alunoId ?? null,
             };
 
@@ -271,6 +272,7 @@ class ExercicioService {
             const dadosParaAtualizar: Partial<type_exercicio> = {};
             if (camposExercicio.nome !== undefined) dadosParaAtualizar.nome = camposExercicio.nome;
             if (camposExercicio.descricao !== undefined) dadosParaAtualizar.descricao = camposExercicio.descricao;
+            if (camposExercicio.animacao_url !== undefined) dadosParaAtualizar.animacao_url = camposExercicio.animacao_url;
 
             await this.repository.updateExercicio(id, dadosParaAtualizar, musculos, aparelhos);
 
