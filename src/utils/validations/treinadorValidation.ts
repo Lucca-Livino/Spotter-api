@@ -54,10 +54,13 @@ const treinadorCreateBaseSchema = z
 			.min(1, { message: "A graduação é obrigatória" })
 			.openapi({ description: "Graduação do treinador", example: "Educação Física - Bacharel" }),
 		url_foto: z
-			.string()
-			.optional()
-			.nullable()
-			.openapi({ description: "URL da foto do treinador", example: "https://example.com/foto.jpg" }),
+		        .string()
+		        .url({ message: "A URL da foto deve ser válida" })
+		        .max(255, { message: "A URL da foto deve ter no máximo 255 caracteres" })
+		        .optional()
+		        .nullable()
+		        .openapi({ description: "URL da foto do treinador", example: "https://example.com/foto.jpg" }),
+
 		status_conta: z
 			.boolean()
 			.optional()

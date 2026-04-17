@@ -31,6 +31,8 @@ const alunoSchema = z.object({
         .openapi({ description: "Sexo do aluno", example: "M" }),
     url_foto: z
         .string()
+        .url({ message: "A URL da foto deve ser válida" })
+        .max(255, { message: "A URL da foto deve ter no máximo 255 caracteres" })
         .optional()
         .nullable()
         .openapi({ description: "URL da foto do aluno", example: "https://example.com/foto.jpg" }),
