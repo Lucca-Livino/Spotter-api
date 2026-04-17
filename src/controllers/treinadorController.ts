@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import TreinadorService from "../services/treinadorService";
+import UploadService from "../services/uploadService";
 import CommonResponse from "../utils/helpers/commonResponse";
 import HttpStatusCode from "../utils/helpers/httpStatusCode";
 import { ZodError } from "zod";
@@ -7,13 +8,44 @@ import { DatabaseError } from "../utils/errors/DatabaseError";
 import { type_treinador } from "../types/dbSchemas";
 
 class TreinadorController {
-	private service: TreinadorService;
+        private service: TreinadorService;
+        private uploadService: UploadService;
 
-	constructor() {
-		this.service = new TreinadorService();
-	}
+        constructor() {
+                this.service = new TreinadorService();
+                this.uploadService = new UploadService();
+        }
 
-	getAllTreinadores = async (req: Request, res: Response) => {
+        private async parseMultipartData(req: Request) {
+                if (req.body.data) {
+                        try {
+                                return JSON.parse(req.body.data);
+                        } catch (e) {
+                                throw new Error('VALIDATION: Campo "data" deve ser um JSON válido');
+                        }
+                }
+                return req.body;
+        }
+
+        private async uploadFoto(req: Request): Promise<string | null> {
+                if (!req.file) return null;
+                const uploaded = await this.uploadService.uploadFiles('fotos-perfil', [req.file as any]);
+                return uploaded[0].url;
+        }
+
+        private async deleteFoto(url: string | null) {
+                if (!url) return;
+                try {
+                        const urlParts = url.split('/');
+                        const fileName = urlParts[urlParts.length - 1];
+                        await this.uploadService.deleteFile('fotos-perfil', fileName);
+                } catch (error) {
+                        console.error('[TreinadorController] Erro ao deletar foto órfã:', error);
+                }
+        }
+
+        getAllTreinadores = async (req: Request, res: Response) => {
+
 		console.log("[TreinadorController] [getAllTreinadores] Requisição recebida");
 
 		try {
@@ -53,102 +85,101 @@ class TreinadorController {
 	};
 
 	createTreinador = async (req: Request, res: Response) => {
-		console.log("[TreinadorController] [createTreinador] Requisição recebida");
+	        let fotoUrl: string | null = null;
+	        try {
+	                console.log("[TreinadorController] [createTreinador] Requisição recebida");
+	                const body = await this.parseMultipartData(req);
 
-		const usuarioAutenticado = (req as any).user;
-		const userId = usuarioAutenticado?.id;
+	                const usuarioAutenticado = (req as any).user;
+	                const userId = usuarioAutenticado?.id;
 
-		if (!userId) {
-			return CommonResponse.error(
-				res,
-				HttpStatusCode.UNAUTHORIZED.code,
-				null,
-				null,
-				[],
-				"Usuário não autenticado",
-			);
-		}
+	                if (!userId) {
+	                        return CommonResponse.error(
+	                                res,
+	                                HttpStatusCode.UNAUTHORIZED.code,
+	                                null,
+	                                null,
+	                                [],
+	                                "Usuário não autenticado",
+	                        );
+	                }
 
-		const novoTreinador: type_treinador = {
-			user_id: userId,
-			nome: req.body.nome,
-			data_nascimento: req.body.data_nascimento,
-			sexo: req.body.sexo,
-			cref: req.body.cref,
-			turnos: req.body.turnos,
-			especializacao: req.body.especializacao,
-			graduacao: req.body.graduacao,
-			url_foto: req.body.url_foto || null,
-			status_conta: req.body.status_conta ?? true,
-			academia_id: req.body.academia_id,
-		};
+	                fotoUrl = await this.uploadFoto(req);
 
-		if (!novoTreinador.nome) {
-			return CommonResponse.error(
-				res,
-				HttpStatusCode.BAD_REQUEST.code,
-				null,
-				"",
-				[],
-				"Dados do treinador são obrigatórios (nome)",
-			);
-		}
+	                const novoTreinador: type_treinador = {
+	                        user_id: userId,
+	                        nome: body.nome,
+	                        data_nascimento: body.data_nascimento,
+	                        sexo: body.sexo,
+	                        cref: body.cref,
+	                        turnos: body.turnos,
+	                        especializacao: body.especializacao,
+	                        graduacao: body.graduacao,
+	                        url_foto: fotoUrl || body.url_foto || null,
+	                        status_conta: body.status_conta ?? true,
+	                        academia_id: body.academia_id,
+	                };
 
-		try {
-			const resposta = await this.service.createTreinador(novoTreinador);
-			return CommonResponse.created(
-				res,
-				resposta,
-				HttpStatusCode.CREATED.message,
-			);
-		} catch (error) {
-			return this.handleError(res, error, "createTreinador");
-		}
+	                if (!novoTreinador.nome) {
+	                        if (fotoUrl) await this.deleteFoto(fotoUrl);
+	                        return CommonResponse.error(
+	                                res,
+	                                HttpStatusCode.BAD_REQUEST.code,
+	                                null,
+	                                "",
+	                                [],
+	                                "Dados do treinador são obrigatórios (nome)",
+	                        );
+	                }
+
+	                const resposta = await this.service.createTreinador(novoTreinador);
+	                return CommonResponse.created(
+	                        res,
+	                        resposta,
+	                        HttpStatusCode.CREATED.message,
+	                );
+	        } catch (error) {
+	                if (fotoUrl) await this.deleteFoto(fotoUrl);
+	                return this.handleError(res, error, "createTreinador");
+	        }
 	};
 
 	updateTreinador = async (req: Request, res: Response) => {
-		console.log("[TreinadorController] [updateTreinador] Requisição recebida");
-		const id = this.getRequestIdParam(req);
-		const treinadorEditadoBody = req.body;
+	        let fotoUrl: string | null = null;
+	        try {
+	                console.log("[TreinadorController] [updateTreinador] Requisição recebida");
+	                const id = this.getRequestIdParam(req);
+	                const body = await this.parseMultipartData(req);
 
-		if (!id) {
-			return CommonResponse.error(
-				res,
-				HttpStatusCode.BAD_REQUEST.code,
-				null,
-				"id",
-				[],
-				"O id é obrigatório",
-			);
-		}
+	                if (!id) {
+	                        return CommonResponse.error(
+	                                res,
+	                                HttpStatusCode.BAD_REQUEST.code,
+	                                null,
+	                                "id",
+	                                [],
+	                                "O id é obrigatório",
+	                        );
+	                }
 
-		if (!treinadorEditadoBody || Object.keys(treinadorEditadoBody).length === 0) {
-			return CommonResponse.error(
-				res,
-				HttpStatusCode.BAD_REQUEST.code,
-				null,
-				"",
-				[],
-				"Corpo da requisição é obrigatório",
-			);
-		}
+	                fotoUrl = await this.uploadFoto(req);
+	                const treinadorEditadoBody = { ...body, url_foto: fotoUrl || body.url_foto };
 
-		try {
-			const treinadorAtualizado = await this.service.updateTreinador(
-				id,
-				treinadorEditadoBody,
-			);
-			return CommonResponse.success(
-				res,
-				treinadorAtualizado,
-				HttpStatusCode.OK.code,
-				"Treinador atualizado com sucesso",
-			);
-		} catch (error) {
-			return this.handleError(res, error, "updateTreinador");
-		}
+	                const treinadorAtualizado = await this.service.updateTreinador(
+	                        id,
+	                        treinadorEditadoBody,
+	                );
+	                return CommonResponse.success(
+	                        res,
+	                        treinadorAtualizado,
+	                        HttpStatusCode.OK.code,
+	                        "Treinador atualizado com sucesso",
+	                );
+	        } catch (error) {
+	                if (fotoUrl) await this.deleteFoto(fotoUrl);
+	                return this.handleError(res, error, "updateTreinador");
+	        }
 	};
-
 	private handleError(res: Response, error: unknown, context: string) {
 		if (error instanceof ZodError) {
 			console.warn(

@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import AlunosService from "../services/alunoService";
+import UploadService from "../services/uploadService";
 import CommonResponse from "../utils/helpers/commonResponse";
 import HttpStatusCode from "../utils/helpers/httpStatusCode";
 import { ZodError } from "zod";
@@ -8,9 +9,39 @@ import { type_aluno } from "../types/dbSchemas";
 
 class AlunoController {
   private service: AlunosService;
+  private uploadService: UploadService;
 
   constructor() {
     this.service = new AlunosService();
+    this.uploadService = new UploadService();
+  }
+
+  private async parseMultipartData(req: Request) {
+    if (req.body.data) {
+      try {
+        return JSON.parse(req.body.data);
+      } catch (e) {
+        throw new Error('VALIDATION: Campo "data" deve ser um JSON válido');
+      }
+    }
+    return req.body;
+  }
+
+  private async uploadFoto(req: Request): Promise<string | null> {
+    if (!req.file) return null;
+    const uploaded = await this.uploadService.uploadFiles('fotos-perfil', [req.file as any]);
+    return uploaded[0].url;
+  }
+
+  private async deleteFoto(url: string | null) {
+    if (!url) return;
+    try {
+      const urlParts = url.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+      await this.uploadService.deleteFile('fotos-perfil', fileName);
+    } catch (error) {
+      console.error('[AlunoController] Erro ao deletar foto órfã:', error);
+    }
   }
 
   getAllAlunos = async (req: Request, res: Response) => {
@@ -53,57 +84,44 @@ class AlunoController {
   };
 
   createAluno = async (req: Request, res: Response) => {
-    console.log("[AlunosController] [createAluno] Requisição recebida");
-    console.log(
-      "[AlunosController] [createAluno] Body:",
-      JSON.stringify(req.body, null, 2),
-    );
-
-    const novoAluno: type_aluno = {
-      user_id: req.body.user_id,
-      nome: req.body.nome,
-      data_nascimento: req.body.data_nascimento,
-      sexo: req.body.sexo,
-      url_foto: req.body.url_foto || null,
-      status_conta: req.body.status_conta ?? true,
-      academia_id: req.body.academia_id,
-      treinador_id: req.body.treinador_id ?? null,
-    };
-
-    console.log(
-      "[AlunosController] [createAluno] Objeto montado:",
-      JSON.stringify(novoAluno, null, 2),
-    );
-
-    if (!novoAluno.nome || !novoAluno.user_id) {
-      console.warn(
-        "[AlunosController] [createAluno] Dados obrigatórios ausentes, retornando BAD_REQUEST",
-      );
-      return CommonResponse.error(
-        res,
-        HttpStatusCode.BAD_REQUEST.code,
-        null,
-        "",
-        [],
-        "Dados do aluno são obrigatórios (user_id, nome)",
-      );
-    }
-
+    let fotoUrl: string | null = null;
     try {
-      console.log(
-        "[AlunosController] [createAluno] Chamando service.createAluno...",
-      );
+      console.log("[AlunosController] [createAluno] Requisição recebida");
+      const body = await this.parseMultipartData(req);
+
+      fotoUrl = await this.uploadFoto(req);
+
+      const novoAluno: type_aluno = {
+        user_id: body.user_id,
+        nome: body.nome,
+        data_nascimento: body.data_nascimento,
+        sexo: body.sexo,
+        url_foto: fotoUrl || body.url_foto || null,
+        status_conta: body.status_conta ?? true,
+        academia_id: body.academia_id,
+        treinador_id: body.treinador_id ?? null,
+      };
+
+      if (!novoAluno.nome || !novoAluno.user_id) {
+        if (fotoUrl) await this.deleteFoto(fotoUrl);
+        return CommonResponse.error(
+          res,
+          HttpStatusCode.BAD_REQUEST.code,
+          null,
+          "",
+          [],
+          "Dados do aluno são obrigatórios (user_id, nome)",
+        );
+      }
+
       const resposta = await this.service.createAluno(novoAluno);
-      console.log(
-        "[AlunosController] [createAluno] Aluno criado com sucesso. Resposta:",
-        JSON.stringify(resposta, null, 2),
-      );
       return CommonResponse.created(
         res,
         resposta,
         HttpStatusCode.CREATED.message,
       );
     } catch (error) {
+      if (fotoUrl) await this.deleteFoto(fotoUrl);
       return this.handleError(res, error, "createAluno");
     }
   };
@@ -137,33 +155,26 @@ class AlunoController {
   };
 
   updateAluno = async (req: Request, res: Response) => {
-    console.log("[AlunoController] [updateAluno] Requisição recebida");
-    const id = this.getRequestIdParam(req);
-    const alunoEditadoBody = req.body;
-
-    if (!id) {
-      return CommonResponse.error(
-        res,
-        HttpStatusCode.BAD_REQUEST.code,
-        null,
-        "id",
-        [],
-        "O id é obrigatório",
-      );
-    }
-
-    if (!alunoEditadoBody || Object.keys(alunoEditadoBody).length === 0) {
-      return CommonResponse.error(
-        res,
-        HttpStatusCode.BAD_REQUEST.code,
-        null,
-        "",
-        [],
-        "Corpo da requisição é obrigatório",
-      );
-    }
-
+    let fotoUrl: string | null = null;
     try {
+      console.log("[AlunoController] [updateAluno] Requisição recebida");
+      const id = this.getRequestIdParam(req);
+      const body = await this.parseMultipartData(req);
+
+      if (!id) {
+        return CommonResponse.error(
+          res,
+          HttpStatusCode.BAD_REQUEST.code,
+          null,
+          "id",
+          [],
+          "O id é obrigatório",
+        );
+      }
+
+      fotoUrl = await this.uploadFoto(req);
+      const alunoEditadoBody = { ...body, url_foto: fotoUrl || body.url_foto };
+
       const alunoAtualizado = await this.service.updateAluno(id, alunoEditadoBody);
       return CommonResponse.success(
         res,
@@ -172,6 +183,7 @@ class AlunoController {
         "Aluno atualizado com sucesso",
       );
     } catch (error) {
+      if (fotoUrl) await this.deleteFoto(fotoUrl);
       return this.handleError(res, error, "updateAluno");
     }
   };
