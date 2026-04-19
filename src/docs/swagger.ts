@@ -11,6 +11,8 @@ import { musculoRegistry } from "./musculoDoc";
 import { aparelhoRegistry } from "./aparelhoDoc";
 import { uploadRegistry } from "./uploadDoc";
 import { conversaRegistry } from "./conversaDoc";
+import { exerciseDbRegistry } from "./exerciseDbDoc";
+import { mediaRegistry } from "./mediaDoc";
 
 const registry = new OpenAPIRegistry([
     academiaRegistry,
@@ -25,6 +27,8 @@ const registry = new OpenAPIRegistry([
     aparelhoRegistry,
     uploadRegistry,
     conversaRegistry,
+    exerciseDbRegistry,
+    mediaRegistry,
 ]);
 
 registry.registerComponent("securitySchemes", "BearerAuth", {
@@ -59,6 +63,7 @@ export const openApiDocument = generator.generateDocument({
         { name: "Aparelho", description: "Listagem de aparelhos de academia" },
         { name: "Upload", description: "Upload de arquivos para o bucket S3 (GarageHQ)" },
         { name: "Conversa", description: "Conversas e mensagens entre aluno e treinador" },
-        { name: "Upload", description: "Upload de arquivos para o bucket S3 (GarageHQ)" },
+        { name: "ExerciseDB", description: "Integração com a ExerciseDB v2 (RapidAPI) — consultas proxy e sincronização de catálogo" },
+        { name: "Media", description: "Proxy público de mídia (streaming com Range e cache condicional)" },
     ],
 });

@@ -43,6 +43,19 @@ class ExercicioController {
         }
     }
 
+    private handleMulterError(res: Response, error: unknown): boolean {
+        if (!(error instanceof Error)) return false;
+        if (error.message.includes('são permitidos')) {
+            CommonResponse.error(res, HttpStatusCode.BAD_REQUEST.code, null, 'animacao', [], error.message);
+            return true;
+        }
+        if ((error as any).code === 'LIMIT_FILE_SIZE') {
+            CommonResponse.error(res, HttpStatusCode.BAD_REQUEST.code, null, 'animacao', [], 'Arquivo excede o tamanho máximo permitido');
+            return true;
+        }
+        return false;
+    }
+
     createExercicio = async (req: Request, res: Response) => {
         let animacaoUrl: string | null = null;
         try {
@@ -56,6 +69,8 @@ class ExercicioController {
             return CommonResponse.created(res, resposta, HttpStatusCode.CREATED.message);
         } catch (error) {
             if (animacaoUrl) await this.deleteAnimacao(animacaoUrl);
+
+            if (this.handleMulterError(res, error)) return;
 
             if (error instanceof ZodError) {
                 return CommonResponse.error(res, HttpStatusCode.UNPROCESSABLE_ENTITY.code, null, null, error.issues, HttpStatusCode.UNPROCESSABLE_ENTITY.message);
@@ -144,13 +159,39 @@ class ExercicioController {
             const userId = (req as any).user?.id as string;
             const body = await this.parseMultipartData(req);
 
+            // Buscar URL antiga se houver substituição ou remoção explícita
+            let animacaoAntiga: string | null = null;
+            const haveraSubstituicao = !!req.file;
+            const haveraRemocaoExplicita = body.animacao_url === null && !req.file;
+
+            if (haveraSubstituicao || haveraRemocaoExplicita) {
+                try {
+                    const exercicioAtual = await this.service.getByIdExercicio(req.params.id as string, userId);
+                    animacaoAntiga = exercicioAtual?.animacao_url ?? null;
+                } catch {
+                    // Ignora erros de leitura; update abaixo trata a ausência
+                }
+            }
+
             animacaoUrl = await this.uploadAnimacao(req);
-            const dadosParaAtualizar = { ...body, animacao_url: animacaoUrl || body.animacao_url };
+            const dadosParaAtualizar: Record<string, unknown> = { ...body };
+            const animacaoResolvida = animacaoUrl ?? body.animacao_url;
+            if (animacaoResolvida !== undefined) {
+                dadosParaAtualizar.animacao_url = animacaoResolvida;
+            }
 
             const resposta = await this.service.updateExercicio(req.params.id as string, dadosParaAtualizar, userId);
+
+            // Após sucesso do update: limpar animação antiga do S3
+            if ((animacaoUrl || haveraRemocaoExplicita) && animacaoAntiga) {
+                await this.deleteAnimacao(animacaoAntiga);
+            }
+
             return CommonResponse.success(res, resposta, HttpStatusCode.OK.code);
         } catch (error) {
             if (animacaoUrl) await this.deleteAnimacao(animacaoUrl);
+
+            if (this.handleMulterError(res, error)) return;
 
             if (error instanceof ZodError) {
                 return CommonResponse.error(res, HttpStatusCode.UNPROCESSABLE_ENTITY.code, null, null, error.issues, HttpStatusCode.UNPROCESSABLE_ENTITY.message);
@@ -185,7 +226,22 @@ class ExercicioController {
             const soft = req.query.soft === 'true';
             const force = req.query.force === 'true';
 
+            // Buscar URL da animação ANTES da exclusão para limpeza posterior
+            let animacaoParaRemover: string | null = null;
+            try {
+                const exercicioExistente = await this.service.getByIdExercicio(req.params.id as string, userId);
+                animacaoParaRemover = exercicioExistente?.animacao_url ?? null;
+            } catch {
+                // Ignora erros de leitura; delete abaixo valida existência e permissão
+            }
+
             const resposta = await this.service.deleteExercicio(req.params.id as string, { soft, force, userId });
+
+            // Soft delete preserva o arquivo (permite reativação futura); hard/cascade removem.
+            if (resposta.tipo_exclusao !== 'soft' && animacaoParaRemover) {
+                await this.deleteAnimacao(animacaoParaRemover);
+            }
+
             return CommonResponse.success(res, resposta, HttpStatusCode.OK.code);
         } catch (error) {
             if (error instanceof ZodError) {

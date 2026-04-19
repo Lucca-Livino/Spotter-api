@@ -118,6 +118,11 @@ export const getPublicObjectUrl = (objectKey: string): string => {
     return `${minioConfig.publicUrl.replace(/\/$/, "")}/${objectKey}`;
   }
 
+  const apiBase = process.env.API_BASE_URL?.replace(/\/$/, "");
+  if (apiBase) {
+    return `${apiBase}/media/${objectKey}`;
+  }
+
   const protocol = minioConfig.useSSL ? "https" : "http";
   return `${protocol}://${minioConfig.endpoint}:${minioConfig.port}/${minioConfig.bucket}/${objectKey}`;
 };

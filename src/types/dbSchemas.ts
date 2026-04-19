@@ -71,7 +71,7 @@ export type type_mensagem_conversa = {
     ativa?: boolean;
 }
 
-export type type_grupo_muscular = 'PEITO' | 'COSTAS' | 'PERNAS' | 'BRAÇOS' | 'OMBROS' | 'ABDOMEN';
+export type type_grupo_muscular = 'PEITO' | 'COSTAS' | 'PERNAS' | 'BRAÇOS' | 'OMBROS' | 'ABDOMEN' | 'PESCOÇO' | 'CARDIO';
 
 export type type_musculo = {
     id?: string;
