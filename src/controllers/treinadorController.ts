@@ -163,7 +163,11 @@ class TreinadorController {
 	                }
 
 	                fotoUrl = await this.uploadFoto(req);
-	                const treinadorEditadoBody = { ...body, url_foto: fotoUrl || body.url_foto };
+				const treinadorEditadoBody: Record<string, unknown> = { ...body };
+				const fotoResolvida = fotoUrl || body.url_foto;
+				if (fotoResolvida !== undefined) {
+					treinadorEditadoBody.url_foto = fotoResolvida;
+				}
 
 	                const treinadorAtualizado = await this.service.updateTreinador(
 	                        id,
@@ -213,6 +217,10 @@ class TreinadorController {
 
 		const errorMessage =
 			error instanceof Error ? error.message : "Erro desconhecido";
+
+		if (errorMessage.toLowerCase().includes("corpo da requisição é obrigatório")) {
+			return CommonResponse.error(res, HttpStatusCode.BAD_REQUEST.code, null, null, [], errorMessage);
+		}
 
 		if (errorMessage.includes("não encontrado")) {
 			console.warn(

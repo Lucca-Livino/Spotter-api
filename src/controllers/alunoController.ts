@@ -173,7 +173,11 @@ class AlunoController {
       }
 
       fotoUrl = await this.uploadFoto(req);
-      const alunoEditadoBody = { ...body, url_foto: fotoUrl || body.url_foto };
+      const alunoEditadoBody: Record<string, unknown> = { ...body };
+      const fotoResolvida = fotoUrl || body.url_foto;
+      if (fotoResolvida !== undefined) {
+        alunoEditadoBody.url_foto = fotoResolvida;
+      }
 
       const alunoAtualizado = await this.service.updateAluno(id, alunoEditadoBody);
       return CommonResponse.success(
@@ -221,6 +225,10 @@ class AlunoController {
 
     const errorMessage =
       error instanceof Error ? error.message : "Erro desconhecido";
+
+    if (errorMessage.toLowerCase().includes("corpo da requisição é obrigatório")) {
+      return CommonResponse.error(res, HttpStatusCode.BAD_REQUEST.code, null, null, [], errorMessage);
+    }
 
     if (errorMessage.includes("não encontrado")) {
       console.warn(
