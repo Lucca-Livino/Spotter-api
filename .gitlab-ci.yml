@@ -106,9 +106,14 @@ build:
     - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
   script:
     - |
+      if [ "$CI_COMMIT_BRANCH" = "main" ]; then
+        TAG_SUFFIX="latest"
+      else
+        TAG_SUFFIX="$CI_COMMIT_BRANCH"
+      fi
       docker buildx build \
         --platform linux/amd64,linux/arm64 \
-        -t yurizetoles/atividades_fisicas_api:latest \
+        -t yurizetoles/atividades_fisicas_api:$TAG_SUFFIX \
         -t yurizetoles/atividades_fisicas_api:$CI_COMMIT_SHORT_SHA \
         --push .
   after_script:
