@@ -22,7 +22,7 @@ rbac:
 
 runners:
   secret: gitlab-runner-fabricaiv-secret
-  tags: 'k3s-vm'
+  tags: 'k3s-vm-fabrica'
   runUntagged: false
   locked: false
   config: |

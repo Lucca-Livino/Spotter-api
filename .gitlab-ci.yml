@@ -90,7 +90,7 @@ smoke:
 build:
   stage: build
   tags:
-    - k3s-vm
+    - k3s-vm-fabrica
   image: docker:27
   services:
     - name: docker:27-dind
@@ -126,7 +126,7 @@ build:
 deploy-prod:
   stage: deploy
   tags:
-    - k3s-vm
+    - k3s-vm-fabrica
   image: bitnami/kubectl:latest
   needs: [build]
   script:
