@@ -1,0 +1,115 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vol-atividades-fisicas-db
+  namespace: fabricaiv
+  labels:
+    io.kompose.service: atividades-fisicas-db
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1000Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: atividades-fisicas-db
+  namespace: fabricaiv
+  labels:
+    io.kompose.service: atividades-fisicas-db
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      io.kompose.service: atividades-fisicas-db
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: atividades-fisicas-db
+    spec:
+      restartPolicy: Always
+
+      securityContext:
+        fsGroup: 999
+
+      initContainers:
+        - name: fix-data-dir-permissions
+          image: busybox:1.36
+          command: ['sh', '-c', 'chown -R 999:999 /data && chmod 700 /data']
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /data
+              name: vol-atividades-fisicas-db
+
+      containers:
+        - name: atividades-fisicas-db
+          image: postgres:17-alpine
+
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+
+          envFrom:
+            - configMapRef:
+                name: atividades-fisicas-config
+            - secretRef:
+                name: atividades-fisicas-secret
+
+          resources:
+            requests:
+              cpu: '100m'
+              memory: '256Mi'
+            limits:
+              cpu: '500m'
+              memory: '512Mi'
+
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - $(POSTGRES_USER)
+                - -d
+                - $(POSTGRES_DB)
+            failureThreshold: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 999
+            capabilities:
+              drop:
+                - ALL
+
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: vol-atividades-fisicas-db
+
+      volumes:
+        - name: vol-atividades-fisicas-db
+          persistentVolumeClaim:
+            claimName: vol-atividades-fisicas-db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: atividades-fisicas-db
+  namespace: fabricaiv
+  labels:
+    io.kompose.service: atividades-fisicas-db
+spec:
+  type: ClusterIP
+  ports:
+    - name: '5432'
+      port: 5432
+      targetPort: 5432
+  selector:
+    io.kompose.service: atividades-fisicas-db

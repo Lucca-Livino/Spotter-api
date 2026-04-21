@@ -1,4 +1,4 @@
-FROM node:22
+FROM node:22-slim
 
 RUN apt-get update && apt-get install -y \
     curl \
@@ -6,16 +6,18 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-EXPOSE 1350
-
 WORKDIR /app
 
 COPY package.json package-lock.json ./
 
 RUN npm ci
 
-COPY . .
+COPY --chown=node:node . .
 
-RUN npm run build
+RUN mkdir -p /app/logs && chown -R node:node /app
 
-CMD ["npm", "run", "start"]
+USER node
+
+EXPOSE 1350
+
+CMD ["npx", "tsx", "src/server.ts"]

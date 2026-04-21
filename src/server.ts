@@ -32,6 +32,8 @@ dotenv.config();
 export const app = express();
 const PORT = process.env.PORT || 1350;
 
+app.set('trust proxy', 1);
+
 app.use(cors());
 
 // BetterAuth handler — DEVE ficar ANTES de express.json()
@@ -43,7 +45,7 @@ app.use(express.json());
 // Swagger UI — documentação da API
 app.get("/api/docs/openapi.json", (req, res) => {
   const host = req.get("host") || `localhost:${PORT}`;
-  const protocol = req.headers["x-forwarded-proto"] || "http";
+  const protocol = req.protocol;
   const currentServer = `${protocol}://${host}/api`;
 
   const servers: { url: string; description: string }[] = [];
@@ -77,7 +79,7 @@ app.get("/api", (req, res) => {
   );
 });
 app.get("/", (req, res) => {
-  res.redirect("/api");
+  res.redirect("/api/docs");
 });
 
 // rotas

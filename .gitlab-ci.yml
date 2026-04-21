@@ -1,0 +1,140 @@
+stages:
+  - quality
+  - smoke
+  - build
+  - deploy
+
+default:
+  image: node:22-alpine
+  cache:
+    key: 'npm-$CI_COMMIT_REF_SLUG'
+    paths:
+      - node_modules/
+
+# ── quality ──────────────────────────────────────────────────────────────────
+# Shared runners — TypeScript build check
+# ─────────────────────────────────────────────────────────────────────────────
+
+quality:
+  stage: quality
+  before_script:
+    - npm ci
+  script:
+    - npx tsc --noEmit
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# ── smoke ─────────────────────────────────────────────────────────────────────
+# Shared runners — sobe servidor com banco real e valida /api
+# ─────────────────────────────────────────────────────────────────────────────
+
+smoke:
+  stage: smoke
+  services:
+    - name: postgres:17-alpine
+      alias: postgres
+  variables:
+    POSTGRES_DB: aplicativo_atividades_fisicas
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    DATABASE_URL: 'postgresql://postgres:postgres@postgres/aplicativo_atividades_fisicas'
+    NODE_ENV: 'ci'
+    PORT: '1350'
+    BETTER_AUTH_SECRET: 'ci-secret-key-pipeline-only-not-production-32chars'
+    BETTER_AUTH_URL: 'http://localhost:1350'
+    API_BASE_URL: 'http://localhost:1350/api'
+    MINIO_ENDPOINT: 'localhost'
+    MINIO_PORT: '9000'
+    MINIO_USE_SSL: 'false'
+    MINIO_ACCESS_KEY: 'ci-access-key'
+    MINIO_SECRET_KEY: 'ci-secret-key'
+    MINIO_BUCKET_FOTOS: 'ci-bucket'
+    MINIO_LOCAL: 'true'
+    MINIO_PUBLIC_URL: ''
+    AWS_ACCESS_KEY_ID: 'ci-access-key'
+    AWS_SECRET_ACCESS_KEY: 'ci-secret-key'
+    AWS_REGION: 'us-east-1'
+    AWS_BUCKET_NAME: 'ci-bucket'
+    AWS_ENDPOINT_URL: 'http://localhost:9000'
+    AWS_PUBLIC_URL: ''
+    UPLOAD_MAX_FILE_SIZE_MB: '20'
+    EXERCISEDB_API_KEY: 'ci-key'
+    EXERCISEDB_API_HOST: 'exercisedb.p.rapidapi.com'
+    EXERCISEDB_BASE_URL: 'https://exercisedb.p.rapidapi.com'
+  before_script:
+    - apk add --no-cache curl
+    - npm ci
+  script:
+    - npx tsx src/server.ts &
+    - |
+      for i in $(seq 1 15); do
+        curl -sf http://localhost:1350/api && break
+        echo "Aguardando servidor... tentativa $i/15"
+        sleep 2
+      done
+    - curl -sf http://localhost:1350/api
+  needs: [quality]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# ── build ─────────────────────────────────────────────────────────────────────
+# Runner k3s (kubernetes executor, namespace: tools)
+# Docker-in-Docker (dind) para build multi-plataforma amd64 + arm64
+# Requer variáveis CI/CD: DOCKERHUB_USER, DOCKERHUB_TOKEN
+# ─────────────────────────────────────────────────────────────────────────────
+
+build:
+  stage: build
+  tags:
+    - k3s-vm
+  image: docker:27
+  services:
+    - name: docker:27-dind
+      command: ['--tls=false']
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ''
+  before_script:
+    - docker run --privileged --rm tonistiigi/binfmt --install all
+    - docker buildx create --name multiarch --driver docker-container --use 2>/dev/null || docker buildx use multiarch
+    - docker buildx inspect --bootstrap
+    - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
+  script:
+    - |
+      docker buildx build \
+        --platform linux/amd64,linux/arm64 \
+        -t yurizetoles/atividades_fisicas_api:latest \
+        -t yurizetoles/atividades_fisicas_api:$CI_COMMIT_SHORT_SHA \
+        --push .
+  after_script:
+    - docker logout
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+# ── deploy ────────────────────────────────────────────────────────────────────
+# Runner k3s (kubernetes executor, namespace: tools)
+# kubectl via in-cluster config — ServiceAccount gitlab-runner tem Role
+# em fabricaiv (ver deploy/runner/gitlab-runner-rbac.yaml)
+# ─────────────────────────────────────────────────────────────────────────────
+
+deploy-prod:
+  stage: deploy
+  tags:
+    - k3s-vm
+  image: bitnami/kubectl:latest
+  needs: [build]
+  script:
+    - kubectl rollout restart deployment/atividades-fisicas-api -n fabricaiv
+    - kubectl rollout status deployment/atividades-fisicas-api -n fabricaiv --timeout=120s
+  environment:
+    name: production
+    url: https://atividadesfisicas-api.yuriprojects.dpdns.org
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual

@@ -1,0 +1,115 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: atividades-fisicas-api
+  namespace: fabricaiv
+  labels:
+    io.kompose.service: atividades-fisicas-api
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      io.kompose.service: atividades-fisicas-api
+  template:
+    metadata:
+      labels:
+        io.kompose.service: atividades-fisicas-api
+    spec:
+      restartPolicy: Always
+
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+
+      initContainers:
+        - name: migrate
+          image: yurizetoles/atividades_fisicas_api:latest
+          imagePullPolicy: Always
+          command: ['npm', 'run', 'migrate:push']
+          envFrom:
+            - configMapRef:
+                name: atividades-fisicas-config
+            - secretRef:
+                name: atividades-fisicas-secret
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+
+      containers:
+        - name: atividades-fisicas-api
+          image: yurizetoles/atividades_fisicas_api:latest
+          imagePullPolicy: Always
+          command: ['npx', 'tsx', 'src/server.ts']
+
+          ports:
+            - containerPort: 1350
+              protocol: TCP
+
+          envFrom:
+            - configMapRef:
+                name: atividades-fisicas-config
+            - secretRef:
+                name: atividades-fisicas-secret
+
+          resources:
+            requests:
+              cpu: '100m'
+              memory: '128Mi'
+            limits:
+              cpu: '500m'
+              memory: '512Mi'
+
+          livenessProbe:
+            httpGet:
+              path: /api
+              port: 1350
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+
+          readinessProbe:
+            httpGet:
+              path: /api
+              port: 1350
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+            successThreshold: 1
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+            runAsUser: 1000
+            capabilities:
+              drop:
+                - ALL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: atividadesfisicas-api
+  namespace: fabricaiv
+  labels:
+    io.kompose.service: atividades-fisicas-api
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 1350
+      protocol: TCP
+  selector:
+    io.kompose.service: atividades-fisicas-api

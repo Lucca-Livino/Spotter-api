@@ -1,0 +1,48 @@
+# Helm values — GitLab Runner no k3s (namespace: tools)
+# Chart: gitlab/gitlab-runner
+#
+# Instalar (release separada do runner do gestao-ativos):
+#   helm repo add gitlab https://charts.gitlab.io
+#   helm repo update
+#   kubectl apply -f deploy/runner/gitlab-runner-secret.secret.yaml
+#   helm upgrade --install gitlab-runner-fabricaiv gitlab/gitlab-runner \
+#     -n tools -f deploy/runner/gitlab-runner-values.yaml
+#   kubectl apply -f deploy/runner/gitlab-runner-rbac.yaml
+
+gitlabUrl: https://gitlab.fslab.dev
+
+rbac:
+  create: true
+  serviceAccountName: gitlab-runner-fabricaiv
+  rules:
+    - resources: ['pods', 'pods/exec', 'pods/attach', 'secrets', 'configmaps']
+      verbs: ['get', 'list', 'watch', 'create', 'patch', 'delete']
+    - resources: ['pods/log']
+      verbs: ['get', 'list', 'watch']
+
+runners:
+  secret: gitlab-runner-fabricaiv-secret
+  tags: 'k3s-vm'
+  runUntagged: false
+  locked: false
+  config: |
+    [[runners]]
+      [runners.kubernetes]
+        namespace = "tools"
+        image = "alpine:3.20"
+        privileged = true
+        pull_policy = ["if-not-present"]
+        service_account = "gitlab-runner-fabricaiv"
+        helper_image = "gitlab/gitlab-runner-helper:arm64-v18.11.0"
+        [[runners.kubernetes.volumes.empty_dir]]
+          name = "docker-certs"
+          mount_path = "/certs/client"
+          medium = "Memory"
+
+resources:
+  requests:
+    cpu: '100m'
+    memory: '128Mi'
+  limits:
+    cpu: '500m'
+    memory: '256Mi'

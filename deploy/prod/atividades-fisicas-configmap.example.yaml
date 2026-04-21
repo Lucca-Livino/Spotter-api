@@ -1,0 +1,37 @@
+# CONFIGMAP EXAMPLE — Produção
+# Copie para atividades-fisicas-configmap.secret.yaml e preencha os valores.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: atividades-fisicas-config
+  namespace: fabricaiv
+  labels:
+    io.kompose.service: atividades-fisicas
+data:
+  PORT: '1350'
+  NODE_ENV: 'production'
+
+  POSTGRES_DB: 'aplicativo_atividades_fisicas'
+  POSTGRES_USER: 'atividadefisicas'
+
+  BETTER_AUTH_URL: '<URL_PUBLICA_DA_API>'
+  API_BASE_URL: '<URL_PUBLICA_DA_API>/api'
+
+  MINIO_ENDPOINT: '<ENDPOINT_MINIO>'
+  MINIO_PORT: '443'
+  MINIO_USE_SSL: 'true'
+  MINIO_REGION: '<REGIAO_MINIO>'
+  MINIO_BUCKET_FOTOS: '<BUCKET_FOTOS>'
+  MINIO_PUBLIC_URL: ''
+  MINIO_LOCAL: 'false'
+
+  AWS_REGION: '<REGIAO_AWS>'
+  AWS_BUCKET_NAME: '<BUCKET_AWS>'
+  AWS_ENDPOINT_URL: '<ENDPOINT_AWS>'
+  AWS_PUBLIC_URL: ''
+
+  UPLOAD_MAX_FILE_SIZE_MB: '20'
+
+  EXERCISEDB_API_HOST: 'exercisedb.p.rapidapi.com'
+  EXERCISEDB_BASE_URL: 'https://exercisedb.p.rapidapi.com'

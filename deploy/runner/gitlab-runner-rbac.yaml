@@ -1,0 +1,33 @@
+# RBAC cross-namespace: permite que o runner-fabricaiv (SA tools/gitlab-runner-fabricaiv)
+# execute kubectl rollout restart nos deployments de fabricaiv.
+#
+# Aplicar após o helm install:
+#   kubectl apply -f deploy/runner/gitlab-runner-rbac.yaml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: gitlab-runner-deployer
+  namespace: fabricaiv
+rules:
+  - apiGroups: ['apps']
+    resources: ['deployments', 'replicasets']
+    verbs: ['get', 'list', 'watch', 'patch']
+  - apiGroups: ['']
+    resources: ['pods']
+    verbs: ['get', 'list', 'watch']
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gitlab-runner-deployer
+  namespace: fabricaiv
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: gitlab-runner-deployer
+subjects:
+  - kind: ServiceAccount
+    name: gitlab-runner-fabricaiv
+    namespace: tools

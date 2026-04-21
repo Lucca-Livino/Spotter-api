@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: atividades-fisicas-ingress
+  namespace: fabricaiv
+  labels:
+    io.kompose.service: atividades-fisicas-api
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: fabricaiv-https-forwarded-proto@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: atividadesfisicas-api.yuriprojects.dpdns.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: atividadesfisicas-api
+                port:
+                  number: 80
