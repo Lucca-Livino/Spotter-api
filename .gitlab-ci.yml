@@ -1,6 +1,7 @@
 stages:
   - quality
   - smoke
+  - test
   - build
   - deploy
 
@@ -81,6 +82,56 @@ smoke:
     - if: '$CI_COMMIT_BRANCH == "develop"'
     - if: '$CI_COMMIT_BRANCH == "main"'
 
+# ── test ──────────────────────────────────────────────────────────────────────
+# Shared runners — testes de integração com banco real (supertest + Jest)
+# jest.setup.js substitui DATABASE_URL por DATABASE_URL_TEST automaticamente
+# ─────────────────────────────────────────────────────────────────────────────
+
+test:
+  stage: test
+  services:
+    - name: postgres:17-alpine
+      alias: postgres
+  variables:
+    POSTGRES_DB: aplicativo_atividades_fisicas
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    DATABASE_URL: 'postgresql://postgres:postgres@postgres/aplicativo_atividades_fisicas'
+    DATABASE_URL_TEST: 'postgresql://postgres:postgres@postgres/aplicativo_atividades_fisicas_test'
+    NODE_ENV: 'test'
+    PORT: '1350'
+    BETTER_AUTH_SECRET: 'ci-secret-key-pipeline-only-not-production-32chars'
+    BETTER_AUTH_URL: 'http://localhost:1350'
+    API_BASE_URL: 'http://localhost:1350/api'
+    MINIO_ENDPOINT: 'localhost'
+    MINIO_PORT: '9000'
+    MINIO_USE_SSL: 'false'
+    MINIO_ACCESS_KEY: 'ci-access-key'
+    MINIO_SECRET_KEY: 'ci-secret-key'
+    MINIO_BUCKET_FOTOS: 'ci-bucket'
+    MINIO_LOCAL: 'true'
+    MINIO_PUBLIC_URL: ''
+    AWS_ACCESS_KEY_ID: 'ci-access-key'
+    AWS_SECRET_ACCESS_KEY: 'ci-secret-key'
+    AWS_REGION: 'us-east-1'
+    AWS_BUCKET_NAME: 'ci-bucket'
+    AWS_ENDPOINT_URL: 'http://localhost:9000'
+    AWS_PUBLIC_URL: ''
+    UPLOAD_MAX_FILE_SIZE_MB: '20'
+    EXERCISEDB_API_KEY: 'ci-key'
+    EXERCISEDB_API_HOST: 'exercisedb.p.rapidapi.com'
+    EXERCISEDB_BASE_URL: 'https://exercisedb.p.rapidapi.com'
+  before_script:
+    - npm ci
+  script:
+    - npm run test:setup
+    - npm test -- --runInBand --forceExit
+  needs: [smoke]
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
 # ── build ─────────────────────────────────────────────────────────────────────
 # Runner k3s (kubernetes executor, namespace: tools)
 # Docker-in-Docker (dind) para build multi-plataforma amd64 + arm64
@@ -106,9 +157,14 @@ build:
     - echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USER" --password-stdin
   script:
     - |
+      if [ "$CI_COMMIT_BRANCH" = "main" ]; then
+        TAG_SUFFIX="latest"
+      else
+        TAG_SUFFIX="$CI_COMMIT_BRANCH"
+      fi
       docker buildx build \
         --platform linux/amd64,linux/arm64 \
-        -t yurizetoles/atividades_fisicas_api:latest \
+        -t yurizetoles/atividades_fisicas_api:$TAG_SUFFIX \
         -t yurizetoles/atividades_fisicas_api:$CI_COMMIT_SHORT_SHA \
         --push .
   after_script:
@@ -122,6 +178,21 @@ build:
 # kubectl via in-cluster config — ServiceAccount gitlab-runner tem Role
 # em fabricaiv (ver deploy/runner/gitlab-runner-rbac.yaml)
 # ─────────────────────────────────────────────────────────────────────────────
+
+deploy-qa:
+  stage: deploy
+  tags:
+    - k3s-vm-fabrica
+  image: bitnami/kubectl:latest
+  needs: [build]
+  script:
+    - kubectl rollout restart deployment/atividades-fisicas-api-qa -n fabricaiv
+    - kubectl rollout status deployment/atividades-fisicas-api-qa -n fabricaiv --timeout=120s
+  environment:
+    name: qa
+    url: https://atividadesfisicas-api-qa.yuriprojects.dpdns.org
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
 
 deploy-prod:
   stage: deploy
