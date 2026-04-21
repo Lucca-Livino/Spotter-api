@@ -1,9 +1,36 @@
-# RBAC cross-namespace: permite que o runner-fabricaiv (SA tools/gitlab-runner-fabricaiv)
-# execute kubectl rollout restart nos deployments de fabricaiv.
+# RBAC para o runner gitlab-runner-fabricaiv (SA tools/gitlab-runner-fabricaiv):
+#  1. Role em tools — permissões para criar/gerenciar pods e secrets dos jobs CI
+#  2. Role em fabricaiv — permissões para kubectl rollout restart nos deployments
 #
 # Aplicar após o helm install:
 #   kubectl apply -f deploy/runner/gitlab-runner-rbac.yaml
 
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: gitlab-runner-fabricaiv-jobs
+  namespace: tools
+rules:
+  - apiGroups: ['']
+    resources: ['pods', 'pods/exec', 'pods/attach', 'pods/log', 'secrets', 'configmaps', 'services']
+    verbs: ['get', 'list', 'watch', 'create', 'patch', 'update', 'delete']
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: gitlab-runner-fabricaiv-jobs
+  namespace: tools
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: gitlab-runner-fabricaiv-jobs
+subjects:
+  - kind: ServiceAccount
+    name: gitlab-runner-fabricaiv
+    namespace: tools
+
+---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
