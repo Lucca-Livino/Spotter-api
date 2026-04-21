@@ -128,6 +128,21 @@ build:
 # em fabricaiv (ver deploy/runner/gitlab-runner-rbac.yaml)
 # ─────────────────────────────────────────────────────────────────────────────
 
+deploy-qa:
+  stage: deploy
+  tags:
+    - k3s-vm-fabrica
+  image: bitnami/kubectl:latest
+  needs: [build]
+  script:
+    - kubectl rollout restart deployment/atividades-fisicas-api-qa -n fabricaiv
+    - kubectl rollout status deployment/atividades-fisicas-api-qa -n fabricaiv --timeout=120s
+  environment:
+    name: qa
+    url: https://atividadesfisicas-api-qa.yuriprojects.dpdns.org
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+
 deploy-prod:
   stage: deploy
   tags:
