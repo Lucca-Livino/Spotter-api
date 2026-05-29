@@ -8,7 +8,7 @@ const academiaController = new Academia_Controller();
 
 router
     .post('/academia', authMiddleware, adminMiddleware, academiaController.createAcademia)
-    .get('/academia', authMiddleware, academiaController.getAllAcademia)
+    .get('/academia', academiaController.getAllAcademia)
     .get('/academia/:id', authMiddleware, academiaController.getAcademiaById)
     .patch('/academia/:id', authMiddleware, adminMiddleware, academiaController.updateAcademia)
     .delete('/academia/:id', authMiddleware, adminMiddleware, academiaController.deleteAcademia)

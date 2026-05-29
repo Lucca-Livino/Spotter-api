@@ -31,6 +31,13 @@ export const auth = betterAuth({
     autoSignIn: process.env.NODE_ENV !== "production",
   },
 
+  socialProviders: {
+    google: {
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    },
+  },
+
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 dias
     updateAge: 60 * 60 * 24,     // Atualiza a sessão a cada 1 dia

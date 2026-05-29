@@ -20,6 +20,8 @@ export type type_aluno = {
     sexo: enum_sexo;
     is_admin?: boolean;
     status_conta?: boolean;
+    peso_atual_kg: number;
+    altura_m: number;
     created_at?: Date;
     academia_id: string;
     treinador_id?: string | null;

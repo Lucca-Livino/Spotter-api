@@ -19,6 +19,9 @@ import { authMiddleware } from "../middlewares/authMiddleware";
 import UsuarioRepository from "../repositories/usuarioRepository";
 import AlunoRepository from "../repositories/alunoRepository";
 import TreinadorRepository from "../repositories/treinadorRepository";
+import { DataBase } from "../config/DbConnect";
+import { aluno, treinador } from "../config/db/schema";
+import { eq } from "drizzle-orm";
 
 const router = express.Router();
 
@@ -54,6 +57,37 @@ router.get("/me", authMiddleware, async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Erro ao carregar perfil" });
+  }
+});
+
+// Atualizar FCM token do usuário autenticado
+router.patch("/me/fcm-token", authMiddleware, async (req, res) => {
+  try {
+    const user = (req as any).user;
+    const { fcm_token } = req.body as { fcm_token?: string };
+
+    if (fcm_token === undefined) {
+      res.status(400).json({ success: false, message: "fcm_token é obrigatório" });
+      return;
+    }
+
+    const usuarioRepository = new UsuarioRepository();
+    const perfilAcesso = await usuarioRepository.buscarPerfilAcesso(user.id);
+
+    if (perfilAcesso.isTreinador) {
+      await DataBase.update(treinador)
+        .set({ fcm_token })
+        .where(eq(treinador.user_id, user.id));
+    } else if (perfilAcesso.isAluno) {
+      await DataBase.update(aluno)
+        .set({ fcm_token })
+        .where(eq(aluno.user_id, user.id));
+    }
+
+    res.json({ success: true, message: "Token FCM atualizado" });
+  } catch (error) {
+    console.error("[authRoutes] Erro ao atualizar token FCM:", error);
+    res.status(500).json({ success: false, message: "Erro ao atualizar token FCM" });
   }
 });
 

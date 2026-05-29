@@ -41,6 +41,20 @@ const alunoSchema = z.object({
         .optional()
         .default(true)
         .openapi({ description: "Status da conta (ativa/inativa)", example: true }),
+    peso_atual_kg: z.coerce
+        .number()
+        .positive({ message: "Peso deve ser um número positivo" })
+        .max(500, { message: "Peso não pode exceder 500 kg" })
+        .optional()
+        .nullable()
+        .openapi({ description: "Peso em kg", example: 75.5 }),
+    altura_m: z.coerce
+        .number()
+        .positive({ message: "Altura deve ser um número positivo" })
+        .max(3, { message: "Altura não pode exceder 3 metros" })
+        .optional()
+        .nullable()
+        .openapi({ description: "Altura em metros", example: 1.75 }),
     academia_id: z
         .string()
         .uuid({ message: "O ID da academia deve ser um UUID válido" })

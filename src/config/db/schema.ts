@@ -105,6 +105,7 @@ export const aluno = pgTable('aluno', {
     peso_atual_kg: decimal('peso_atual_kg', { precision: 5, scale: 2 }),
     altura_m: decimal('altura_m', { precision: 3, scale: 2 }),
     created_at: timestamp('created_at').defaultNow().notNull(),
+    fcm_token: text('fcm_token'),
     academia_id: uuid('academia_id').notNull().references(() => academia.id),
     treinador_id: uuid('treinador_id').references(() => treinador.id),
 });
@@ -139,6 +140,7 @@ export const treinador = pgTable('treinador', {
     is_admin: boolean('is_admin').notNull().default(false),
     status_conta: boolean('status_conta').notNull().default(true),
     created_at: timestamp('created_at').defaultNow().notNull(),
+    fcm_token: text('fcm_token'),
     academia_id: uuid('academia_id').notNull().references(() => academia.id),
 });
 

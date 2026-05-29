@@ -1,6 +1,6 @@
 {
-  "id": "c2944c92-6bbe-4b2a-b9ce-e411fa27128d",
-  "prevId": "03068638-bfae-4b12-8bf9-45cc70fa6293",
+  "id": "db42dc27-320a-4c9a-bd08-32e7f10f608f",
+  "prevId": "c2944c92-6bbe-4b2a-b9ce-e411fa27128d",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -228,12 +228,30 @@
           "notNull": true,
           "default": true
         },
+        "peso_atual_kg": {
+          "name": "peso_atual_kg",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "altura_m": {
+          "name": "altura_m",
+          "type": "numeric(3, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "fcm_token": {
+          "name": "fcm_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "academia_id": {
           "name": "academia_id",
@@ -1374,6 +1392,12 @@
           "notNull": true,
           "default": "now()"
         },
+        "fcm_token": {
+          "name": "fcm_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "academia_id": {
           "name": "academia_id",
           "type": "uuid",
@@ -1722,6 +1746,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'aluno'"
         },
         "created_at": {
           "name": "created_at",

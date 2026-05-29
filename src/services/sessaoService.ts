@@ -3,6 +3,10 @@ import UsuarioRepository from '../repositories/usuarioRepository';
 import { sessaoSchema, sessaoIdSchema, sessaoListQuerySchema, SessaoListQuery, sessaoUpdateSchema, sessaoExercicioUpdateSchema, exercicioIdSchema, sessaoSeriesUpdateSchema, SessaoSeriesUpdate, reordenarExerciciosSchema, ReordenarExerciciosInput } from '../utils/validations/sessaoValidation';
 import { ZodError } from 'zod';
 import { type_sessao_exercicio, type_sessao_serie, type_sessao_treino } from '../types/dbSchemas';
+import { notificarSessaoFinalizada, notificarSessaoIniciada } from '../integrations/notificacoes';
+import { DataBase } from '../config/DbConnect';
+import { aluno } from '../config/db/schema';
+import { eq } from 'drizzle-orm';
 
 class SessaoService {
     private repository: SessaoRepository;
@@ -60,6 +64,23 @@ class SessaoService {
             }
 
             const sessaoId = await this.repository.create(novaSessao, sessaoExercicios, sessaoSeries);
+
+            // Enviar notificação push (não-bloqueante)
+            void (async () => {
+                try {
+                    const alunoData = await DataBase.select({ fcm_token: aluno.fcm_token })
+                        .from(aluno)
+                        .where(eq(aluno.id, perfil.alunoId!))
+                        .limit(1);
+
+                    const fcmToken = alunoData[0]?.fcm_token;
+                    if (fcmToken) {
+                        await notificarSessaoIniciada(fcmToken, treinoComExercicios.nome ?? 'Treino');
+                    }
+                } catch (e) {
+                    console.error('[SessaoService] Erro ao enviar notificação de início:', e);
+                }
+            })();
 
             return await this.repository.findById(sessaoId) as SessaoComDetalhe;
         } catch (error) {
@@ -392,6 +413,29 @@ class SessaoService {
             this.repository.findById(id) as Promise<SessaoComDetalhe>,
             this.repository.getSessaoResumo(id),
         ]);
+
+        // Enviar notificação push (não-bloqueante)
+        void (async () => {
+            try {
+                if (sessao) {
+                    const alunoData = await DataBase.select({ fcm_token: aluno.fcm_token })
+                        .from(aluno)
+                        .where(eq(aluno.id, sessao.aluno_id))
+                        .limit(1);
+
+                    const fcmToken = alunoData[0]?.fcm_token;
+                    if (fcmToken && resumo) {
+                        await notificarSessaoFinalizada(
+                            fcmToken,
+                            sessao.treino?.nome ?? 'Treino',
+                            resumo.exercicios_concluidos
+                        );
+                    }
+                }
+            } catch (e) {
+                console.error('[SessaoService] Erro ao enviar notificação de fim:', e);
+            }
+        })();
 
         return { ...sessao, resumo: resumo! };
     }

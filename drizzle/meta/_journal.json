@@ -19,7 +19,6 @@
     {
       "idx": 2,
       "version": "7",
-<<<<<<< Updated upstream
       "when": 1778167929548,
       "tag": "0002_fuzzy_agent_zero",
       "breakpoints": true
@@ -36,10 +35,13 @@
       "version": "7",
       "when": 1778168948010,
       "tag": "0004_tired_wilson_fisk",
-=======
-      "when": 1778292383700,
-      "tag": "0002_broken_baron_zemo",
->>>>>>> Stashed changes
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1780080373556,
+      "tag": "0005_jazzy_adam_warlock",
       "breakpoints": true
     }
   ]
