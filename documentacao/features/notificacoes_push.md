@@ -53,11 +53,6 @@ Estas notificações fazem sentido para a regra de negócio, mas dependem de mó
     *   **Para:** Aluno
     *   **Descrição:** Notifica que um novo laudo/medidas foi anexado ao perfil.
     *   **O que falta:** O `AvaliacaoFisicaService` e o repositório/controller correspondente ainda não existem no backend (embora a tabela exista no schema).
-*   **Alerta de Recorde Pessoal (PR)**
-    *   **De:** Sistema
-    *   **Para:** Aluno
-    *   **Descrição:** "Parabéns! Você bateu seu recorde de carga no Supino Reto (80kg)."
-    *   **O que falta:** Um serviço analítico ou lógica dentro do `SessaoService` (ou `HistoricoService`) que compare a carga/volume atual com os registros passados do mesmo exercício de forma assíncrona.
 *   **Lembrete de Treino (Inatividade)**
     *   **De:** Sistema
     *   **Para:** Aluno
@@ -65,19 +60,3 @@ Estas notificações fazem sentido para a regra de negócio, mas dependem de mó
     *   **O que falta:** Um worker/CRON Job no servidor (ex: `node-cron` ou AWS EventBridge) que rode diariamente verificando o `created_at` da última sessão de cada aluno.
 
 ---
-
-## 🔴 3. Ideias Futuras (Requerem Novas Features)
-Notificações interessantes, mas que exigem a criação de novas funcionalidades, tabelas e lógicas não previstas no escopo atual.
-
-*   **Agendamento de Aulas/Consultorias**
-    *   **Descrição:** Notificar 1 hora antes de uma mentoria em vídeo ou aula presencial marcada.
-    *   **Depende de:** Criação de módulo de `Agendamento` / `Calendário` no backend.
-*   **Vencimento de Mensalidade/Plano**
-    *   **Descrição:** Aviso financeiro.
-    *   **Depende de:** Integração com gateway de pagamento (Stripe, Pagar.me) e módulo financeiro.
-*   **Gamificação (Badges/Conquistas)**
-    *   **Descrição:** "Você alcançou a marca de 50 treinos no ano! Distintivo desbloqueado."
-    *   **Depende de:** Criação de tabelas de `conquistas`, `pontuacao` e um motor de regras de gamificação.
-*   **Alerta de Equipamento em Manutenção**
-    *   **Descrição:** (Focado na administração da Academia). Avisar alunos que o aparelho X está quebrado.
-    *   **Depende de:** Módulo de gestão de hardware/manutenção vinculado à `Academia`.
