@@ -64,6 +64,44 @@ export async function notificarTreinoAtribuido(
   );
 }
 
+export async function notificarTreinoAtualizado(
+  fcmToken: string,
+  nomeTreino: string,
+): Promise<void> {
+  await enviarPushParaUsuario(
+    fcmToken,
+    "🔄 Treino atualizado",
+    `O treino "${nomeTreino}" foi atualizado pelo seu treinador.`,
+    { tipo: "TREINO_ATUALIZADO" },
+  );
+}
+
+export async function notificarTreinoConcluidoTreinador(
+  fcmToken: string,
+  nomeAluno: string,
+  nomeTreino: string,
+): Promise<void> {
+  await enviarPushParaUsuario(
+    fcmToken,
+    "✅ Aluno concluiu um treino",
+    `${nomeAluno} finalizou a sessão de ${nomeTreino}.`,
+    { tipo: "SESSAO_FINALIZADA_TREINADOR" },
+  );
+}
+
+export async function notificarNovaMensagem(
+  fcmToken: string,
+  nomeRemetente: string,
+  conversaId: string,
+): Promise<void> {
+  await enviarPushParaUsuario(
+    fcmToken,
+    "💬 Nova Mensagem",
+    `${nomeRemetente} enviou uma mensagem para você.`,
+    { tipo: "NOVA_MENSAGEM", conversa_id: conversaId },
+  );
+}
+
 export async function notificarAvaliacaoFisicaAgendada(
   fcmToken: string,
 ): Promise<void> {

@@ -45,9 +45,16 @@ class AlunoRepository {
     );
     try {
       const { academia_id, ...restStudent } = novoStudent;
+      const insertData = {
+        ...restStudent,
+        academia_id,
+        peso_atual_kg: restStudent.peso_atual_kg?.toString() ?? null,
+        altura_m: restStudent.altura_m?.toString() ?? null,
+      } as any;
+      
       const resultado = await this.db
         .insert(aluno)
-        .values({ ...restStudent, academia_id })
+        .values(insertData)
         .returning();
       console.log(
         "[StudentsRepository] [create] Inserção concluída. Registro retornado:",
@@ -174,9 +181,15 @@ class AlunoRepository {
 
   async update(id: string, alunoEditado: Partial<type_aluno>): Promise<type_aluno | null> {
     try {
+      const updateData = {
+        ...alunoEditado,
+        peso_atual_kg: alunoEditado.peso_atual_kg?.toString(),
+        altura_m: alunoEditado.altura_m?.toString(),
+      } as any;
+        
       const resultado = await this.db
         .update(aluno)
-        .set(alunoEditado)
+        .set(updateData)
         .where(eq(aluno.id, id))
         .returning();
 

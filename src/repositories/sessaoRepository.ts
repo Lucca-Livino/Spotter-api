@@ -658,11 +658,12 @@ class SessaoRepository {
 
     async buscarTreinoComExercicios(treinoId: string, alunoId: string): Promise<{
         treino_id: string;
+        nome: string;
         exercicios: { treino_exercicio_id: string; series: number; ordem_execucao: number }[];
     } | null> {
         try {
             const treinoResult = await this.db
-                .select({ id: treino.id })
+                .select({ id: treino.id, nome: treino.nome })
                 .from(treino)
                 .where(
                     and(
@@ -686,6 +687,7 @@ class SessaoRepository {
 
             return {
                 treino_id: treinoResult[0].id,
+                nome: treinoResult[0].nome,
                 exercicios: exerciciosResult,
             };
         } catch (error) {

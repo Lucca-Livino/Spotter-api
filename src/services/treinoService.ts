@@ -17,6 +17,10 @@ import {
 } from '../utils/validations/treinoValidation';
 import { type_treino } from '../types/dbSchemas';
 import { mapTreinoTemplateParaAluno } from '../utils/treinoTemplateMapper';
+import { notificarTreinoAtribuido, notificarTreinoAtualizado } from '../integrations/notificacoes';
+import { DataBase } from '../config/DbConnect';
+import { aluno } from '../config/db/schema';
+import { eq } from 'drizzle-orm';
 
 class TreinoService {
     private repository: TreinoRepository;
@@ -213,6 +217,25 @@ class TreinoService {
 
             if (!treinoDetalhado) {
                 throw new Error('Treino não encontrado');
+            }
+
+            // Enviar push notification se o treino foi criado por um treinador para um aluno
+            if (perfil.isTreinador && alunoIdDestino && alunoIdDestino !== perfil.alunoId) {
+                void (async () => {
+                    try {
+                        const alunoData = await DataBase.select({ fcm_token: aluno.fcm_token })
+                            .from(aluno)
+                            .where(eq(aluno.id, alunoIdDestino))
+                            .limit(1);
+
+                        const fcmToken = alunoData[0]?.fcm_token;
+                        if (fcmToken) {
+                            await notificarTreinoAtribuido(fcmToken, treinoDetalhado.nome);
+                        }
+                    } catch (e) {
+                        console.error('[TreinoService] Erro ao enviar notificação de novo treino:', e);
+                    }
+                })();
             }
 
             return treinoDetalhado;
@@ -512,6 +535,25 @@ class TreinoService {
             throw new Error('Treino não encontrado');
         }
 
+        // Enviar push notification se o treino foi atualizado por um treinador para um aluno
+        if (perfil.isTreinador && treinoAtualizadoComExercicios.usuario_id && treinoAtualizadoComExercicios.usuario_id !== perfil.alunoId) {
+            void (async () => {
+                try {
+                    const alunoData = await DataBase.select({ fcm_token: aluno.fcm_token })
+                        .from(aluno)
+                        .where(eq(aluno.id, treinoAtualizadoComExercicios.usuario_id as string))
+                        .limit(1);
+
+                    const fcmToken = alunoData[0]?.fcm_token;
+                    if (fcmToken) {
+                        await notificarTreinoAtualizado(fcmToken, treinoAtualizadoComExercicios.nome);
+                    }
+                } catch (e) {
+                    console.error('[TreinoService] Erro ao enviar notificação de treino atualizado:', e);
+                }
+            })();
+        }
+
         return treinoAtualizadoComExercicios;
     }
 
@@ -603,6 +645,7 @@ class TreinoService {
         const resultados: TreinoComExercicios[] = [];
         for (const alunoId of alunoIds) {
             const payload = mapTreinoTemplateParaAluno(treinoTemplate, alunoId);
+            // O createTreino já cuida do envio da notificação "Novo Treino Atribuído"
             const criado = await this.createTreino(payload, userId);
             resultados.push(criado);
         }
