@@ -240,7 +240,7 @@ class TreinoService {
         }
 
         const podeVisualizar =
-            (perfil.isAdmin && treinoEncontrado.usuario_id !== null && perfil.alunoId === treinoEncontrado.usuario_id) ||
+            (perfil.isAdmin && (!perfil.alunoId || perfil.alunoId === treinoEncontrado.usuario_id)) ||
             (treinoEncontrado.usuario_id !== null && perfil.alunoId === treinoEncontrado.usuario_id) ||
             (perfil.treinadorId !== null && perfil.treinadorId === treinoEncontrado.treinador_id) ||
             (perfil.isTreinador && perfil.treinadorId !== null && treinoEncontrado.usuario_id !== null &&
@@ -335,7 +335,7 @@ class TreinoService {
         }
 
         const podeAtualizar =
-            (perfil.isAdmin && treinoAtual.usuario_id !== null && perfil.alunoId === treinoAtual.usuario_id) ||
+            (perfil.isAdmin && (!perfil.alunoId || perfil.alunoId === treinoAtual.usuario_id)) ||
             (treinoAtual.usuario_id !== null && perfil.alunoId === treinoAtual.usuario_id) ||
             (perfil.treinadorId !== null && perfil.treinadorId === treinoAtual.treinador_id) ||
             (perfil.isTreinador && perfil.treinadorId !== null && treinoAtual.usuario_id !== null &&
@@ -539,7 +539,7 @@ class TreinoService {
         }
 
         const podeDeletar =
-            (perfil.isAdmin && treinoExistente.usuario_id !== null && perfil.alunoId === treinoExistente.usuario_id) ||
+            (perfil.isAdmin && (!perfil.alunoId || perfil.alunoId === treinoExistente.usuario_id)) ||
             (treinoExistente.usuario_id !== null && perfil.alunoId === treinoExistente.usuario_id) ||
             (perfil.treinadorId !== null && perfil.treinadorId === treinoExistente.treinador_id) ||
             (perfil.isTreinador && perfil.treinadorId !== null && treinoExistente.usuario_id !== null &&
@@ -588,7 +588,7 @@ class TreinoService {
         }
 
         const podeVisualizar =
-            (perfil.isAdmin && treinoTemplate.usuario_id !== null && perfil.alunoId === treinoTemplate.usuario_id) ||
+            (perfil.isAdmin && (!perfil.alunoId || perfil.alunoId === treinoTemplate.usuario_id)) ||
             (treinoTemplate.usuario_id !== null && perfil.alunoId === treinoTemplate.usuario_id) ||
             (perfil.treinadorId !== null && perfil.treinadorId === treinoTemplate.treinador_id) ||
             (perfil.isTreinador && perfil.treinadorId !== null && treinoTemplate.usuario_id !== null &&
