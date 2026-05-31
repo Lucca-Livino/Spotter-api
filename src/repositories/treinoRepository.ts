@@ -393,13 +393,13 @@ class TreinoRepository {
                         ultima_sessao_em: sql<string | null>`(
                             SELECT MAX(st.fim)::text
                             FROM sessao_treino st
-                            WHERE st.treino_id = ${treino.id}
+                            WHERE st.treino_id = "treino"."id"
                             AND st.status = 'CONCLUIDA'
                         )`,
                         total_exercicios: sql<number>`(
                             SELECT COUNT(*)::int
                             FROM treino_exercicio te
-                            WHERE te.treino_id = ${treino.id}
+                            WHERE te.treino_id = "treino"."id"
                         )`,
                     })
                     .from(treino)
