@@ -126,6 +126,7 @@ class ExercicioService {
                 treinador_id,
                 escopo,
                 em_uso,
+                com_midia,
                 ordem_nome,
                 incluir_musculos,
                 incluir_aparelhos,
@@ -197,6 +198,7 @@ class ExercicioService {
             if (treinadorContexto) filtros.treinador_id = treinadorContexto;
             if (escopoFinal) filtros.escopo = escopoFinal;
             if (typeof em_uso === 'boolean') filtros.em_uso = em_uso;
+            if (typeof com_midia === 'boolean') filtros.com_midia = com_midia;
             if (ordem_nome) filtros.ordem_nome = ordem_nome;
             if (incluir_inativos) filtros.incluir_inativos = true;
 
