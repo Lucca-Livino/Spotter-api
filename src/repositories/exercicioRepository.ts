@@ -63,6 +63,7 @@ class ExercicioRepository {
                 .comNome(filtros.nome)
                 .comEscopo(filtros.escopo, filtros.aluno_id, filtros.treinador_id)
                 .comEmUso(filtros.em_uso)
+                .comMidia(filtros.com_midia)
                 .comGrupoMuscular(filtros.grupo_muscular)
                 .comTipoAtivacao(filtros.tipo_ativacao)
                 .comTipoExercicio(filtros.tipo_exercicio);
