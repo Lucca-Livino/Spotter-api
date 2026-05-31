@@ -9,8 +9,9 @@ import {
     exercicio_aparelho,
     aparelho,
     treinador,
+    sessao_treino,
 } from '../config/db/schema';
-import { and, asc, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, getTableColumns, inArray, isNull, sql } from 'drizzle-orm';
 import { type_treino } from '../types/dbSchemas';
 import { enum_tipo_exercicio } from '../types/enum';
 import { parseDatabaseError } from '../utils/errors/DatabaseError';
@@ -49,8 +50,17 @@ export interface TreinoComExercicios extends type_treino {
     exercicios: TreinoExercicioDetalhe[];
 }
 
+export interface TreinoListItem extends type_treino {
+    ultima_sessao_em: string | null;
+    total_exercicios: number;
+}
+
+export interface TreinoListItemComExercicios extends TreinoListItem {
+    exercicios: TreinoExercicioDetalhe[];
+}
+
 export interface ResultadoPaginadoTreino {
-    dados: Array<type_treino | TreinoComExercicios>;
+    dados: Array<TreinoListItem | TreinoListItemComExercicios>;
     total: number;
     page: number;
     limite: number;
@@ -378,7 +388,20 @@ class TreinoRepository {
 
             const [treinos, countResult] = await Promise.all([
                 this.db
-                    .select()
+                    .select({
+                        ...getTableColumns(treino),
+                        ultima_sessao_em: sql<string | null>`(
+                            SELECT MAX(st.fim)::text
+                            FROM sessao_treino st
+                            WHERE st.treino_id = ${treino.id}
+                            AND st.status = 'CONCLUIDA'
+                        )`,
+                        total_exercicios: sql<number>`(
+                            SELECT COUNT(*)::int
+                            FROM treino_exercicio te
+                            WHERE te.treino_id = ${treino.id}
+                        )`,
+                    })
                     .from(treino)
                     .where(where)
                     .limit(filtros.limite)
@@ -402,7 +425,7 @@ class TreinoRepository {
 
             if (!filtros.incluir_exercicios) {
                 return {
-                    dados: treinos as type_treino[],
+                    dados: treinos as TreinoListItem[],
                     total,
                     page: filtros.page,
                     limite: filtros.limite,
@@ -412,13 +435,13 @@ class TreinoRepository {
 
             const treinosComExercicios = await Promise.all(
                 treinos.map(async (treinoItem) => ({
-                    ...(treinoItem as type_treino),
+                    ...(treinoItem as TreinoListItem),
                     exercicios: await this.montarExerciciosDoTreino(treinoItem.id, detalhes),
                 })),
             );
 
             return {
-                dados: treinosComExercicios,
+                dados: treinosComExercicios as TreinoListItemComExercicios[],
                 total,
                 page: filtros.page,
                 limite: filtros.limite,
