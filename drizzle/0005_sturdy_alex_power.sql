@@ -1,0 +1,2 @@
+ALTER TABLE "exercicio" ADD COLUMN "treinador_id" uuid;--> statement-breakpoint
+ALTER TABLE "exercicio" ADD CONSTRAINT "exercicio_treinador_id_treinador_id_fk" FOREIGN KEY ("treinador_id") REFERENCES "public"."treinador"("id") ON DELETE no action ON UPDATE no action;

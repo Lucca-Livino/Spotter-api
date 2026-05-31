@@ -1,10 +1,62 @@
+// Helper para evitar TS2345 "not assignable to parameter of type never"
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mockFn() {
+  return jest.fn() as jest.MockedFunction<(...args: any[]) => any>;
+}
+
+// Mock dos módulos externos ANTES dos imports do UploadService
+jest.mock('../../config/garageHqConnect', () => ({
+    minioClient: {
+        putObject: mockFn(),
+        statObject: mockFn(),
+        removeObject: mockFn(),
+    },
+    minioConfig: {
+        bucket: 'test-bucket',
+    },
+    getPublicObjectUrl: jest.fn((key: string) => `https://cdn.test/${key}`),
+    prepareMinioUpload: mockFn(),
+}));
+
+jest.mock('fluent-ffmpeg', () => {
+    const mockFfmpeg: any = jest.fn(() => ({
+        videoCodec: mockFn().mockReturnThis(),
+        outputOptions: mockFn().mockReturnThis(),
+        format: mockFn().mockReturnThis(),
+        on: mockFn().mockImplementation(function (this: any, event: string, cb: any) {
+            if (event === 'end') setTimeout(() => cb(), 0);
+            return this;
+        } as any),
+        save: mockFn(),
+    }));
+    return mockFfmpeg;
+});
+
+jest.mock('fs/promises', () => ({
+    __esModule: true,
+    mkdtemp: mockFn().mockResolvedValue('/tmp/webm-test'),
+    writeFile: mockFn().mockResolvedValue(undefined),
+    readFile: mockFn().mockResolvedValue(Buffer.from('encoded-webm')),
+    unlink: mockFn().mockResolvedValue(undefined),
+    rmdir: mockFn().mockResolvedValue(undefined),
+    default: {
+        mkdtemp: mockFn().mockResolvedValue('/tmp/webm-test'),
+        writeFile: mockFn().mockResolvedValue(undefined),
+        readFile: mockFn().mockResolvedValue(Buffer.from('encoded-webm')),
+        unlink: mockFn().mockResolvedValue(undefined),
+        rmdir: mockFn().mockResolvedValue(undefined),
+    },
+}));
+
 import { randomUUID } from 'crypto';
 import { spawn, ChildProcess } from 'child_process';
 import request from 'supertest';
 import { inArray } from 'drizzle-orm';
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
 import { DbConnect, DataBase } from '../../config/DbConnect';
 import { user } from '../../config/db/schema';
+import UploadService from '../../services/uploadService';
+import { minioClient, minioConfig, getPublicObjectUrl, prepareMinioUpload } from '../../config/garageHqConnect';
 
 const RUN_ID = Date.now().toString(36);
 const ORIGIN = 'http://localhost:3000';
@@ -150,6 +202,7 @@ beforeAll(async () => {
             BETTER_AUTH_URL: BASE_URL,
         },
         stdio: 'ignore',
+        shell: true,
     });
 
     await waitForServerReady();
@@ -514,5 +567,134 @@ describe('Fluxo E2E completo de auth', () => {
             .get('/api/me')
             .set(buildHeaders(login, true, false));
         expect(meAfter.status).toBe(401);
+    });
+});
+
+// ============================================================
+// BLOCO 2 — Testes unitários do UploadService (mocked)
+// ============================================================
+
+const mockMinioClient = minioClient as jest.Mocked<typeof minioClient>;
+const mockPrepare = prepareMinioUpload as jest.MockedFunction<typeof prepareMinioUpload>;
+const mockGetUrl = getPublicObjectUrl as jest.MockedFunction<typeof getPublicObjectUrl>;
+
+function makeFile(overrides: Partial<{
+    originalname: string;
+    mimetype: string;
+    size: number;
+    buffer: Buffer;
+}> = {}) {
+    return {
+        originalname: 'foto.jpg',
+        mimetype: 'image/jpeg',
+        size: 1024,
+        buffer: Buffer.from('fake image data'),
+        ...overrides,
+    };
+}
+
+describe('UploadService.uploadFiles', () => {
+    let service: UploadService;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        service = new UploadService();
+        (mockMinioClient.putObject as any).mockResolvedValue(undefined);
+        (mockPrepare as any).mockResolvedValue(undefined);
+        (mockGetUrl as any).mockReturnValue('https://cdn.test/fotos/file.jpg');
+        (minioConfig as any).bucket = 'test-bucket';
+    });
+
+    it('faz upload de um arquivo e retorna resultado', async () => {
+        const file = makeFile();
+        const result = await service.uploadFiles('fotos', [file]);
+
+        expect(result).toHaveLength(1);
+        expect(result[0].bucket).toBe('test-bucket');
+        expect(result[0].originalName).toBe('foto.jpg');
+        expect(result[0].mimetype).toBe('image/jpeg');
+        expect(result[0].size).toBe(1024);
+        expect(result[0].url).toBeDefined();
+        expect(mockMinioClient.putObject).toHaveBeenCalled();
+    });
+
+    it('faz upload de múltiplos arquivos em paralelo', async () => {
+        const files = [makeFile({ originalname: 'a.jpg' }), makeFile({ originalname: 'b.jpg' })];
+        const result = await service.uploadFiles('fotos', files);
+
+        expect(result).toHaveLength(2);
+        expect(mockMinioClient.putObject).toHaveBeenCalledTimes(2);
+    });
+
+    it('lança erro quando bucket não está configurado', async () => {
+        (minioConfig as any).bucket = undefined;
+
+        const file = makeFile();
+        await expect(service.uploadFiles('fotos', [file])).rejects.toThrow('Bucket nao configurado');
+    });
+
+    it('sanitiza categoria com caracteres especiais', async () => {
+        const file = makeFile({ originalname: 'img.png', mimetype: 'image/png' });
+        await service.uploadFiles('fotos perfil!@#', [file]);
+
+        const putCall = (mockMinioClient.putObject as any).mock.calls[0];
+        expect(putCall[1]).toMatch(/^fotosperfil\//);
+    });
+
+    it('constrói objectKey com timestamp e UUID e extensão', async () => {
+        const file = makeFile({ originalname: 'imagem.png' });
+        await service.uploadFiles('fotos', [file]);
+
+        const putCall = (mockMinioClient.putObject as any).mock.calls[0];
+        const key: string = putCall[1];
+        expect(key).toMatch(/^fotos\/\d+-[a-f0-9-]+\.png$/);
+    });
+
+    it('constrói objectKey sem extensão quando arquivo não tem extensão', async () => {
+        const file = makeFile({ originalname: 'arquivo_sem_ext' });
+        await service.uploadFiles('docs', [file]);
+
+        const putCall = (mockMinioClient.putObject as any).mock.calls[0];
+        const key: string = putCall[1];
+        expect(key).toMatch(/^docs\/\d+-[a-f0-9-]+$/);
+    });
+});
+
+describe('UploadService.deleteFile', () => {
+    let service: UploadService;
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        service = new UploadService();
+        (mockPrepare as any).mockResolvedValue(undefined);
+        (minioConfig as any).bucket = 'test-bucket';
+        (mockMinioClient.statObject as any).mockResolvedValue({});
+        (mockMinioClient.removeObject as any).mockResolvedValue(undefined);
+    });
+
+    it('deleta arquivo existente com sucesso', async () => {
+        const result = await service.deleteFile('fotos', 'arquivo.jpg');
+
+        expect(result.bucket).toBe('test-bucket');
+        expect(result.objectKey).toBe('fotos/arquivo.jpg');
+        expect(mockMinioClient.removeObject).toHaveBeenCalledWith('test-bucket', 'fotos/arquivo.jpg');
+    });
+
+    it('lança erro quando bucket não configurado', async () => {
+        (minioConfig as any).bucket = undefined;
+
+        await expect(service.deleteFile('fotos', 'arq.jpg')).rejects.toThrow('Bucket nao configurado');
+    });
+
+    it('lança erro quando arquivo não encontrado (statObject falha)', async () => {
+        (mockMinioClient.statObject as any).mockRejectedValue(new Error('not found'));
+
+        await expect(service.deleteFile('fotos', 'nao-existe.jpg')).rejects.toThrow('Arquivo nao encontrado');
+    });
+
+    it('sanitiza categoria na chave do objeto', async () => {
+        await service.deleteFile('minha pasta!', 'arquivo.jpg');
+
+        expect(mockMinioClient.statObject).toHaveBeenCalledWith('test-bucket', 'minhapasta/arquivo.jpg');
     });
 });

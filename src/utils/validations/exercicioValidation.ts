@@ -123,11 +123,16 @@ const exercicioQuerySchema = z.object({
         .uuid({ message: 'aluno_id deve ser um UUID válido' })
         .optional()
         .openapi({ description: "Filtrar por UUID do aluno", example: "550e8400-e29b-41d4-a716-446655440000" }),
+    treinador_id: z
+        .string()
+        .uuid({ message: 'treinador_id deve ser um UUID válido' })
+        .optional()
+        .openapi({ description: "Filtrar por UUID do treinador", example: "550e8400-e29b-41d4-a716-446655440000" }),
     escopo: z
         .enum(['GLOBAL', 'PESSOAL', 'TODOS'])
         .optional()
         .openapi({
-            description: "Define o escopo da biblioteca de exercícios. GLOBAL=apenas globais, PESSOAL=apenas pessoais do aluno informado/contexto, TODOS=globais+pessoais.",
+            description: "Define o escopo da biblioteca de exercícios. GLOBAL=apenas globais, PESSOAL=apenas pessoais do aluno/treinador informado/contexto, TODOS=globais+pessoais.",
             example: "TODOS",
         }),
     em_uso: booleanQueryParam

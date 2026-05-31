@@ -32,6 +32,14 @@ class TreinadorService {
 		return resultado;
 	}
 
+	async getTreinadorByUserId(userId: string): Promise<any> {
+		const Treinador = await this.repository.findFullByUserId(userId);
+		if (!Treinador) {
+			throw new Error(`Perfil de treinador não encontrado para o usuário ${userId}`);
+		}
+		return Treinador;
+	}
+
 	async createTreinador(novoTreinador: type_treinador): Promise<type_treinador> {
 		try {
 			treinadorSchema.parse(novoTreinador);

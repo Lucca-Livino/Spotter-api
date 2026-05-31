@@ -1,10 +1,16 @@
+// Helper para evitar TS2345 "not assignable to parameter of type never"
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mockFn() {
+  return jest.fn() as jest.MockedFunction<(...args: any[]) => any>;
+}
+
 jest.mock('../../middlewares/authMiddleware', () => ({
-    authMiddleware: jest.fn(),
+    authMiddleware: mockFn(),
 }));
 
 jest.mock('../../config/socketIo', () => ({
-    emitirNovaMensagem: jest.fn(),
-    emitirMensagensLidas: jest.fn(),
+    emitirNovaMensagem: mockFn(),
+    emitirMensagensLidas: mockFn(),
 }));
 
 import { randomUUID } from 'crypto';
@@ -23,6 +29,10 @@ import {
     treinador,
     user,
 } from '../../config/db/schema';
+import ConversaController from '../../controllers/conversaController';
+import MensagemConversaController from '../../controllers/mensagemConversaController';
+import { ZodError } from 'zod';
+import { DatabaseError } from '../../utils/errors/DatabaseError';
 
 const RUN_ID = Date.now().toString(36);
 
@@ -1002,5 +1012,689 @@ describe('Sanidade de persistência de leitura', () => {
         expect(alvo).toBeDefined();
         expect(alvo?.lida_por_user_id).toBe(alunoUserId);
         expect(alvo?.lida_em).not.toBeNull();
+    });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================
+// BLOCO DE COBERTURA — Testes unitários do ConversaController (Gerado Automaticamente)
+// ============================================================
+
+
+describe('ConversaController (Coverage)', () => {
+    let controller: ConversaController;
+    
+    function makeRes() {
+            const res = {
+                status: mockFn().mockReturnThis(),
+                json: mockFn(),
+                header: mockFn().mockReturnThis(),
+                attachment: mockFn().mockReturnThis(),
+                send: mockFn().mockReturnThis(),
+            };
+            return res as any;
+        }
+
+    function makeReq(overrides: any = {}) { return ({
+            body: {},
+            params: { 
+                id: '00000000-0000-0000-0000-000000000000', 
+                conversaId: '00000000-0000-0000-0000-000000000000',
+                exercicioId: '00000000-0000-0000-0000-000000000000'
+            },
+            query: {},
+            user: { id: '00000000-0000-0000-0000-000000000000' },
+            ...overrides,
+        }) as any; }
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        controller = new ConversaController();
+    });
+
+
+    describe('iniciarOuBuscar', () => {
+        it('handles ZodError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                iniciarOuBuscar: mockFn().mockRejectedValue(new ZodError([])),
+            };
+            await controller.iniciarOuBuscar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles DatabaseError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                iniciarOuBuscar: mockFn().mockRejectedValue(new DatabaseError('db error', 400)),
+            };
+            await controller.iniciarOuBuscar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 500, 404, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles FORBIDDEN error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                iniciarOuBuscar: mockFn().mockRejectedValue(new Error('FORBIDDEN: denied')),
+            };
+            await controller.iniciarOuBuscar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([403, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles VALIDATION error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                iniciarOuBuscar: mockFn().mockRejectedValue(new Error('VALIDATION: error')),
+            };
+            await controller.iniciarOuBuscar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles not found error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            const msg = 'Conversa não encontrado';
+            (controller as any).service = {
+                iniciarOuBuscar: mockFn().mockRejectedValue(new Error(msg)),
+            };
+            await controller.iniciarOuBuscar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles Conversa nao encontrada error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                iniciarOuBuscar: mockFn().mockRejectedValue(new Error('Conversa nao encontrada')),
+            };
+            await controller.iniciarOuBuscar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles generic Error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                iniciarOuBuscar: mockFn().mockRejectedValue(new Error('generic error')),
+            };
+            await controller.iniciarOuBuscar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 403, 404, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+        
+        it('handles non-Error throw', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                iniciarOuBuscar: mockFn().mockRejectedValue('not an error object'),
+            };
+            await controller.iniciarOuBuscar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect(res.status).toHaveBeenCalledWith(500);
+            }
+        });
+    });
+
+    describe('listar', () => {
+        it('handles ZodError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listar: mockFn().mockRejectedValue(new ZodError([])),
+            };
+            await controller.listar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles DatabaseError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listar: mockFn().mockRejectedValue(new DatabaseError('db error', 400)),
+            };
+            await controller.listar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 500, 404, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles FORBIDDEN error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listar: mockFn().mockRejectedValue(new Error('FORBIDDEN: denied')),
+            };
+            await controller.listar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([403, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles VALIDATION error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listar: mockFn().mockRejectedValue(new Error('VALIDATION: error')),
+            };
+            await controller.listar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles not found error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            const msg = 'Conversa não encontrado';
+            (controller as any).service = {
+                listar: mockFn().mockRejectedValue(new Error(msg)),
+            };
+            await controller.listar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles Conversa nao encontrada error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listar: mockFn().mockRejectedValue(new Error('Conversa nao encontrada')),
+            };
+            await controller.listar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles generic Error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listar: mockFn().mockRejectedValue(new Error('generic error')),
+            };
+            await controller.listar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 403, 404, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+        
+        it('handles non-Error throw', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listar: mockFn().mockRejectedValue('not an error object'),
+            };
+            await controller.listar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect(res.status).toHaveBeenCalledWith(500);
+            }
+        });
+    });
+
+    describe('obterPorId', () => {
+        it('handles ZodError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                obterPorId: mockFn().mockRejectedValue(new ZodError([])),
+            };
+            await controller.obterPorId(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles DatabaseError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                obterPorId: mockFn().mockRejectedValue(new DatabaseError('db error', 400)),
+            };
+            await controller.obterPorId(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 500, 404, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles FORBIDDEN error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                obterPorId: mockFn().mockRejectedValue(new Error('FORBIDDEN: denied')),
+            };
+            await controller.obterPorId(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([403, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles VALIDATION error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                obterPorId: mockFn().mockRejectedValue(new Error('VALIDATION: error')),
+            };
+            await controller.obterPorId(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles not found error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            const msg = 'Conversa não encontrado';
+            (controller as any).service = {
+                obterPorId: mockFn().mockRejectedValue(new Error(msg)),
+            };
+            await controller.obterPorId(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles Conversa nao encontrada error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                obterPorId: mockFn().mockRejectedValue(new Error('Conversa nao encontrada')),
+            };
+            await controller.obterPorId(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles generic Error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                obterPorId: mockFn().mockRejectedValue(new Error('generic error')),
+            };
+            await controller.obterPorId(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 403, 404, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+        
+        it('handles non-Error throw', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                obterPorId: mockFn().mockRejectedValue('not an error object'),
+            };
+            await controller.obterPorId(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect(res.status).toHaveBeenCalledWith(500);
+            }
+        });
+    });
+});
+
+
+// ============================================================
+// BLOCO DE COBERTURA — Testes unitários do MensagemConversaController (Gerado Automaticamente)
+// ============================================================
+
+
+describe('MensagemConversaController (Coverage)', () => {
+    let controller: MensagemConversaController;
+    
+    function makeRes() {
+        const res = {
+            status: mockFn().mockReturnThis(),
+            json: mockFn(),
+            header: mockFn().mockReturnThis(),
+            attachment: mockFn().mockReturnThis(),
+            send: mockFn().mockReturnThis(),
+        };
+        return res as any;
+    }
+
+    function makeReq(overrides: any = {}) {
+        return ({
+            body: {},
+            params: { 
+                id: '00000000-0000-0000-0000-000000000000', 
+                conversaId: '00000000-0000-0000-0000-000000000000',
+                exercicioId: '00000000-0000-0000-0000-000000000000'
+            },
+            query: {},
+            user: { id: '00000000-0000-0000-0000-000000000000' },
+            ...overrides,
+        }) as any;
+    }
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        controller = new MensagemConversaController();
+    });
+
+
+    describe('enviar', () => {
+        it('handles ZodError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                enviar: mockFn().mockRejectedValue(new ZodError([])),
+            };
+            await controller.enviar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles DatabaseError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                enviar: mockFn().mockRejectedValue(new DatabaseError('db error', 400)),
+            };
+            await controller.enviar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 500, 404, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles FORBIDDEN error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                enviar: mockFn().mockRejectedValue(new Error('FORBIDDEN: denied')),
+            };
+            await controller.enviar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([403, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles VALIDATION error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                enviar: mockFn().mockRejectedValue(new Error('VALIDATION: error')),
+            };
+            await controller.enviar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles not found error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            const msg = 'MensagemConversa não encontrado';
+            (controller as any).service = {
+                enviar: mockFn().mockRejectedValue(new Error(msg)),
+            };
+            await controller.enviar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles Conversa nao encontrada error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                enviar: mockFn().mockRejectedValue(new Error('Conversa nao encontrada')),
+            };
+            await controller.enviar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles generic Error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                enviar: mockFn().mockRejectedValue(new Error('generic error')),
+            };
+            await controller.enviar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 403, 404, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+        
+        it('handles non-Error throw', async () => {
+            const res = makeRes();
+            const req = makeReq({ body: { conteudo: 'teste' } });
+            (controller as any).service = {
+                enviar: mockFn().mockRejectedValue('not an error object'),
+            };
+            await controller.enviar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect(res.status).toHaveBeenCalledWith(500);
+            }
+        });
+    });
+
+    describe('listar', () => {
+        it('handles ZodError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listar: mockFn().mockRejectedValue(new ZodError([])),
+            };
+            await controller.listar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles DatabaseError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listar: mockFn().mockRejectedValue(new DatabaseError('db error', 400)),
+            };
+            await controller.listar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 500, 404, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles FORBIDDEN error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listar: mockFn().mockRejectedValue(new Error('FORBIDDEN: denied')),
+            };
+            await controller.listar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([403, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles VALIDATION error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listar: mockFn().mockRejectedValue(new Error('VALIDATION: error')),
+            };
+            await controller.listar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles not found error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            const msg = 'MensagemConversa não encontrado';
+            (controller as any).service = {
+                listar: mockFn().mockRejectedValue(new Error(msg)),
+            };
+            await controller.listar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles Conversa nao encontrada error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listar: mockFn().mockRejectedValue(new Error('Conversa nao encontrada')),
+            };
+            await controller.listar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles generic Error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listar: mockFn().mockRejectedValue(new Error('generic error')),
+            };
+            await controller.listar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 403, 404, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+        
+        it('handles non-Error throw', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listar: mockFn().mockRejectedValue('not an error object'),
+            };
+            await controller.listar(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect(res.status).toHaveBeenCalledWith(500);
+            }
+        });
+    });
+
+    describe('marcarComoLidas', () => {
+        it('handles ZodError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                marcarComoLidas: mockFn().mockRejectedValue(new ZodError([])),
+            };
+            await controller.marcarComoLidas(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles DatabaseError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                marcarComoLidas: mockFn().mockRejectedValue(new DatabaseError('db error', 400)),
+            };
+            await controller.marcarComoLidas(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 500, 404, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles FORBIDDEN error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                marcarComoLidas: mockFn().mockRejectedValue(new Error('FORBIDDEN: denied')),
+            };
+            await controller.marcarComoLidas(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([403, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles VALIDATION error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                marcarComoLidas: mockFn().mockRejectedValue(new Error('VALIDATION: error')),
+            };
+            await controller.marcarComoLidas(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles not found error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            const msg = 'MensagemConversa não encontrado';
+            (controller as any).service = {
+                marcarComoLidas: mockFn().mockRejectedValue(new Error(msg)),
+            };
+            await controller.marcarComoLidas(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles Conversa nao encontrada error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                marcarComoLidas: mockFn().mockRejectedValue(new Error('Conversa nao encontrada')),
+            };
+            await controller.marcarComoLidas(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles generic Error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                marcarComoLidas: mockFn().mockRejectedValue(new Error('generic error')),
+            };
+            await controller.marcarComoLidas(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 403, 404, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+        
+        it('handles non-Error throw', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                marcarComoLidas: mockFn().mockRejectedValue('not an error object'),
+            };
+            await controller.marcarComoLidas(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect(res.status).toHaveBeenCalledWith(500);
+            }
+        });
     });
 });

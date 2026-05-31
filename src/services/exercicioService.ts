@@ -34,8 +34,9 @@ class ExercicioService {
             const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
 
             const alunoId = dadosValidados.aluno_id ?? (perfil.alunoId || undefined);
+            const treinadorId = (perfil.isTreinador && !dadosValidados.aluno_id) ? perfil.treinadorId : undefined;
 
-            if (!alunoId && !perfil.isAdmin) {
+            if (!alunoId && !treinadorId && !perfil.isAdmin) {
                 throw new Error('FORBIDDEN: apenas administradores podem criar exercícios globais');
             }
 
@@ -81,6 +82,7 @@ class ExercicioService {
             const exercicioExistente = await this.repository.findByNome(
                 dadosValidados.nome,
                 alunoId,
+                treinadorId ?? null,
             );
 
             if (exercicioExistente) {
@@ -92,6 +94,7 @@ class ExercicioService {
                 descricao: dadosValidados.descricao ?? null,
                 animacao_url: dadosValidados.animacao_url ?? null,
                 aluno_id: alunoId ?? null,
+                treinador_id: treinadorId ?? null,
                 tipo_exercicio: dadosValidados.tipo_exercicio ?? 'REPETICAO',
             };
 
@@ -120,6 +123,7 @@ class ExercicioService {
                 tipo_ativacao,
                 tipo_exercicio,
                 aluno_id,
+                treinador_id,
                 escopo,
                 em_uso,
                 ordem_nome,
@@ -131,10 +135,11 @@ class ExercicioService {
             const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
 
             let alunoContexto = aluno_id;
+            let treinadorContexto = treinador_id;
             let escopoFinal = escopo;
 
             if (!escopoFinal) {
-                escopoFinal = perfil.alunoId ? 'TODOS' : 'GLOBAL';
+                escopoFinal = (perfil.alunoId || perfil.treinadorId) ? 'TODOS' : 'GLOBAL';
             }
 
             if (aluno_id) {
@@ -150,13 +155,32 @@ class ExercicioService {
                 }
             }
 
+            if (treinador_id) {
+                if (!perfil.isAdmin && perfil.isTreinador && perfil.treinadorId !== treinador_id) {
+                    throw new Error('FORBIDDEN: você não pode listar exercícios de outro treinador');
+                }
+                if (perfil.isAluno) {
+                    // Aluno pode listar exercícios do seu treinador?
+                    // Por enquanto vamos permitir apenas se for o treinador dele
+                    const alunoPerfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
+                    if (alunoPerfil.treinadorId !== treinador_id) {
+                        throw new Error('FORBIDDEN: você não pode listar exercícios de um treinador que não seja o seu');
+                    }
+                }
+            }
+
             if (escopoFinal === 'PESSOAL' || escopoFinal === 'TODOS') {
                 if (!alunoContexto && perfil.alunoId) {
                     alunoContexto = perfil.alunoId;
                 }
+                
+                // Aluno também vê exercícios do seu treinador por padrão nestes escopos
+                if (!treinadorContexto && perfil.treinadorId) {
+                    treinadorContexto = perfil.treinadorId;
+                }
 
-                if (!alunoContexto) {
-                    throw new Error('VALIDATION: aluno_id é obrigatório para escopo PESSOAL ou TODOS sem contexto de aluno autenticado');
+                if (!alunoContexto && !treinadorContexto) {
+                    throw new Error('VALIDATION: aluno_id ou treinador_id é obrigatório para escopo PESSOAL ou TODOS sem contexto de usuário autenticado');
                 }
             }
 
@@ -170,6 +194,7 @@ class ExercicioService {
             if (tipo_ativacao) filtros.tipo_ativacao = tipo_ativacao;
             if (tipo_exercicio) filtros.tipo_exercicio = tipo_exercicio;
             if (alunoContexto) filtros.aluno_id = alunoContexto;
+            if (treinadorContexto) filtros.treinador_id = treinadorContexto;
             if (escopoFinal) filtros.escopo = escopoFinal;
             if (typeof em_uso === 'boolean') filtros.em_uso = em_uso;
             if (ordem_nome) filtros.ordem_nome = ordem_nome;
@@ -193,7 +218,7 @@ class ExercicioService {
             throw new Error('Exercício não encontrado');
         }
 
-        // Exercício pessoal: apenas o dono, qualquer treinador ou admin pode visualizar
+        // Exercício pessoal de aluno: apenas o dono, qualquer treinador ou admin pode visualizar
         if (exercicioEncontrado.aluno_id) {
             const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
             const treinadorComAcesso = !perfil.isAdmin && perfil.isTreinador
@@ -202,6 +227,20 @@ class ExercicioService {
 
             if (!perfil.isAdmin && !treinadorComAcesso && perfil.alunoId !== exercicioEncontrado.aluno_id) {
                 throw new Error('FORBIDDEN: você não tem permissão para visualizar este exercício');
+            }
+        }
+
+        // Exercício pessoal de treinador: dono, aluno vinculado ou admin pode visualizar
+        if (exercicioEncontrado.treinador_id) {
+            const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
+            if (!perfil.isAdmin && perfil.treinadorId !== exercicioEncontrado.treinador_id) {
+                if (perfil.isAluno) {
+                    if (perfil.alunoTreinadorId !== exercicioEncontrado.treinador_id) {
+                        throw new Error('FORBIDDEN: você não tem permissão para visualizar este exercício');
+                    }
+                } else {
+                    throw new Error('FORBIDDEN: você não tem permissão para visualizar este exercício');
+                }
             }
         }
 
@@ -222,11 +261,11 @@ class ExercicioService {
             const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
 
             // Exercício global: apenas admin pode editar
-            if (!exercicioExistente.aluno_id && !perfil.isAdmin) {
+            if (!exercicioExistente.aluno_id && !exercicioExistente.treinador_id && !perfil.isAdmin) {
                 throw new Error('FORBIDDEN: apenas administradores podem editar exercícios globais');
             }
 
-            // Exercício pessoal: dono, admin ou treinador vinculado ao aluno
+            // Exercício pessoal de aluno: dono, admin ou treinador vinculado ao aluno
             if (exercicioExistente.aluno_id && !perfil.isAdmin) {
                 const ehDono = perfil.alunoId === exercicioExistente.aluno_id;
                 const treinadorComAcesso = perfil.isTreinador
@@ -234,6 +273,13 @@ class ExercicioService {
                     : false;
 
                 if (!ehDono && !treinadorComAcesso) {
+                    throw new Error('FORBIDDEN: você não tem permissão para editar este exercício');
+                }
+            }
+
+            // Exercício pessoal de treinador: dono ou admin
+            if (exercicioExistente.treinador_id && !perfil.isAdmin) {
+                if (perfil.treinadorId !== exercicioExistente.treinador_id) {
                     throw new Error('FORBIDDEN: você não tem permissão para editar este exercício');
                 }
             }
@@ -264,6 +310,7 @@ class ExercicioService {
                 const duplicado = await this.repository.findByNome(
                     dadosValidados.nome,
                     exercicioExistente.aluno_id,
+                    exercicioExistente.treinador_id,
                 );
 
                 if (duplicado) {
@@ -316,11 +363,11 @@ class ExercicioService {
         const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
 
         // Exercício global: apenas admin pode deletar
-        if (!exercicioExistente.aluno_id && !perfil.isAdmin) {
+        if (!exercicioExistente.aluno_id && !exercicioExistente.treinador_id && !perfil.isAdmin) {
             throw new Error('FORBIDDEN: apenas administradores podem excluir exercícios globais');
         }
 
-        // Exercício pessoal: dono, admin ou treinador vinculado ao aluno
+        // Exercício pessoal de aluno: dono, admin ou treinador vinculado ao aluno
         if (exercicioExistente.aluno_id && !perfil.isAdmin) {
             const ehDono = perfil.alunoId === exercicioExistente.aluno_id;
             const treinadorComAcesso = perfil.isTreinador
@@ -328,6 +375,13 @@ class ExercicioService {
                 : false;
 
             if (!ehDono && !treinadorComAcesso) {
+                throw new Error('FORBIDDEN: você não tem permissão para excluir este exercício');
+            }
+        }
+
+        // Exercício pessoal de treinador: dono ou admin
+        if (exercicioExistente.treinador_id && !perfil.isAdmin) {
+            if (perfil.treinadorId !== exercicioExistente.treinador_id) {
                 throw new Error('FORBIDDEN: você não tem permissão para excluir este exercício');
             }
         }

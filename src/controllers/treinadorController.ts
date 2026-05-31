@@ -192,16 +192,18 @@ class TreinadorController {
 					treinadorEditadoBody.url_foto = fotoResolvida;
 				}
 
-	                const treinadorAtualizado = await this.service.updateTreinador(
-	                        id,
-	                        treinadorEditadoBody,
-	                );
-	                return CommonResponse.success(
-	                        res,
-	                        treinadorAtualizado,
-	                        HttpStatusCode.OK.code,
-	                        "Treinador atualizado com sucesso",
-	                );
+				await this.service.updateTreinador(
+					id,
+					treinadorEditadoBody,
+				);
+				const treinadorCompleto = await this.service.getTreinadorById(id);
+				
+				return CommonResponse.success(
+					res,
+					treinadorCompleto,
+					HttpStatusCode.OK.code,
+					"Treinador atualizado com sucesso",
+				);
 	        } catch (error) {
 	                if (fotoUrl) await this.deleteFoto(fotoUrl);
 	                return this.handleError(res, error, "updateTreinador");
@@ -223,18 +225,19 @@ class TreinadorController {
 			);
 		}
 
-		if (error instanceof DatabaseError) {
+		if (error instanceof DatabaseError || (error as any)?.name === 'DatabaseError') {
+			const dbError = error as DatabaseError;
 			console.warn(
 				`[TreinadorController] [${context}] DatabaseError:`,
-				error.message,
+				dbError.message,
 			);
 			return CommonResponse.error(
 				res,
-				error.statusCode,
+				dbError.statusCode || 500,
 				null,
 				null,
-				[error.toJSON()],
-				error.message,
+				[dbError.toJSON()],
+				dbError.message,
 			);
 		}
 

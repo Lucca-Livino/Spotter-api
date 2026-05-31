@@ -3,7 +3,7 @@ import { minioClient, minioConfig, prepareMinioUpload } from "../config/garageHq
 import CommonResponse from "../utils/helpers/commonResponse";
 import HttpStatusCode from "../utils/helpers/httpStatusCode";
 
-const CATEGORIAS_PERMITIDAS = new Set(["animacoes", "fotos", "musculos", "aparelhos"]);
+const CATEGORIAS_PERMITIDAS = new Set(["animacoes", "fotos", "fotos-perfil", "musculos", "aparelhos"]);
 
 const MIME_POR_EXT: Record<string, string> = {
     ".webm": "video/webm",

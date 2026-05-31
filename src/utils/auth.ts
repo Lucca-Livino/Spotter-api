@@ -12,6 +12,16 @@ export const auth = betterAuth({
     provider: "pg",
   }),
 
+  user: {
+    additionalFields: {
+      tipo: {
+        type: "string",
+        required: true,
+        defaultValue: "aluno",
+      },
+    },
+  },
+
   plugins: [
     bearer()
   ],

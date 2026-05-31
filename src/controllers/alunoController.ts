@@ -179,10 +179,12 @@ class AlunoController {
         alunoEditadoBody.url_foto = fotoResolvida;
       }
 
-      const alunoAtualizado = await this.service.updateAluno(id, alunoEditadoBody);
+      await this.service.updateAluno(id, alunoEditadoBody);
+      const alunoCompleto = await this.service.getAlunoById(id);
+      
       return CommonResponse.success(
         res,
-        alunoAtualizado,
+        alunoCompleto,
         HttpStatusCode.OK.code,
         "Aluno atualizado com sucesso",
       );
@@ -208,18 +210,19 @@ class AlunoController {
       );
     }
 
-    if (error instanceof DatabaseError) {
+    if (error instanceof DatabaseError || (error as any)?.name === 'DatabaseError') {
+      const dbError = error as DatabaseError;
       console.warn(
         `[AlunoController] [${context}] DatabaseError:`,
-        error.message,
+        dbError.message,
       );
       return CommonResponse.error(
         res,
-        error.statusCode,
+        dbError.statusCode || 500,
         null,
         null,
-        [error.toJSON()],
-        error.message,
+        [dbError.toJSON()],
+        dbError.message,
       );
     }
 

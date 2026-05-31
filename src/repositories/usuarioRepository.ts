@@ -6,6 +6,7 @@ import { parseDatabaseError } from '../utils/errors/DatabaseError';
 export interface PerfilAcesso {
     alunoId: string | null;
     treinadorId: string | null;
+    alunoTreinadorId: string | null;
     isAluno: boolean;
     isTreinador: boolean;
     isAdmin: boolean;
@@ -27,7 +28,7 @@ class UsuarioRepository {
                     .where(eq(treinador.user_id, userId))
                     .limit(1),
                 this.db
-                    .select({ id: aluno.id, is_admin: aluno.is_admin })
+                    .select({ id: aluno.id, is_admin: aluno.is_admin, treinador_id: aluno.treinador_id })
                     .from(aluno)
                     .where(eq(aluno.user_id, userId))
                     .limit(1),
@@ -42,6 +43,7 @@ class UsuarioRepository {
             return {
                 alunoId: alunoResult[0]?.id ?? null,
                 treinadorId: treinadorResult[0]?.id ?? null,
+                alunoTreinadorId: alunoResult[0]?.treinador_id ?? null,
                 isAluno,
                 isTreinador,
                 isAdmin,

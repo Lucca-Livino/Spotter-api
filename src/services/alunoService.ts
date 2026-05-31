@@ -39,6 +39,14 @@ class AlunoService {
     return resultado;
   }
 
+  async getAlunoByUserId(userId: string): Promise<any> {
+    const Aluno = await this.repository.findFullByUserId(userId);
+    if (!Aluno) {
+      throw new Error(`Perfil de aluno não encontrado para o usuário ${userId}`);
+    }
+    return Aluno;
+  }
+
   async createAluno(novoAluno: type_aluno): Promise<type_aluno> {
     console.log(
       "[AlunoService] [createAluno] Dados recebidos do controller:",

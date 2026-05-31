@@ -39,6 +39,7 @@ export interface FiltrosExercicio {
     tipo_ativacao?: string;
     tipo_exercicio?: 'REPETICAO' | 'TEMPO' | 'DISTANCIA';
     aluno_id?: string;
+    treinador_id?: string;
     escopo?: 'GLOBAL' | 'PESSOAL' | 'TODOS';
     em_uso?: boolean;
     ordem_nome?: 'asc' | 'desc';

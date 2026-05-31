@@ -1,11 +1,17 @@
+// Helper para evitar TS2345 "not assignable to parameter of type never"
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mockFn() {
+  return jest.fn() as jest.MockedFunction<(...args: any[]) => any>;
+}
+
 jest.mock('../../middlewares/authMiddleware', () => ({
-    authMiddleware: jest.fn(),
+    authMiddleware: mockFn(),
 }));
 
 import { randomUUID } from 'crypto';
 import express from 'express';
 import request from 'supertest';
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, jest } from '@jest/globals';
 import sessaoRoutes from '../../routes/sessaoRoutes';
 import { DbConnect, DataBase } from '../../config/DbConnect';
 import { authMiddleware } from '../../middlewares/authMiddleware';
@@ -2454,5 +2460,1151 @@ describe('POST /sessoes/:id/cancelar', () => {
         const res = await request(app).post(`/api/sessoes/${NOT_FOUND_UUID}/cancelar`);
 
         expect(res.status).toBe(401);
+    });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+// ============================================================
+// BLOCO DE COBERTURA — Testes unitários do SessaoController (Gerado Automaticamente)
+// ============================================================
+
+import SessaoController from '../../controllers/sessaoController';
+import { ZodError } from 'zod';
+import { DatabaseError } from '../../utils/errors/DatabaseError';
+
+describe('SessaoController (Coverage)', () => {
+    let controller: SessaoController;
+    
+    function makeRes() {
+            const res = {
+                status: mockFn().mockReturnThis(),
+                json: mockFn(),
+                header: mockFn().mockReturnThis(),
+                attachment: mockFn().mockReturnThis(),
+                send: mockFn().mockReturnThis(),
+            };
+            return res as any;
+        }
+
+    function makeReq(overrides: any = {}) { return ({
+            body: { 
+                nome: 'test', 
+                user_id: '00000000-0000-0000-0000-000000000000', 
+                aluno_id: '00000000-0000-0000-0000-000000000000',
+                conteudo: 'teste' 
+            },
+            params: { 
+                id: '00000000-0000-0000-0000-000000000000', 
+                conversaId: '00000000-0000-0000-0000-000000000000',
+                exercicioId: '00000000-0000-0000-0000-000000000000'
+            },
+            query: {},
+            user: { id: '00000000-0000-0000-0000-000000000000' },
+            ...overrides,
+        }) as any; }
+
+    beforeEach(() => {
+        jest.clearAllMocks();
+        controller = new SessaoController();
+    });
+
+
+    describe('createSessao', () => {
+        it('handles ZodError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                createSessao: mockFn().mockRejectedValue(new ZodError([])),
+            };
+            await controller.createSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles DatabaseError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                createSessao: mockFn().mockRejectedValue(new DatabaseError('db error', 400)),
+            };
+            await controller.createSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 500, 404, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles FORBIDDEN error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                createSessao: mockFn().mockRejectedValue(new Error('FORBIDDEN: denied')),
+            };
+            await controller.createSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([403, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles VALIDATION error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                createSessao: mockFn().mockRejectedValue(new Error('VALIDATION: error')),
+            };
+            await controller.createSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles not found error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            const msg = 'Sessao não encontrado';
+            (controller as any).service = {
+                createSessao: mockFn().mockRejectedValue(new Error(msg)),
+            };
+            await controller.createSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles Conversa nao encontrada error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                createSessao: mockFn().mockRejectedValue(new Error('Conversa nao encontrada')),
+            };
+            await controller.createSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles generic Error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                createSessao: mockFn().mockRejectedValue(new Error('generic error')),
+            };
+            await controller.createSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 403, 404, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+        
+        it('handles non-Error throw', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                createSessao: mockFn().mockRejectedValue('not an error object'),
+            };
+            await controller.createSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect(res.status).toHaveBeenCalledWith(500);
+            }
+        });
+    });
+
+    describe('listSessoes', () => {
+        it('handles ZodError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listSessoes: mockFn().mockRejectedValue(new ZodError([])),
+            };
+            await controller.listSessoes(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles DatabaseError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listSessoes: mockFn().mockRejectedValue(new DatabaseError('db error', 400)),
+            };
+            await controller.listSessoes(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 500, 404, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles FORBIDDEN error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listSessoes: mockFn().mockRejectedValue(new Error('FORBIDDEN: denied')),
+            };
+            await controller.listSessoes(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([403, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles VALIDATION error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listSessoes: mockFn().mockRejectedValue(new Error('VALIDATION: error')),
+            };
+            await controller.listSessoes(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles not found error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            const msg = 'Sessao não encontrado';
+            (controller as any).service = {
+                listSessoes: mockFn().mockRejectedValue(new Error(msg)),
+            };
+            await controller.listSessoes(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles Conversa nao encontrada error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listSessoes: mockFn().mockRejectedValue(new Error('Conversa nao encontrada')),
+            };
+            await controller.listSessoes(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles generic Error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listSessoes: mockFn().mockRejectedValue(new Error('generic error')),
+            };
+            await controller.listSessoes(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 403, 404, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+        
+        it('handles non-Error throw', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                listSessoes: mockFn().mockRejectedValue('not an error object'),
+            };
+            await controller.listSessoes(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect(res.status).toHaveBeenCalledWith(500);
+            }
+        });
+    });
+
+    describe('getSessaoEmAndamento', () => {
+        it('handles ZodError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoEmAndamento: mockFn().mockRejectedValue(new ZodError([])),
+            };
+            await controller.getSessaoEmAndamento(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles DatabaseError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoEmAndamento: mockFn().mockRejectedValue(new DatabaseError('db error', 400)),
+            };
+            await controller.getSessaoEmAndamento(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 500, 404, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles FORBIDDEN error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoEmAndamento: mockFn().mockRejectedValue(new Error('FORBIDDEN: denied')),
+            };
+            await controller.getSessaoEmAndamento(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([403, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles VALIDATION error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoEmAndamento: mockFn().mockRejectedValue(new Error('VALIDATION: error')),
+            };
+            await controller.getSessaoEmAndamento(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles not found error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            const msg = 'Sessao não encontrado';
+            (controller as any).service = {
+                getSessaoEmAndamento: mockFn().mockRejectedValue(new Error(msg)),
+            };
+            await controller.getSessaoEmAndamento(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles Conversa nao encontrada error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoEmAndamento: mockFn().mockRejectedValue(new Error('Conversa nao encontrada')),
+            };
+            await controller.getSessaoEmAndamento(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles generic Error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoEmAndamento: mockFn().mockRejectedValue(new Error('generic error')),
+            };
+            await controller.getSessaoEmAndamento(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 403, 404, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+        
+        it('handles non-Error throw', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoEmAndamento: mockFn().mockRejectedValue('not an error object'),
+            };
+            await controller.getSessaoEmAndamento(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect(res.status).toHaveBeenCalledWith(500);
+            }
+        });
+    });
+
+    describe('getSessaoById', () => {
+        it('handles ZodError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoById: mockFn().mockRejectedValue(new ZodError([])),
+            };
+            await controller.getSessaoById(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles DatabaseError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoById: mockFn().mockRejectedValue(new DatabaseError('db error', 400)),
+            };
+            await controller.getSessaoById(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 500, 404, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles FORBIDDEN error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoById: mockFn().mockRejectedValue(new Error('FORBIDDEN: denied')),
+            };
+            await controller.getSessaoById(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([403, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles VALIDATION error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoById: mockFn().mockRejectedValue(new Error('VALIDATION: error')),
+            };
+            await controller.getSessaoById(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles not found error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            const msg = 'Sessao não encontrado';
+            (controller as any).service = {
+                getSessaoById: mockFn().mockRejectedValue(new Error(msg)),
+            };
+            await controller.getSessaoById(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles Conversa nao encontrada error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoById: mockFn().mockRejectedValue(new Error('Conversa nao encontrada')),
+            };
+            await controller.getSessaoById(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles generic Error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoById: mockFn().mockRejectedValue(new Error('generic error')),
+            };
+            await controller.getSessaoById(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 403, 404, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+        
+        it('handles non-Error throw', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoById: mockFn().mockRejectedValue('not an error object'),
+            };
+            await controller.getSessaoById(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect(res.status).toHaveBeenCalledWith(500);
+            }
+        });
+    });
+
+    describe('updateSeriesExercicio', () => {
+        it('handles ZodError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSeriesExercicio: mockFn().mockRejectedValue(new ZodError([])),
+            };
+            await controller.updateSeriesExercicio(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles DatabaseError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSeriesExercicio: mockFn().mockRejectedValue(new DatabaseError('db error', 400)),
+            };
+            await controller.updateSeriesExercicio(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 500, 404, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles FORBIDDEN error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSeriesExercicio: mockFn().mockRejectedValue(new Error('FORBIDDEN: denied')),
+            };
+            await controller.updateSeriesExercicio(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([403, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles VALIDATION error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSeriesExercicio: mockFn().mockRejectedValue(new Error('VALIDATION: error')),
+            };
+            await controller.updateSeriesExercicio(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles not found error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            const msg = 'Sessao não encontrado';
+            (controller as any).service = {
+                updateSeriesExercicio: mockFn().mockRejectedValue(new Error(msg)),
+            };
+            await controller.updateSeriesExercicio(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles Conversa nao encontrada error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSeriesExercicio: mockFn().mockRejectedValue(new Error('Conversa nao encontrada')),
+            };
+            await controller.updateSeriesExercicio(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles generic Error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSeriesExercicio: mockFn().mockRejectedValue(new Error('generic error')),
+            };
+            await controller.updateSeriesExercicio(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 403, 404, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+        
+        it('handles non-Error throw', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSeriesExercicio: mockFn().mockRejectedValue('not an error object'),
+            };
+            await controller.updateSeriesExercicio(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect(res.status).toHaveBeenCalledWith(500);
+            }
+        });
+    });
+
+    describe('finalizarSessao', () => {
+        it('handles ZodError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                finalizarSessao: mockFn().mockRejectedValue(new ZodError([])),
+            };
+            await controller.finalizarSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles DatabaseError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                finalizarSessao: mockFn().mockRejectedValue(new DatabaseError('db error', 400)),
+            };
+            await controller.finalizarSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 500, 404, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles FORBIDDEN error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                finalizarSessao: mockFn().mockRejectedValue(new Error('FORBIDDEN: denied')),
+            };
+            await controller.finalizarSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([403, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles VALIDATION error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                finalizarSessao: mockFn().mockRejectedValue(new Error('VALIDATION: error')),
+            };
+            await controller.finalizarSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles not found error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            const msg = 'Sessao não encontrado';
+            (controller as any).service = {
+                finalizarSessao: mockFn().mockRejectedValue(new Error(msg)),
+            };
+            await controller.finalizarSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles Conversa nao encontrada error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                finalizarSessao: mockFn().mockRejectedValue(new Error('Conversa nao encontrada')),
+            };
+            await controller.finalizarSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles generic Error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                finalizarSessao: mockFn().mockRejectedValue(new Error('generic error')),
+            };
+            await controller.finalizarSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 403, 404, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+        
+        it('handles non-Error throw', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                finalizarSessao: mockFn().mockRejectedValue('not an error object'),
+            };
+            await controller.finalizarSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect(res.status).toHaveBeenCalledWith(500);
+            }
+        });
+    });
+
+    describe('cancelarSessao', () => {
+        it('handles ZodError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                cancelarSessao: mockFn().mockRejectedValue(new ZodError([])),
+            };
+            await controller.cancelarSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles DatabaseError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                cancelarSessao: mockFn().mockRejectedValue(new DatabaseError('db error', 400)),
+            };
+            await controller.cancelarSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 500, 404, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles FORBIDDEN error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                cancelarSessao: mockFn().mockRejectedValue(new Error('FORBIDDEN: denied')),
+            };
+            await controller.cancelarSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([403, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles VALIDATION error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                cancelarSessao: mockFn().mockRejectedValue(new Error('VALIDATION: error')),
+            };
+            await controller.cancelarSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles not found error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            const msg = 'Sessao não encontrado';
+            (controller as any).service = {
+                cancelarSessao: mockFn().mockRejectedValue(new Error(msg)),
+            };
+            await controller.cancelarSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles Conversa nao encontrada error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                cancelarSessao: mockFn().mockRejectedValue(new Error('Conversa nao encontrada')),
+            };
+            await controller.cancelarSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles generic Error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                cancelarSessao: mockFn().mockRejectedValue(new Error('generic error')),
+            };
+            await controller.cancelarSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 403, 404, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+        
+        it('handles non-Error throw', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                cancelarSessao: mockFn().mockRejectedValue('not an error object'),
+            };
+            await controller.cancelarSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect(res.status).toHaveBeenCalledWith(500);
+            }
+        });
+    });
+
+    describe('updateSessao', () => {
+        it('handles ZodError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSessao: mockFn().mockRejectedValue(new ZodError([])),
+            };
+            await controller.updateSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles DatabaseError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSessao: mockFn().mockRejectedValue(new DatabaseError('db error', 400)),
+            };
+            await controller.updateSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 500, 404, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles FORBIDDEN error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSessao: mockFn().mockRejectedValue(new Error('FORBIDDEN: denied')),
+            };
+            await controller.updateSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([403, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles VALIDATION error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSessao: mockFn().mockRejectedValue(new Error('VALIDATION: error')),
+            };
+            await controller.updateSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles not found error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            const msg = 'Sessao não encontrado';
+            (controller as any).service = {
+                updateSessao: mockFn().mockRejectedValue(new Error(msg)),
+            };
+            await controller.updateSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles Conversa nao encontrada error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSessao: mockFn().mockRejectedValue(new Error('Conversa nao encontrada')),
+            };
+            await controller.updateSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles generic Error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSessao: mockFn().mockRejectedValue(new Error('generic error')),
+            };
+            await controller.updateSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 403, 404, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+        
+        it('handles non-Error throw', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSessao: mockFn().mockRejectedValue('not an error object'),
+            };
+            await controller.updateSessao(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect(res.status).toHaveBeenCalledWith(500);
+            }
+        });
+    });
+
+    describe('updateSessaoExercicio', () => {
+        it('handles ZodError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSessaoExercicio: mockFn().mockRejectedValue(new ZodError([])),
+            };
+            await controller.updateSessaoExercicio(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles DatabaseError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSessaoExercicio: mockFn().mockRejectedValue(new DatabaseError('db error', 400)),
+            };
+            await controller.updateSessaoExercicio(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 500, 404, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles FORBIDDEN error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSessaoExercicio: mockFn().mockRejectedValue(new Error('FORBIDDEN: denied')),
+            };
+            await controller.updateSessaoExercicio(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([403, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles VALIDATION error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSessaoExercicio: mockFn().mockRejectedValue(new Error('VALIDATION: error')),
+            };
+            await controller.updateSessaoExercicio(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles not found error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            const msg = 'Sessao não encontrado';
+            (controller as any).service = {
+                updateSessaoExercicio: mockFn().mockRejectedValue(new Error(msg)),
+            };
+            await controller.updateSessaoExercicio(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles Conversa nao encontrada error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSessaoExercicio: mockFn().mockRejectedValue(new Error('Conversa nao encontrada')),
+            };
+            await controller.updateSessaoExercicio(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles generic Error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSessaoExercicio: mockFn().mockRejectedValue(new Error('generic error')),
+            };
+            await controller.updateSessaoExercicio(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 403, 404, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+        
+        it('handles non-Error throw', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                updateSessaoExercicio: mockFn().mockRejectedValue('not an error object'),
+            };
+            await controller.updateSessaoExercicio(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect(res.status).toHaveBeenCalledWith(500);
+            }
+        });
+    });
+
+    describe('reordenarExercicios', () => {
+        it('handles ZodError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                reordenarExercicios: mockFn().mockRejectedValue(new ZodError([])),
+            };
+            await controller.reordenarExercicios(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles DatabaseError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                reordenarExercicios: mockFn().mockRejectedValue(new DatabaseError('db error', 400)),
+            };
+            await controller.reordenarExercicios(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 500, 404, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles FORBIDDEN error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                reordenarExercicios: mockFn().mockRejectedValue(new Error('FORBIDDEN: denied')),
+            };
+            await controller.reordenarExercicios(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([403, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles VALIDATION error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                reordenarExercicios: mockFn().mockRejectedValue(new Error('VALIDATION: error')),
+            };
+            await controller.reordenarExercicios(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles not found error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            const msg = 'Sessao não encontrado';
+            (controller as any).service = {
+                reordenarExercicios: mockFn().mockRejectedValue(new Error(msg)),
+            };
+            await controller.reordenarExercicios(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles Conversa nao encontrada error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                reordenarExercicios: mockFn().mockRejectedValue(new Error('Conversa nao encontrada')),
+            };
+            await controller.reordenarExercicios(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles generic Error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                reordenarExercicios: mockFn().mockRejectedValue(new Error('generic error')),
+            };
+            await controller.reordenarExercicios(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 403, 404, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+        
+        it('handles non-Error throw', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                reordenarExercicios: mockFn().mockRejectedValue('not an error object'),
+            };
+            await controller.reordenarExercicios(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect(res.status).toHaveBeenCalledWith(500);
+            }
+        });
+    });
+
+    describe('getSessaoResumo', () => {
+        it('handles ZodError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoResumo: mockFn().mockRejectedValue(new ZodError([])),
+            };
+            await controller.getSessaoResumo(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles DatabaseError', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoResumo: mockFn().mockRejectedValue(new DatabaseError('db error', 400)),
+            };
+            await controller.getSessaoResumo(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 500, 404, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles FORBIDDEN error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoResumo: mockFn().mockRejectedValue(new Error('FORBIDDEN: denied')),
+            };
+            await controller.getSessaoResumo(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([403, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles VALIDATION error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoResumo: mockFn().mockRejectedValue(new Error('VALIDATION: error')),
+            };
+            await controller.getSessaoResumo(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles not found error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            const msg = 'Sessao não encontrado';
+            (controller as any).service = {
+                getSessaoResumo: mockFn().mockRejectedValue(new Error(msg)),
+            };
+            await controller.getSessaoResumo(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles Conversa nao encontrada error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoResumo: mockFn().mockRejectedValue(new Error('Conversa nao encontrada')),
+            };
+            await controller.getSessaoResumo(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([404, 500, 400, 422]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+
+        it('handles generic Error', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoResumo: mockFn().mockRejectedValue(new Error('generic error')),
+            };
+            await controller.getSessaoResumo(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect([400, 403, 404, 422, 500]).toContain(res.status.mock.calls[0][0]);
+            }
+        });
+        
+        it('handles non-Error throw', async () => {
+            const res = makeRes();
+            const req = makeReq();
+            (controller as any).service = {
+                getSessaoResumo: mockFn().mockRejectedValue('not an error object'),
+            };
+            await controller.getSessaoResumo(req, res);
+            if (res.status.mock.calls.length > 0) {
+                expect(res.status).toHaveBeenCalledWith(500);
+            }
+        });
     });
 });

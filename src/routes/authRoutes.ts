@@ -17,26 +17,44 @@
 import express from "express";
 import { authMiddleware } from "../middlewares/authMiddleware";
 import UsuarioRepository from "../repositories/usuarioRepository";
+import AlunoRepository from "../repositories/alunoRepository";
+import TreinadorRepository from "../repositories/treinadorRepository";
 
 const router = express.Router();
 
-// Exemplo: rota protegida para obter dados do usuário autenticado
+// Rota inteligente para obter o perfil completo do usuário logado
 router.get("/me", authMiddleware, async (req, res) => {
+  try {
     const user = (req as any).user;
     const usuarioRepository = new UsuarioRepository();
-    const perfil = await usuarioRepository.buscarPerfilAcesso(user.id);
+    const perfilAcesso = await usuarioRepository.buscarPerfilAcesso(user.id);
+
+    let dadosCompletos: any = null;
+
+    if (perfilAcesso.isTreinador && user.id) {
+        const treinadorRepo = new TreinadorRepository();
+        dadosCompletos = await treinadorRepo.findFullByUserId(user.id);
+    } else if (perfilAcesso.isAluno && user.id) {
+        const alunoRepo = new AlunoRepository();
+        dadosCompletos = await alunoRepo.findFullByUserId(user.id);
+    }
 
     res.json({
         success: true,
         data: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            image: user.image,
-            type_usuario_autenticado: perfil.isTreinador ? "treinador" : "aluno",
-            isAdmin: perfil.isAdmin,
+            ...user,
+            tipo: perfilAcesso.isTreinador ? "treinador" : "aluno",
+            isAdmin: perfilAcesso.isAdmin,
+            perfil: dadosCompletos
         },
     });
+
+  } catch (error) {
+    console.error("[authRoutes] Erro na rota /me:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Erro ao carregar perfil" });
+  }
 });
 
 export default router;

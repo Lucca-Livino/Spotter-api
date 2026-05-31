@@ -27,12 +27,17 @@ class ExercicioFilterBuilder {
         return this;
     }
 
-    comEscopo(escopo?: 'GLOBAL' | 'PESSOAL' | 'TODOS', aluno_id?: string) {
+    comEscopo(escopo?: 'GLOBAL' | 'PESSOAL' | 'TODOS', aluno_id?: string, treinador_id?: string) {
         const alunoId = aluno_id?.trim();
+        const treinadorId = treinador_id?.trim();
 
         if (escopo === 'PESSOAL') {
-            if (alunoId) {
+            if (alunoId && treinadorId) {
+                this.condicoes.push(or(eq(exercicio.aluno_id, alunoId), eq(exercicio.treinador_id, treinadorId))!);
+            } else if (alunoId) {
                 this.condicoes.push(eq(exercicio.aluno_id, alunoId));
+            } else if (treinadorId) {
+                this.condicoes.push(eq(exercicio.treinador_id, treinadorId));
             } else {
                 this.condicoes.push(sql`1 = 0`);
             }
@@ -40,21 +45,23 @@ class ExercicioFilterBuilder {
         }
 
         if (escopo === 'TODOS') {
+            const orConditions: SQL[] = [
+                and(isNull(exercicio.aluno_id), isNull(exercicio.treinador_id))!,
+            ];
+
             if (alunoId) {
-                this.condicoes.push(
-                    or(
-                        isNull(exercicio.aluno_id),
-                        eq(exercicio.aluno_id, alunoId),
-                    )!,
-                );
-            } else {
-                this.condicoes.push(isNull(exercicio.aluno_id));
+                orConditions.push(eq(exercicio.aluno_id, alunoId));
             }
+            if (treinadorId) {
+                orConditions.push(eq(exercicio.treinador_id, treinadorId));
+            }
+
+            this.condicoes.push(or(...orConditions)!);
             return this;
         }
 
         // GLOBAL (default)
-        this.condicoes.push(isNull(exercicio.aluno_id));
+        this.condicoes.push(and(isNull(exercicio.aluno_id), isNull(exercicio.treinador_id))!);
         return this;
     }
 

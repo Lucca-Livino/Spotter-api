@@ -1,6 +1,6 @@
 import { DataBase } from "../config/DbConnect";
 import { eq, sql } from "drizzle-orm";
-import { treinador } from "../config/db/schema";
+import { treinador, user } from "../config/db/schema";
 import { type_treinador } from "../types/dbSchemas";
 import { parseDatabaseError } from "../utils/errors/DatabaseError";
 
@@ -9,6 +9,33 @@ class TreinadorRepository {
 
 	constructor() {
 		this.db = DataBase;
+	}
+
+	async findFullByUserId(userId: string): Promise<any | null> {
+		try {
+			const resultado = await this.db
+				.select({
+					id: treinador.id,
+					nome: treinador.nome,
+					email: user.email,
+					data_nascimento: treinador.data_nascimento,
+					sexo: treinador.sexo,
+					cref: treinador.cref,
+					especializacao: treinador.especializacao,
+					graduacao: treinador.graduacao,
+					turnos: treinador.turnos,
+					url_foto: treinador.url_foto,
+					academia_id: treinador.academia_id,
+				})
+				.from(treinador)
+				.innerJoin(user, eq(treinador.user_id, user.id))
+				.where(eq(treinador.user_id, userId))
+				.limit(1);
+
+			return resultado[0] || null;
+		} catch (error) {
+			throw parseDatabaseError(error, "TreinadorRepository.findFullByUserId");
+		}
 	}
 
 	async create(novoTreinador: type_treinador): Promise<type_treinador> {

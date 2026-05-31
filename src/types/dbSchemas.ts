@@ -91,6 +91,7 @@ export type type_exercicio = {
     descricao?: string | null;
     animacao_url?: string | null;
     aluno_id?: string | null;
+    treinador_id?: string | null;
     tipo_exercicio?: enum_tipo_exercicio;
     deletado_em?: Date | null;
     created_at?: Date;

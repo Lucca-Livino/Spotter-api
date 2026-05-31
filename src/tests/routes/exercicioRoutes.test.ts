@@ -1,12 +1,18 @@
+// Helper para evitar TS2345 "not assignable to parameter of type never"
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mockFn() {
+  return jest.fn() as jest.MockedFunction<(...args: any[]) => any>;
+}
+
 jest.mock('../../middlewares/authMiddleware', () => ({
-    authMiddleware: jest.fn(),
+    authMiddleware: mockFn(),
 }));
 jest.mock('../../middlewares/adminMiddleware', () => ({
     adminMiddleware: jest.fn((_req: any, _res: any, next: any) => next()),
 }));
 jest.mock('../../services/uploadService', () => ({
     __esModule: true,
-    default: jest.fn().mockImplementation(() => ({
+    default: mockFn().mockImplementation(() => ({
         uploadFiles: jest.fn<() => Promise<{ url: string }[]>>().mockResolvedValue([{ url: 'http://test-s3.local/animacoes/test.gif' }]),
         deleteFile: jest.fn<() => Promise<void>>().mockResolvedValue(),
     })),
@@ -15,7 +21,7 @@ jest.mock('../../services/uploadService', () => ({
 import { randomUUID } from 'crypto';
 import express from 'express';
 import request from 'supertest';
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach, jest } from '@jest/globals';
 import exercicioRoutes from '../../routes/exercicioRoutes';
 import { globalErrorHandler } from '../../middlewares/globalErrorHandler';
 import { DbConnect, DataBase } from '../../config/DbConnect';
@@ -320,6 +326,19 @@ afterAll(async () => {
         await DataBase.delete(exercicio).where(inArray(exercicio.id, ids)).catch(() => {});
     }
 
+    const exerciciosTreinadores = await DataBase
+        .select({ id: exercicio.id })
+        .from(exercicio)
+        .where(inArray(exercicio.treinador_id, [adminTreinadorId, treinadorRecId]));
+
+    if (exerciciosTreinadores.length > 0) {
+        const ids = exerciciosTreinadores.map((e) => e.id!);
+        await DataBase.delete(treino_exercicio).where(inArray(treino_exercicio.exercicio_id, ids)).catch(() => {});
+        await DataBase.delete(exercicio_musculo).where(inArray(exercicio_musculo.exercicio_id, ids)).catch(() => {});
+        await DataBase.delete(exercicio_aparelho).where(inArray(exercicio_aparelho.exercicio_id, ids)).catch(() => {});
+        await DataBase.delete(exercicio).where(inArray(exercicio.id, ids)).catch(() => {});
+    }
+
     // 3. Músculos e aparelho de teste
     await DataBase.delete(exercicio_musculo).where(eq(exercicio_musculo.musculo_id, musculoId)).catch(() => {});
     await DataBase.delete(exercicio_musculo).where(eq(exercicio_musculo.musculo_id, musculo2Id)).catch(() => {});
@@ -467,14 +486,16 @@ describe('POST /exercicios', () => {
         expect(res.body.message).toMatch(/você não pode criar exercícios para outro aluno/i);
     });
 
-    it('treinador tenta criar exercício global (sem aluno_id) → 403', async () => {
+    it('treinador cria exercício sem aluno_id → 201 cria exercício pessoal de treinador', async () => {
         asTreinador();
         const res = await request(app)
             .post('/api/exercicios')
-            .send(buildPayloadGlobal(`Treinador Global Forbidden ${RUN_ID}`));
+            .send(buildPayloadGlobal(`Treinador Proprio ${RUN_ID}`));
 
-        expect(res.status).toBe(403);
-        expect(res.body.message).toMatch(/apenas administradores podem criar exercícios globais/i);
+        expect(res.status).toBe(201);
+        expect(res.body.data.aluno_id).toBeNull();
+        expect(res.body.data.treinador_id).toBe(treinadorRecId);
+        if (res.body.data?.id) criados.push(res.body.data.id);
     });
 
     it('body vazio → 422 com issues Zod', async () => {
@@ -846,13 +867,20 @@ describe('GET /exercicios', () => {
 
     it('filtro em_uso=true → 200 somente exercícios vinculados a treinos', async () => {
         asAdmin();
-        const res = await request(app).get('/api/exercicios?escopo=GLOBAL&em_uso=true');
+        const res = await request(app).get(`/api/exercicios?escopo=GLOBAL&em_uso=true&nome=${encodeURIComponent(RUN_ID)}&limite=100`);
 
         expect(res.status).toBe(200);
         const ids = res.body.data.dados.map((e: any) => e.id);
+        expect(ids.length).toBeGreaterThan(0);
         expect(ids).toContain(exGlobal1Id);
         // exGlobal2Id não tem treino_exercicio
         expect(ids).not.toContain(exGlobal2Id);
+
+        const usados = await DataBase
+            .select({ id: treino_exercicio.exercicio_id })
+            .from(treino_exercicio)
+            .where(inArray(treino_exercicio.exercicio_id, ids));
+        expect(usados.length).toBe(ids.length);
     });
 
     it('filtro em_uso=false → 200 somente exercícios sem treino vinculado', async () => {
@@ -984,20 +1012,18 @@ describe('GET /exercicios', () => {
         expect(res.body.message).toMatch(/apenas administradores podem listar exercícios inativos/i);
     });
 
-    it('treinador sem perfil de aluno usa escopo=TODOS sem aluno_id → 422', async () => {
+    it('treinador sem perfil de aluno usa escopo=TODOS sem aluno_id → 200 retorna exercícios dele', async () => {
         asTreinador();
         const res = await request(app).get('/api/exercicios?escopo=TODOS');
 
-        expect(res.status).toBe(422);
-        expect(res.body.message).toMatch(/aluno_id é obrigatório/i);
+        expect(res.status).toBe(200);
     });
 
-    it('treinador sem perfil de aluno usa escopo=PESSOAL sem aluno_id → 422', async () => {
+    it('treinador sem perfil de aluno usa escopo=PESSOAL sem aluno_id → 200 retorna exercícios dele', async () => {
         asTreinador();
         const res = await request(app).get('/api/exercicios?escopo=PESSOAL');
 
-        expect(res.status).toBe(422);
-        expect(res.body.message).toMatch(/aluno_id é obrigatório/i);
+        expect(res.status).toBe(200);
     });
 
     it('aluno_id com UUID inválido → 422', async () => {

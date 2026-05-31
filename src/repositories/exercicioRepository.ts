@@ -61,7 +61,7 @@ class ExercicioRepository {
         try {
             const filterBuilder = new ExercicioFilterBuilder()
                 .comNome(filtros.nome)
-                .comEscopo(filtros.escopo, filtros.aluno_id)
+                .comEscopo(filtros.escopo, filtros.aluno_id, filtros.treinador_id)
                 .comEmUso(filtros.em_uso)
                 .comGrupoMuscular(filtros.grupo_muscular)
                 .comTipoAtivacao(filtros.tipo_ativacao)
@@ -321,19 +321,29 @@ class ExercicioRepository {
         }
     }
 
-    async findByNome(nome: string, alunoId?: string | null): Promise<type_exercicio | null> {
+    async findByNome(nome: string, alunoId?: string | null, treinadorId?: string | null): Promise<type_exercicio | null> {
         try {
-            const where = alunoId
-                ? and(
+            let where;
+            if (alunoId) {
+                where = and(
                     eq(exercicio.nome, nome),
                     isNull(exercicio.deletado_em),
                     eq(exercicio.aluno_id, alunoId),
-                )
-                : and(
+                );
+            } else if (treinadorId) {
+                where = and(
+                    eq(exercicio.nome, nome),
+                    isNull(exercicio.deletado_em),
+                    eq(exercicio.treinador_id, treinadorId),
+                );
+            } else {
+                where = and(
                     eq(exercicio.nome, nome),
                     isNull(exercicio.deletado_em),
                     isNull(exercicio.aluno_id),
+                    isNull(exercicio.treinador_id),
                 );
+            }
 
             const resposta = await this.db.select().from(exercicio).where(where);
             return resposta[0] || null;

@@ -17,6 +17,7 @@ export const user = pgTable('user', {
     email: text('email').notNull().unique(),
     emailVerified: boolean('email_verified').notNull(),
     image: text('image'),
+    tipo: text('tipo', { enum: ['aluno', 'treinador'] }).notNull().default('aluno'),
     createdAt: timestamp('created_at').notNull(),
     updatedAt: timestamp('updated_at').notNull(),
 });
@@ -101,6 +102,8 @@ export const aluno = pgTable('aluno', {
     sexo: sexoEnum('sexo').notNull(),
     is_admin: boolean('is_admin').notNull().default(false),
     status_conta: boolean('status_conta').notNull().default(true),
+    peso_atual_kg: decimal('peso_atual_kg', { precision: 5, scale: 2 }),
+    altura_m: decimal('altura_m', { precision: 3, scale: 2 }),
     created_at: timestamp('created_at').defaultNow().notNull(),
     academia_id: uuid('academia_id').notNull().references(() => academia.id),
     treinador_id: uuid('treinador_id').references(() => treinador.id),
@@ -187,6 +190,7 @@ export const exercicio = pgTable('exercicio', {
     descricao: text('descricao'),
     animacao_url: varchar('animacao_url', { length: 255 }),
     aluno_id: uuid('aluno_id').references(() => aluno.id),
+    treinador_id: uuid('treinador_id').references(() => treinador.id),
     tipo_exercicio: tipoExercicioEnum('tipo_exercicio').notNull().default('REPETICAO'),
     deletado_em: timestamp('deletado_em'),
     created_at: timestamp('created_at').defaultNow().notNull(),
@@ -293,6 +297,7 @@ export const treinadorRelations = relations(treinador, ({ one, many }) => ({
     treinadorAcademias: many(treinador_academia),
     treinosCriados: many(treino),
     alunosVinculados: many(aluno),
+    exerciciosCriados: many(exercicio),
 }));
 
 // 4.1. Treinador <-> Academia
@@ -341,6 +346,10 @@ export const exercicioRelations = relations(exercicio, ({ one, many }) => ({
     aluno: one(aluno, {
         fields: [exercicio.aluno_id],
         references: [aluno.id],
+    }),
+    treinador: one(treinador, {
+        fields: [exercicio.treinador_id],
+        references: [treinador.id],
     }),
     treinosExercicios: many(treino_exercicio),
     exercicioMusculos: many(exercicio_musculo),

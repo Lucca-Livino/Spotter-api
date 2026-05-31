@@ -1,11 +1,18 @@
+// Helper para evitar TS2345 "not assignable to parameter of type never"
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mockFn() {
+  return jest.fn() as jest.MockedFunction<(...args: any[]) => any>;
+}
+
 jest.mock('../../middlewares/authMiddleware', () => ({
-    authMiddleware: jest.fn(),
+    authMiddleware: mockFn(),
 }));
 
 import { randomUUID } from 'crypto';
 import express from 'express';
 import request from 'supertest';
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, jest } from '@jest/globals';
+import { ZodError } from 'zod';
 import aparelhoRoutes from '../../routes/aparelhoRoutes';
 import { DbConnect, DataBase } from '../../config/DbConnect';
 import { authMiddleware } from '../../middlewares/authMiddleware';
@@ -19,6 +26,8 @@ import {
     user,
 } from '../../config/db/schema';
 import { eq, inArray } from 'drizzle-orm';
+import AparelhoController from '../../controllers/aparelhoController';
+import { DatabaseError } from '../../utils/errors/DatabaseError';
 
 // Estado global
 
@@ -478,5 +487,88 @@ describe('GET /aparelhos/:id', () => {
         const res = await request(app).get(`/api/aparelhos/${aparelhoAId}`);
 
         expect(res.status).toBe(401);
+    });
+});
+
+// ============================================================
+// BLOCO 2 — Testes unitários do AparelhoController (mocked)
+// ============================================================
+
+const makeRes = () => {
+    const res = {
+        status: mockFn().mockReturnThis(),
+        json: mockFn(),
+    };
+    return res as any;
+};
+
+const makeReq = (overrides: Record<string, unknown> = {}) => ({
+    params: { id: 'id' },
+    query: {},
+    ...overrides,
+}) as any;
+
+describe('AparelhoController', () => {
+    let controller: AparelhoController;
+
+    beforeEach(() => {
+        controller = new AparelhoController();
+    });
+
+    it('getAll handles ZodError and DatabaseError', async () => {
+        const res = makeRes();
+        const req = makeReq();
+        (controller as any).service = {
+            getAll: mockFn()
+                .mockRejectedValueOnce(new ZodError([]))
+                .mockRejectedValueOnce(new DatabaseError('db error', 409)),
+        };
+
+        await controller.getAll(req, res);
+        await controller.getAll(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(422);
+        expect(res.status).toHaveBeenCalledWith(409);
+    });
+
+    it('getAll handles unknown error', async () => {
+        const res = makeRes();
+        const req = makeReq();
+        (controller as any).service = {
+            getAll: mockFn().mockRejectedValue(new Error('boom')),
+        };
+
+        await controller.getAll(req, res);
+        expect(res.status).toHaveBeenCalledWith(500);
+    });
+
+    it('getById handles ZodError, not found, and DatabaseError', async () => {
+        const res = makeRes();
+        const req = makeReq({ params: { id: 'id' } });
+        (controller as any).service = {
+            getById: mockFn()
+                .mockRejectedValueOnce(new ZodError([]))
+                .mockRejectedValueOnce(new Error('Aparelho não encontrado'))
+                .mockRejectedValueOnce(new DatabaseError('db error', 400)),
+        };
+
+        await controller.getById(req, res);
+        await controller.getById(req, res);
+        await controller.getById(req, res);
+
+        expect(res.status).toHaveBeenCalledWith(422);
+        expect(res.status).toHaveBeenCalledWith(404);
+        expect(res.status).toHaveBeenCalledWith(400);
+    });
+
+    it('getById handles unknown error', async () => {
+        const res = makeRes();
+        const req = makeReq();
+        (controller as any).service = {
+            getById: mockFn().mockRejectedValue(new Error('boom')),
+        };
+
+        await controller.getById(req, res);
+        expect(res.status).toHaveBeenCalledWith(500);
     });
 });

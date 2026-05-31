@@ -1,6 +1,6 @@
 import { DataBase } from "../config/DbConnect";
-import { eq, sql } from "drizzle-orm";
-import { aluno, user } from "../config/db/schema";
+import { desc, eq, sql } from "drizzle-orm";
+import { aluno, user, avaliacao_fisica } from "../config/db/schema";
 import { type_aluno } from "../types/dbSchemas";
 import { parseDatabaseError } from "../utils/errors/DatabaseError";
 
@@ -8,6 +8,31 @@ class AlunoRepository {
   private db: typeof DataBase;
   constructor() {
     this.db = DataBase;
+  }
+
+  async findFullByUserId(userId: string): Promise<any | null> {
+    try {
+      const resultado = await this.db
+        .select({
+          id: aluno.id,
+          nome: aluno.nome,
+          email: user.email,
+          data_nascimento: aluno.data_nascimento,
+          sexo: aluno.sexo,
+          url_foto: aluno.url_foto,
+          academia_id: aluno.academia_id,
+          peso_atual_kg: aluno.peso_atual_kg,
+          altura_m: aluno.altura_m,
+        })
+        .from(aluno)
+        .innerJoin(user, eq(aluno.user_id, user.id))
+        .where(eq(aluno.user_id, userId))
+        .limit(1);
+
+      return resultado[0] || null;
+    } catch (error) {
+      throw parseDatabaseError(error, "AlunoRepository.findFullByUserId");
+    }
   }
 
   async create(novoStudent: type_aluno): Promise<type_aluno> {

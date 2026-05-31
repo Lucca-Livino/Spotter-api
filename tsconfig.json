@@ -4,6 +4,7 @@
     "module": "ES2020",
     "lib": ["ES2020"],
     "moduleResolution": "node",
+    "ignoreDeprecations": "5.0", // Adicionado para ignorar as mensagens de depreciação relacionadas ao Node.js 18
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,

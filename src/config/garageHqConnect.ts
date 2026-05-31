@@ -109,13 +109,21 @@ export const prepareMinioUpload = async (): Promise<void> => {
   if (minioInitialized) return;
 
   validateMinioEnv();
+  console.log(`[MinioConfig] Public URL carregada: ${minioConfig.publicUrl}`);
   await ensureBucketIfLocal();
   minioInitialized = true;
 };
 
 export const getPublicObjectUrl = (objectKey: string): string => {
-  if (minioConfig.publicUrl) {
-    return `${minioConfig.publicUrl.replace(/\/$/, "")}/${objectKey}`;
+  let baseUrl = minioConfig.publicUrl;
+
+  // Correção proativa para o ambiente de QA da FSLAB
+  if (minioConfig.bucket === "spotter-qa" && baseUrl.includes("spotter.web.fslab.dev")) {
+    baseUrl = baseUrl.replace("spotter.web.fslab.dev", "spotter-qa.web.fslab.dev");
+  }
+
+  if (baseUrl) {
+    return `${baseUrl.replace(/\/$/, "")}/${objectKey}`;
   }
 
   const apiBase = process.env.API_BASE_URL?.replace(/\/$/, "");

@@ -150,7 +150,6 @@ class TreinoService {
                 }
             }
 
-            // Aluno cria apenas treino próprio e não pode criar para outro aluno.
             if (perfil.isAluno && !perfil.isTreinador && !perfil.isAdmin) {
                 if (alunoIdDestino && alunoIdDestino !== perfil.alunoId) {
                     throw new Error('FORBIDDEN: aluno só pode criar treino para si mesmo');
@@ -158,7 +157,6 @@ class TreinoService {
                 alunoIdDestino = perfil.alunoId;
             }
 
-            // Se não houver aluno_id, tenta assumir aluno do perfil (caso exista) ou cria treino do treinador.
             if (!alunoIdDestino) {
                 if (perfil.alunoId && !treinadorIdInput) {
                     alunoIdDestino = perfil.alunoId;
@@ -180,7 +178,6 @@ class TreinoService {
                 }
             }
 
-            // Pula verificação de vínculo quando o treinador está criando treino para o próprio perfil de aluno (usuário híbrido)
             if (perfil.isTreinador && !perfil.isAdmin && perfil.treinadorId && alunoIdDestino && alunoIdDestino !== perfil.alunoId) {
                 const vinculado = await this.usuarioRepository.alunoVinculadoAoTreinador(
                     alunoIdDestino,

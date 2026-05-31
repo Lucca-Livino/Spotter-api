@@ -12,6 +12,8 @@ const alunosSeed = [
             data_nascimento: "1995-03-12",
             sexo: "M" as const,
             is_admin: true,
+            peso_atual_kg: "85.50",
+            altura_m: "1.80",
         },
         academiaIndex: 0,
     },
@@ -24,6 +26,8 @@ const alunosSeed = [
             data_nascimento: "2001-08-25",
             sexo: "F" as const,
             is_admin: false,
+            peso_atual_kg: "62.00",
+            altura_m: "1.65",
         },
         academiaIndex: 0,
         treinadorNome: "Marcos Antônio Rocha",
@@ -37,6 +41,8 @@ const alunosSeed = [
             data_nascimento: "1998-11-07",
             sexo: "M" as const,
             is_admin: false,
+            peso_atual_kg: "78.20",
+            altura_m: "1.75",
         },
         academiaIndex: 1,
         treinadorNome: "Marcos Antônio Rocha",
@@ -50,6 +56,8 @@ const alunosSeed = [
             data_nascimento: "2000-06-18",
             sexo: "F" as const,
             is_admin: false,
+            peso_atual_kg: "58.00",
+            altura_m: "1.60",
         },
         academiaIndex: 2,
         treinadorNome: "Fernanda Souza Almeida",
@@ -64,6 +72,8 @@ const alunosSeed = [
             sexo: "M" as const,
             is_admin: false,
             status_conta: true,
+            peso_atual_kg: "90.00",
+            altura_m: "1.85",
         },
         academiaIndex: 0,
     },
@@ -76,6 +86,8 @@ const alunosSeed = [
             data_nascimento: "2000-10-22",
             sexo: "F" as const,
             is_admin: false,
+            peso_atual_kg: "65.00",
+            altura_m: "1.68",
         },
         academiaIndex: 1,
     },
@@ -94,7 +106,12 @@ export async function seedUsuarios(academiasIds: string[], treinadores: Treinado
     const alunosValues = [];
     for (const seed of alunosSeed) {
         const authUser = await auth.api.signUpEmail({
-            body: { name: seed.name, email: seed.email, password: seed.password },
+            body: { 
+                name: seed.name, 
+                email: seed.email, 
+                password: seed.password,
+                tipo: "aluno" 
+            } as any,
         });
         const treinadorId = seed.treinadorNome
             ? treinadores.find((treinador) => treinador.nome === seed.treinadorNome)?.id
@@ -115,4 +132,3 @@ export async function seedUsuarios(academiasIds: string[], treinadores: Treinado
 
     return alunosCriados.map((a) => a.id);
 }
-
