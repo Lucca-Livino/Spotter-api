@@ -69,7 +69,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 8, carga_utilizada: '55.00', status: 'CONCLUIDA' },
@@ -117,7 +117,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Leg Press 45°',
+                exercicioNome: 'Leg Press',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '110.00', status: 'CONCLUIDA' },
@@ -126,7 +126,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Hip Thrust com Barra',
+                exercicioNome: 'Elevação de Quadril com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '55.00', status: 'CONCLUIDA' },
@@ -144,7 +144,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 8, carga_utilizada: '57.50', status: 'CONCLUIDA' },
@@ -192,7 +192,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Leg Press 45°',
+                exercicioNome: 'Leg Press',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '115.00', status: 'CONCLUIDA' },
@@ -201,7 +201,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Hip Thrust com Barra',
+                exercicioNome: 'Elevação de Quadril com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '57.50', status: 'CONCLUIDA' },
@@ -219,7 +219,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 8, carga_utilizada: '60.00', status: 'CONCLUIDA' },
@@ -270,7 +270,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Leg Press 45°',
+                exercicioNome: 'Leg Press',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '120.00', status: 'CONCLUIDA' },
@@ -279,7 +279,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Hip Thrust com Barra',
+                exercicioNome: 'Elevação de Quadril com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '60.00', status: 'CONCLUIDA' },
@@ -297,7 +297,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 10, carga_utilizada: '62.50', status: 'CONCLUIDA' },
@@ -345,7 +345,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Leg Press 45°',
+                exercicioNome: 'Leg Press',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 15, carga_utilizada: '120.00', status: 'CONCLUIDA' },
@@ -354,7 +354,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Hip Thrust com Barra',
+                exercicioNome: 'Elevação de Quadril com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 15, carga_utilizada: '60.00', status: 'CONCLUIDA' },
@@ -372,7 +372,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 8,  carga_utilizada: '65.00', status: 'CONCLUIDA' },
@@ -420,7 +420,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Leg Press 45°',
+                exercicioNome: 'Leg Press',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 15, carga_utilizada: '125.00', status: 'CONCLUIDA' },
@@ -429,7 +429,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Hip Thrust com Barra',
+                exercicioNome: 'Elevação de Quadril com Barra',
                 concluido: false,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '62.50', status: 'CONCLUIDA' },
@@ -447,7 +447,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 10, carga_utilizada: '65.00', status: 'CONCLUIDA' },
@@ -495,7 +495,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Leg Press 45°',
+                exercicioNome: 'Leg Press',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 15, carga_utilizada: '125.00', status: 'CONCLUIDA' },
@@ -504,7 +504,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Hip Thrust com Barra',
+                exercicioNome: 'Elevação de Quadril com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 15, carga_utilizada: '62.50', status: 'CONCLUIDA' },
@@ -525,7 +525,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 10, carga_utilizada: '22.50', status: 'CONCLUIDA' },
@@ -572,7 +572,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 10, carga_utilizada: '25.00', status: 'CONCLUIDA' },
@@ -620,7 +620,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '27.50', status: 'CONCLUIDA' },
@@ -667,7 +667,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '30.00', status: 'CONCLUIDA' },
@@ -717,7 +717,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Hip Thrust com Barra',
+                exercicioNome: 'Elevação de Quadril com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '35.00', status: 'CONCLUIDA' },
@@ -736,7 +736,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Mesa Flexora',
+                exercicioNome: 'Flexão de Pernas',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '22.00', status: 'CONCLUIDA' },
@@ -763,7 +763,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Hip Thrust com Barra',
+                exercicioNome: 'Elevação de Quadril com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '40.00', status: 'CONCLUIDA' },
@@ -782,7 +782,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Mesa Flexora',
+                exercicioNome: 'Flexão de Pernas',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '24.00', status: 'CONCLUIDA' },
@@ -809,7 +809,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Hip Thrust com Barra',
+                exercicioNome: 'Elevação de Quadril com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 14, carga_utilizada: '40.00', status: 'CONCLUIDA' },
@@ -828,7 +828,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Mesa Flexora',
+                exercicioNome: 'Flexão de Pernas',
                 concluido: false,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '24.00', status: 'CONCLUIDA' },
@@ -855,7 +855,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Hip Thrust com Barra',
+                exercicioNome: 'Elevação de Quadril com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 15, carga_utilizada: '42.50', status: 'CONCLUIDA' },
@@ -874,7 +874,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Mesa Flexora',
+                exercicioNome: 'Flexão de Pernas',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 14, carga_utilizada: '25.00', status: 'CONCLUIDA' },
@@ -901,7 +901,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Hip Thrust com Barra',
+                exercicioNome: 'Elevação de Quadril com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 15, carga_utilizada: '42.50', status: 'CONCLUIDA' },
@@ -920,7 +920,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Mesa Flexora',
+                exercicioNome: 'Flexão de Pernas',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 15, carga_utilizada: '25.00', status: 'CONCLUIDA' },
@@ -947,7 +947,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Hip Thrust com Barra',
+                exercicioNome: 'Elevação de Quadril com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 15, carga_utilizada: '45.00', status: 'CONCLUIDA' },
@@ -966,7 +966,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Mesa Flexora',
+                exercicioNome: 'Flexão de Pernas',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 15, carga_utilizada: '26.00', status: 'CONCLUIDA' },
@@ -1005,7 +1005,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 10, carga_utilizada: '45.00', status: 'CONCLUIDA' },
@@ -1014,7 +1014,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Remada com Barra',
+                exercicioNome: 'Remada Curvada com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 10, carga_utilizada: '40.00', status: 'CONCLUIDA' },
@@ -1041,7 +1041,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 10, carga_utilizada: '47.50', status: 'CONCLUIDA' },
@@ -1050,7 +1050,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Remada com Barra',
+                exercicioNome: 'Remada Curvada com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 10, carga_utilizada: '42.50', status: 'CONCLUIDA' },
@@ -1077,7 +1077,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '50.00', status: 'CONCLUIDA' },
@@ -1086,7 +1086,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Remada com Barra',
+                exercicioNome: 'Remada Curvada com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '45.00', status: 'CONCLUIDA' },
@@ -1113,7 +1113,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '50.00', status: 'CONCLUIDA' },
@@ -1122,7 +1122,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Remada com Barra',
+                exercicioNome: 'Remada Curvada com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '45.00', status: 'CONCLUIDA' },
@@ -1149,7 +1149,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '52.50', status: 'CONCLUIDA' },
@@ -1158,7 +1158,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Remada com Barra',
+                exercicioNome: 'Remada Curvada com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '47.50', status: 'CONCLUIDA' },
@@ -1179,7 +1179,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Desenvolvimento com Halter',
+                exercicioNome: 'Desenvolvimento de Ombros com Halter',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 10, carga_utilizada: '16.00', status: 'CONCLUIDA' },
@@ -1198,7 +1198,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Desenvolvimento com Halter',
+                exercicioNome: 'Desenvolvimento de Ombros com Halter',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '18.00', status: 'CONCLUIDA' },
@@ -1217,7 +1217,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Desenvolvimento com Halter',
+                exercicioNome: 'Desenvolvimento de Ombros com Halter',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '18.00', status: 'CONCLUIDA' },
@@ -1236,7 +1236,7 @@ const SESSOES: SessaoSeedItem[] = [
         status: 'CONCLUIDA',
         exercicios: [
             {
-                exercicioNome: 'Desenvolvimento com Halter',
+                exercicioNome: 'Desenvolvimento de Ombros com Halter',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '20.00', status: 'CONCLUIDA' },
@@ -1267,7 +1267,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 10, carga_utilizada: '18.00', status: 'CONCLUIDA' },
@@ -1294,7 +1294,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '20.00', status: 'CONCLUIDA' },
@@ -1321,7 +1321,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: false,
                 series: [
                     { status: 'PULADA' },
@@ -1348,7 +1348,7 @@ const SESSOES: SessaoSeedItem[] = [
                 ],
             },
             {
-                exercicioNome: 'Supino Reto com Barra',
+                exercicioNome: 'Supino com Barra',
                 concluido: true,
                 series: [
                     { repeticoes_realizadas: 12, carga_utilizada: '22.50', status: 'CONCLUIDA' },

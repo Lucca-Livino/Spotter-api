@@ -492,3 +492,12 @@ export const sessaoSerieRelations = relations(sessao_serie, ({ one }) => ({
         references: [sessao_exercicio.id],
     }),
 }));
+
+// Cache de mídia dos exercícios — não incluída no TRUNCATE dos seeds.
+// Preserva URLs do S3 entre re-execuções de seed para evitar re-download.
+export const exercicio_midia_cache = pgTable('exercicio_midia_cache', {
+    nome_pt: varchar('nome_pt', { length: 255 }).primaryKey(),
+    animacao_url: varchar('animacao_url', { length: 500 }).notNull(),
+    exercisedb_id: varchar('exercisedb_id', { length: 50 }),
+    updated_at: timestamp('updated_at').defaultNow().notNull(),
+});
