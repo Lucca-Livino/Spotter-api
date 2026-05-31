@@ -21,6 +21,7 @@ const MUSCULOS: { nome: string; grupo: type_grupo_muscular }[] = [
     { nome: "Glúteos",               grupo: "PERNAS" },
     { nome: "Panturrilha",           grupo: "PERNAS" },
     { nome: "Adutores",              grupo: "PERNAS" },
+    { nome: "Flexores do Quadril",  grupo: "PERNAS" },
     // BRAÇOS
     { nome: "Bíceps",                grupo: "BRAÇOS" },
     { nome: "Tríceps",               grupo: "BRAÇOS" },
