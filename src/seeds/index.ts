@@ -35,6 +35,17 @@ async function runSeeds() {
         console.log(chalk.cyanBright(`※ ${chalk.cyan('Exercícios, Músculos e Aparelhos...')}`));
         await seedExercicios();
 
+        // Restaura URLs de mídia cacheadas (tabela exercicio_midia_cache não é truncada).
+        // Garante que animacao_url seja preservada entre re-execuções de seed.
+        await DataBase.execute(sql`
+            UPDATE exercicio e
+            SET animacao_url = c.animacao_url
+            FROM exercicio_midia_cache c
+            WHERE e.nome = c.nome_pt
+            AND e.aluno_id IS NULL
+            AND e.animacao_url IS NULL
+        `);
+
         console.log(chalk.cyanBright(`※ ${chalk.cyan('Treinadores...')}`));
         const treinadores = await seedTreinadores(academiasIds);
 

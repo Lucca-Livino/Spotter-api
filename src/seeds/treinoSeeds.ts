@@ -25,7 +25,7 @@ const treinosSeed: TreinoSeedInput[] = [
         treinadorNome: 'Marcos Antônio Rocha',
         exercicios: [
             {
-                nome: 'Supino Reto com Barra',
+                nome: 'Supino com Barra',
                 series: 4,
                 repeticoes: '8-12',
                 carga_sugerida: '30.00',
@@ -65,7 +65,7 @@ const treinosSeed: TreinoSeedInput[] = [
         treinadorNome: 'Marcos Antônio Rocha',
         exercicios: [
             {
-                nome: 'Desenvolvimento com Halter',
+                nome: 'Desenvolvimento de Ombros com Halter',
                 series: 4,
                 repeticoes: '10-12',
                 carga_sugerida: '18.00',
@@ -89,7 +89,7 @@ const treinosSeed: TreinoSeedInput[] = [
                 ordem_execucao: 1,
             },
             {
-                nome: 'Supino Reto com Barra',
+                nome: 'Supino com Barra',
                 series: 3,
                 repeticoes: '10-12',
                 carga_sugerida: '20.00',
@@ -105,7 +105,7 @@ const treinosSeed: TreinoSeedInput[] = [
         treinadorNome: null,
         exercicios: [
             {
-                nome: 'Supino Reto com Barra',
+                nome: 'Supino com Barra',
                 series: 4,
                 repeticoes: '8-12',
                 carga_sugerida: '60.00',
@@ -145,7 +145,7 @@ const treinosSeed: TreinoSeedInput[] = [
                 ordem_execucao: 1,
             },
             {
-                nome: 'Leg Press 45°',
+                nome: 'Leg Press',
                 series: 3,
                 repeticoes: '12-15',
                 carga_sugerida: '120.00',
@@ -153,7 +153,7 @@ const treinosSeed: TreinoSeedInput[] = [
                 ordem_execucao: 2,
             },
             {
-                nome: 'Hip Thrust com Barra',
+                nome: 'Elevação de Quadril com Barra',
                 series: 3,
                 repeticoes: '12-15',
                 carga_sugerida: '60.00',
@@ -177,7 +177,7 @@ const treinosSeed: TreinoSeedInput[] = [
                 ordem_execucao: 1,
             },
             {
-                nome: 'Supino Reto com Barra',
+                nome: 'Supino com Barra',
                 series: 3,
                 repeticoes: '10-12',
                 carga_sugerida: '50.00',
@@ -185,7 +185,7 @@ const treinosSeed: TreinoSeedInput[] = [
                 ordem_execucao: 2,
             },
             {
-                nome: 'Remada com Barra',
+                nome: 'Remada Curvada com Barra',
                 series: 3,
                 repeticoes: '10-12',
                 carga_sugerida: '45.00',
@@ -201,7 +201,7 @@ const treinosSeed: TreinoSeedInput[] = [
         treinadorNome: null,
         exercicios: [
             {
-                nome: 'Hip Thrust com Barra',
+                nome: 'Elevação de Quadril com Barra',
                 series: 4,
                 repeticoes: '12-15',
                 carga_sugerida: '40.00',
@@ -217,7 +217,7 @@ const treinosSeed: TreinoSeedInput[] = [
                 ordem_execucao: 2,
             },
             {
-                nome: 'Mesa Flexora',
+                nome: 'Flexão de Pernas',
                 series: 3,
                 repeticoes: '12-15',
                 carga_sugerida: '25.00',
