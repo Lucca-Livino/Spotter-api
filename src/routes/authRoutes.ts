@@ -20,10 +20,33 @@ import UsuarioRepository from "../repositories/usuarioRepository";
 import AlunoRepository from "../repositories/alunoRepository";
 import TreinadorRepository from "../repositories/treinadorRepository";
 import { DataBase } from "../config/DbConnect";
-import { aluno, treinador } from "../config/db/schema";
+import { aluno, treinador, user } from "../config/db/schema";
 import { eq } from "drizzle-orm";
 
 const router = express.Router();
+
+// Deletar a conta do usuário logado (Hard Delete em cascata)
+router.delete("/me", authMiddleware, async (req, res) => {
+  try {
+    const usuarioLogado = (req as any).user;
+    
+    if (!usuarioLogado || !usuarioLogado.id) {
+      res.status(401).json({ success: false, message: "Não autorizado" });
+      return;
+    }
+
+    // A deleção na tabela 'user' deve disparar exclusões em cascata 
+    // nas tabelas 'aluno', 'treinador', 'session' e 'account' (BetterAuth).
+    await DataBase.delete(user).where(eq(user.id, usuarioLogado.id));
+
+    console.log(`[authRoutes] [DELETE /me] Usuário ${usuarioLogado.id} apagado com sucesso.`);
+    
+    res.json({ success: true, message: "Sua conta foi excluída com sucesso." });
+  } catch (error) {
+    console.error("[authRoutes] [DELETE /me] Erro ao excluir conta:", error);
+    res.status(500).json({ success: false, message: "Erro ao excluir conta. Tente novamente mais tarde." });
+  }
+});
 
 // Rota inteligente para obter o perfil completo do usuário logado
 router.get("/me", authMiddleware, async (req, res) => {

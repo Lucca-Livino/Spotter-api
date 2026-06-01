@@ -111,8 +111,8 @@ export const aluno = pgTable('aluno', {
 });
 
 export const aluno_academia = pgTable('aluno_academia', {
-    aluno_id: uuid('aluno_id').notNull().references(() => aluno.id),
-    academia_id: uuid('academia_id').notNull().references(() => academia.id),
+    aluno_id: uuid('aluno_id').notNull().references(() => aluno.id, { onDelete: 'cascade' }),
+    academia_id: uuid('academia_id').notNull().references(() => academia.id, { onDelete: 'cascade' }),
 }, (table) => [
     primaryKey({ columns: [table.aluno_id, table.academia_id] })
 ]);
@@ -122,7 +122,7 @@ export const avaliacao_fisica = pgTable('avaliacao_fisica', {
     data_avaliacao: date('data_avaliacao').notNull().default(sql`CURRENT_DATE`),
     peso_kg: decimal('peso_kg', { precision: 5, scale: 2 }).notNull(), // Ex: 85.50
     altura_m: decimal('altura_m', { precision: 3, scale: 2 }).notNull(), // Ex: 1.75
-    aluno_id: uuid('aluno_id').notNull().references(() => aluno.id),
+    aluno_id: uuid('aluno_id').notNull().references(() => aluno.id, { onDelete: 'cascade' }),
 });
 
 // Perfil de treinador — autenticação fica na tabela 'user' do BetterAuth
@@ -145,16 +145,16 @@ export const treinador = pgTable('treinador', {
 });
 
 export const treinador_academia = pgTable('treinador_academia', {
-    treinador_id: uuid('treinador_id').notNull().references(() => treinador.id),
-    academia_id: uuid('academia_id').notNull().references(() => academia.id),
+    treinador_id: uuid('treinador_id').notNull().references(() => treinador.id, { onDelete: 'cascade' }),
+    academia_id: uuid('academia_id').notNull().references(() => academia.id, { onDelete: 'cascade' }),
 }, (table) => [
     primaryKey({ columns: [table.treinador_id, table.academia_id] })
 ]);
 
 export const conversa = pgTable('conversa', {
     id: uuid('id').defaultRandom().primaryKey(),
-    treinador_id: uuid('treinador_id').notNull().references(() => treinador.id),
-    aluno_id: uuid('aluno_id').notNull().references(() => aluno.id),
+    treinador_id: uuid('treinador_id').notNull().references(() => treinador.id, { onDelete: 'cascade' }),
+    aluno_id: uuid('aluno_id').notNull().references(() => aluno.id, { onDelete: 'cascade' }),
     ativa: boolean('ativa').notNull().default(true),
     ultima_mensagem_em: timestamp('ultima_mensagem_em'),
     created_at: timestamp('created_at').defaultNow().notNull(),
@@ -191,8 +191,8 @@ export const exercicio = pgTable('exercicio', {
     nome: varchar('nome', { length: 255 }).notNull(),
     descricao: text('descricao'),
     animacao_url: varchar('animacao_url', { length: 255 }),
-    aluno_id: uuid('aluno_id').references(() => aluno.id),
-    treinador_id: uuid('treinador_id').references(() => treinador.id),
+    aluno_id: uuid('aluno_id').references(() => aluno.id, { onDelete: 'cascade' }),
+    treinador_id: uuid('treinador_id').references(() => treinador.id, { onDelete: 'cascade' }),
     tipo_exercicio: tipoExercicioEnum('tipo_exercicio').notNull().default('REPETICAO'),
     deletado_em: timestamp('deletado_em'),
     created_at: timestamp('created_at').defaultNow().notNull(),
@@ -219,8 +219,8 @@ export const treino = pgTable('treino', {
     descricao: text('descricao'),
     data_criacao: timestamp('data_criacao').defaultNow().notNull(),
     deletado_em: timestamp('deletado_em'),
-    usuario_id: uuid('usuario_id').references(() => aluno.id),
-    treinador_id: uuid('treinador_id').references(() => treinador.id),
+    usuario_id: uuid('usuario_id').references(() => aluno.id, { onDelete: 'cascade' }),
+    treinador_id: uuid('treinador_id').references(() => treinador.id, { onDelete: 'cascade' }),
     dias_semana: diaSemanaEnum('dias_semana').array(),
     ordem: integer('ordem'),
 });
@@ -424,8 +424,8 @@ export const statusSerieEnum = pgEnum('status_serie', ['PENDENTE', 'CONCLUIDA', 
 // Tabelas de Sessão
 export const sessao_treino = pgTable('sessao_treino', {
     id: uuid('id').defaultRandom().primaryKey(),
-    aluno_id: uuid('aluno_id').notNull().references(() => aluno.id),
-    treino_id: uuid('treino_id').notNull().references(() => treino.id),
+    aluno_id: uuid('aluno_id').notNull().references(() => aluno.id, { onDelete: 'cascade' }),
+    treino_id: uuid('treino_id').notNull().references(() => treino.id, { onDelete: 'cascade' }),
     status: statusSessaoEnum('status').notNull().default('EM_ANDAMENTO'),
     inicio: timestamp('inicio').defaultNow().notNull(),
     fim: timestamp('fim'),

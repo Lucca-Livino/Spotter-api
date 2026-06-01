@@ -1,6 +1,6 @@
 import { DataBase } from "../config/DbConnect";
 import { eq, sql } from "drizzle-orm";
-import { treinador, user, treinador_academia } from "../config/db/schema";
+import { treinador, user, treinador_academia, academia } from "../config/db/schema";
 import { type_treinador } from "../types/dbSchemas";
 import { parseDatabaseError } from "../utils/errors/DatabaseError";
 
@@ -13,7 +13,7 @@ class TreinadorRepository {
 
 	async findFullByUserId(userId: string): Promise<any | null> {
 		try {
-			const resultado = await this.db
+			const rows = await this.db
 				.select({
 					id: treinador.id,
 					nome: treinador.nome,
@@ -26,13 +26,33 @@ class TreinadorRepository {
 					turnos: treinador.turnos,
 					url_foto: treinador.url_foto,
 					academia_id: treinador.academia_id,
+					fcm_token: treinador.fcm_token,
+					academia_nome: academia.nome,
 				})
 				.from(treinador)
 				.innerJoin(user, eq(treinador.user_id, user.id))
+				.leftJoin(academia, eq(treinador.academia_id, academia.id))
 				.where(eq(treinador.user_id, userId))
 				.limit(1);
 
-			return resultado[0] || null;
+			const treinadorEncontrado = rows[0];
+			if (!treinadorEncontrado) return null;
+
+			// Buscar todos os vínculos de academias
+			const vinculos = await this.db
+				.select({
+					id: academia.id,
+					nome: academia.nome,
+					endereco_cidade: academia.endereco_cidade,
+				})
+				.from(treinador_academia)
+				.innerJoin(academia, eq(treinador_academia.academia_id, academia.id))
+				.where(eq(treinador_academia.treinador_id, treinadorEncontrado.id));
+
+			return {
+				...treinadorEncontrado,
+				academias: vinculos,
+			};
 		} catch (error) {
 			throw parseDatabaseError(error, "TreinadorRepository.findFullByUserId");
 		}
@@ -136,19 +156,39 @@ class TreinadorRepository {
 	async update(
 		id: string,
 		treinadorEditado: Partial<type_treinador>,
+		academias_ids?: string[],
 	): Promise<type_treinador | null> {
 		try {
-			const resultado = await this.db
-				.update(treinador)
-				.set(treinadorEditado)
-				.where(eq(treinador.id, id))
-				.returning();
+			const resultado = await this.db.transaction(async (tx) => {
+				// 1. Atualizar tabela treinador
+				const [treinadorAtualizado] = await tx
+					.update(treinador)
+					.set(treinadorEditado)
+					.where(eq(treinador.id, id))
+					.returning();
 
-			if (resultado.length === 0) {
-				return null;
-			}
+				if (!treinadorAtualizado) return null;
 
-			return resultado[0] as unknown as type_treinador;
+				// 2. Sincronizar academias se fornecidas
+				if (academias_ids) {
+					await tx
+						.delete(treinador_academia)
+						.where(eq(treinador_academia.treinador_id, id));
+
+					if (academias_ids.length > 0) {
+						await tx
+							.insert(treinador_academia)
+							.values(academias_ids.map(acId => ({
+								treinador_id: id,
+								academia_id: acId
+							})));
+					}
+				}
+
+				return treinadorAtualizado;
+			});
+
+			return resultado as unknown as type_treinador;
 		} catch (error) {
 			throw parseDatabaseError(error, "TreinadorRepository.update");
 		}

@@ -107,9 +107,11 @@ class TreinadorService {
 			throw new Error("Corpo da requisição é obrigatório");
 		}
 
-		treinadorUpdateSchema.parse(treinadorEditado);
+		const dadosValidados = treinadorUpdateSchema.parse(treinadorEditado);
 
-		const treinadorAtualizado = await this.repository.update(id, treinadorEditado);
+		const { academias_ids, ...dadosRestantes } = dadosValidados;
+
+		const treinadorAtualizado = await this.repository.update(id, dadosRestantes, academias_ids);
 
 		if (!treinadorAtualizado) {
 			throw new Error(`Treinador com ID ${id} não encontrado`);

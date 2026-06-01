@@ -1,5 +1,5 @@
 {
-  "id": "06d0bb5f-30a3-4fc6-9cb6-7d26ccafc3fb",
+  "id": "6923d7b8-eaa9-4fbc-8ca8-8db93895aa4f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -228,12 +228,30 @@
           "notNull": true,
           "default": true
         },
+        "peso_atual_kg": {
+          "name": "peso_atual_kg",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "altura_m": {
+          "name": "altura_m",
+          "type": "numeric(3, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "fcm_token": {
+          "name": "fcm_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "academia_id": {
           "name": "academia_id",
@@ -333,7 +351,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "aluno_academia_academia_id_academia_id_fk": {
@@ -346,7 +364,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -445,7 +463,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -533,7 +551,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "conversa_aluno_id_aluno_id_fk": {
@@ -546,7 +564,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -591,6 +609,20 @@
           "primaryKey": false,
           "notNull": false
         },
+        "treinador_id": {
+          "name": "treinador_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tipo_exercicio": {
+          "name": "tipo_exercicio",
+          "type": "tipo_exercicio",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'REPETICAO'"
+        },
         "deletado_em": {
           "name": "deletado_em",
           "type": "timestamp",
@@ -617,7 +649,20 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "exercicio_treinador_id_treinador_id_fk": {
+          "name": "exercicio_treinador_id_treinador_id_fk",
+          "tableFrom": "exercicio",
+          "tableTo": "treinador",
+          "columnsFrom": [
+            "treinador_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1024,6 +1069,18 @@
           "primaryKey": false,
           "notNull": false
         },
+        "tempo_realizado_segundos": {
+          "name": "tempo_realizado_segundos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "distancia_realizada_metros": {
+          "name": "distancia_realizada_metros",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "status": {
           "name": "status",
           "type": "status_serie",
@@ -1141,7 +1198,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "sessao_treino_treino_id_treino_id_fk": {
@@ -1154,7 +1211,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1335,6 +1392,12 @@
           "notNull": true,
           "default": "now()"
         },
+        "fcm_token": {
+          "name": "fcm_token",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "academia_id": {
           "name": "academia_id",
           "type": "uuid",
@@ -1421,7 +1484,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "treinador_academia_academia_id_academia_id_fk": {
@@ -1434,7 +1497,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1492,7 +1555,7 @@
           "name": "usuario_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "treinador_id": {
           "name": "treinador_id",
@@ -1526,7 +1589,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
         "treino_treinador_id_treinador_id_fk": {
@@ -1539,7 +1602,7 @@
           "columnsTo": [
             "id"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1570,11 +1633,23 @@
           "name": "repeticoes",
           "type": "varchar(50)",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "carga_sugerida": {
           "name": "carga_sugerida",
           "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "duracao_sugerida_segundos": {
+          "name": "duracao_sugerida_segundos",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "distancia_sugerida_metros": {
+          "name": "distancia_sugerida_metros",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },
@@ -1671,6 +1746,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'aluno'"
         },
         "created_at": {
           "name": "created_at",
@@ -1774,7 +1856,9 @@
         "PERNAS",
         "BRAÇOS",
         "OMBROS",
-        "ABDOMEN"
+        "ABDOMEN",
+        "PESCOÇO",
+        "CARDIO"
       ]
     },
     "public.remetente_tipo": {
@@ -1817,6 +1901,15 @@
       "values": [
         "PRIMARIO",
         "SECUNDARIO"
+      ]
+    },
+    "public.tipo_exercicio": {
+      "name": "tipo_exercicio",
+      "schema": "public",
+      "values": [
+        "REPETICAO",
+        "TEMPO",
+        "DISTANCIA"
       ]
     },
     "public.turno": {

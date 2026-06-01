@@ -70,6 +70,10 @@ const treinadorCreateBaseSchema = z
 			.string()
 			.uuid({ message: "O ID da academia deve ser um UUID válido" })
 			.openapi({ description: "UUID da academia", example: "550e8400-e29b-41d4-a716-446655440001" }),
+		academias_ids: z
+			.array(z.string().uuid({ message: "ID da academia deve ser um UUID válido" }))
+			.optional()
+			.openapi({ description: "Lista de IDs das academias vinculadas", example: ["550e8400-e29b-41d4-a716-446655440000"] }),
 	});
 
 const treinadorCreateSchema = treinadorCreateBaseSchema.openapi("TreinadorCreateInput");
