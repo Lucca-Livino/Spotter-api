@@ -469,6 +469,36 @@ describe('GET /api/me', () => {
     });
 });
 
+describe('DELETE /api/me', () => {
+    it('deleta a conta do usuário logado e retorna sucesso', async () => {
+        const userData = await signUpUser('del_me');
+        const login = await signInUser(userData.email, userData.password);
+
+        // Deletar a conta
+        const res = await request(BASE_URL)
+            .delete('/api/me')
+            .set(buildHeaders(login, true, false));
+
+        expect(res.status).toBe(200);
+        expect(res.body).toMatchObject({
+            success: true,
+            message: "Sua conta foi excluída com sucesso."
+        });
+
+        // Tentar obter o perfil novamente deve dar 401 porque a sessão foi apagada em cascata
+        const verifyRes = await request(BASE_URL)
+            .get('/api/me')
+            .set(buildHeaders(login, true, false));
+
+        expect(verifyRes.status).toBe(401);
+    });
+
+    it('retorna 401 se tentar excluir sem estar logado', async () => {
+        const res = await request(BASE_URL).delete('/api/me');
+        expect(res.status).toBe(401);
+    });
+});
+
 describe('POST /api/auth/sign-out', () => {
     it('sem header Origin retorna 403 (proteção CSRF do BetterAuth)', async () => {
         const userData = await signUpUser('logout_sem_origin');
