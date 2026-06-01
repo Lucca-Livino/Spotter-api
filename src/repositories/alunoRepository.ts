@@ -1,6 +1,6 @@
 import { DataBase } from "../config/DbConnect";
 import { desc, eq, sql } from "drizzle-orm";
-import { aluno, user, avaliacao_fisica } from "../config/db/schema";
+import { aluno, user, avaliacao_fisica, aluno_academia } from "../config/db/schema";
 import { type_aluno } from "../types/dbSchemas";
 import { parseDatabaseError } from "../utils/errors/DatabaseError";
 
@@ -39,28 +39,50 @@ class AlunoRepository {
     console.log(
       "[StudentsRepository] [create] Iniciando inserção no banco de dados...",
     );
-    console.log(
-      "[StudentsRepository] [create] Dados a inserir:",
-      JSON.stringify(novoStudent, null, 2),
-    );
     try {
       const { academia_id, ...restStudent } = novoStudent;
-      const insertData = {
-        ...restStudent,
-        academia_id,
-        peso_atual_kg: restStudent.peso_atual_kg?.toString() ?? null,
-        altura_m: restStudent.altura_m?.toString() ?? null,
-      } as any;
       
-      const resultado = await this.db
-        .insert(aluno)
-        .values(insertData)
-        .returning();
+      const resultado = await this.db.transaction(async (tx) => {
+        // 1. Tentar buscar foto do usuário se não enviada
+        let urlFotoFinal = restStudent.url_foto;
+        if (!urlFotoFinal) {
+          const userData = await tx
+            .select({ image: user.image })
+            .from(user)
+            .where(eq(user.id, restStudent.user_id))
+            .limit(1);
+          urlFotoFinal = userData[0]?.image ?? null;
+        }
+
+        const insertData = {
+          ...restStudent,
+          url_foto: urlFotoFinal,
+          academia_id,
+          peso_atual_kg: restStudent.peso_atual_kg?.toString() ?? null,
+          altura_m: restStudent.altura_m?.toString() ?? null,
+        } as any;
+
+        // 2. Inserir Aluno
+        const [alunoCriado] = await tx
+          .insert(aluno)
+          .values(insertData)
+          .returning();
+
+        // 3. Vincular Aluno à Academia na tabela de relacionamento
+        await tx
+          .insert(aluno_academia)
+          .values({
+            aluno_id: alunoCriado.id,
+            academia_id: academia_id,
+          });
+
+        return alunoCriado;
+      });
+
       console.log(
-        "[StudentsRepository] [create] Inserção concluída. Registro retornado:",
-        JSON.stringify(resultado[0], null, 2),
+        "[StudentsRepository] [create] Inserção e vínculo concluídos.",
       );
-      return resultado[0] as unknown as type_aluno;
+      return resultado as unknown as type_aluno;
     } catch (error) {
       throw parseDatabaseError(error, "StudentsRepository.create");
     }

@@ -1,6 +1,6 @@
 import { DataBase } from "../config/DbConnect";
 import { eq, sql } from "drizzle-orm";
-import { treinador, user } from "../config/db/schema";
+import { treinador, user, treinador_academia } from "../config/db/schema";
 import { type_treinador } from "../types/dbSchemas";
 import { parseDatabaseError } from "../utils/errors/DatabaseError";
 
@@ -41,12 +41,43 @@ class TreinadorRepository {
 	async create(novoTreinador: type_treinador): Promise<type_treinador> {
 		try {
 			const { academia_id, ...restTreinador } = novoTreinador;
-			const resultado = await this.db
-				.insert(treinador)
-				.values({ ...restTreinador, academia_id })
-				.returning();
+			
+			const resultado = await this.db.transaction(async (tx) => {
+				// 1. Tentar buscar foto do usuário se não enviada
+				let urlFotoFinal = restTreinador.url_foto;
+				if (!urlFotoFinal) {
+					const userData = await tx
+						.select({ image: user.image })
+						.from(user)
+						.where(eq(user.id, restTreinador.user_id))
+						.limit(1);
+					urlFotoFinal = userData[0]?.image ?? null;
+				}
 
-			return resultado[0] as unknown as type_treinador;
+				const insertData = {
+					...restTreinador,
+					url_foto: urlFotoFinal,
+					academia_id,
+				};
+
+				// 2. Inserir Treinador
+				const [treinadorCriado] = await tx
+					.insert(treinador)
+					.values(insertData)
+					.returning();
+
+				// 3. Vincular Treinador à Academia
+				await tx
+					.insert(treinador_academia)
+					.values({
+						treinador_id: treinadorCriado.id,
+						academia_id: academia_id,
+					});
+
+				return treinadorCriado;
+			});
+
+			return resultado as unknown as type_treinador;
 		} catch (error) {
 			throw parseDatabaseError(error, "TreinadorRepository.create");
 		}
