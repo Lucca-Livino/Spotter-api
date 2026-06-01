@@ -1,1 +1,0 @@
-ALTER TABLE "treino" ALTER COLUMN "usuario_id" DROP NOT NULL;

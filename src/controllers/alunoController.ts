@@ -17,10 +17,18 @@ class AlunoController {
   }
 
   private async parseMultipartData(req: Request) {
+    console.log("[AlunoController] [parseMultipartData] req.body:", JSON.stringify(req.body, null, 2));
     if (req.body.data) {
       try {
-        return JSON.parse(req.body.data);
+        let parsed = JSON.parse(req.body.data);
+        // Se o resultado ainda for uma string, faz o parse novamente (corrige double encoding do Android/Retrofit)
+        if (typeof parsed === 'string') {
+          parsed = JSON.parse(parsed);
+        }
+        console.log("[AlunoController] [parseMultipartData] JSON parsed successfully:", JSON.stringify(parsed, null, 2));
+        return parsed;
       } catch (e) {
+        console.error("[AlunoController] [parseMultipartData] Error parsing JSON:", e);
         throw new Error('VALIDATION: Campo "data" deve ser um JSON válido');
       }
     }
@@ -98,11 +106,16 @@ class AlunoController {
         sexo: body.sexo,
         url_foto: fotoUrl || body.url_foto || null,
         status_conta: body.status_conta ?? true,
+        peso_atual_kg: body.peso_atual_kg,
+        altura_m: body.altura_m,
         academia_id: body.academia_id,
         treinador_id: body.treinador_id ?? null,
       };
 
+      console.log("[AlunosController] [createAluno] Objeto para criação:", JSON.stringify(novoAluno, null, 2));
+
       if (!novoAluno.nome || !novoAluno.user_id) {
+        console.warn("[AlunosController] [createAluno] Validação falhou: nome ou user_id ausentes");
         if (fotoUrl) await this.deleteFoto(fotoUrl);
         return CommonResponse.error(
           res,
@@ -110,7 +123,7 @@ class AlunoController {
           null,
           "",
           [],
-          "Dados do aluno são obrigatórios (user_id, nome)",
+          `Dados do aluno são obrigatórios (user_id=${novoAluno.user_id}, nome=${novoAluno.nome})`,
         );
       }
 

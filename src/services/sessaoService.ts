@@ -3,6 +3,10 @@ import UsuarioRepository from '../repositories/usuarioRepository';
 import { sessaoSchema, sessaoIdSchema, sessaoListQuerySchema, SessaoListQuery, sessaoUpdateSchema, sessaoExercicioUpdateSchema, exercicioIdSchema, sessaoSeriesUpdateSchema, SessaoSeriesUpdate, reordenarExerciciosSchema, ReordenarExerciciosInput } from '../utils/validations/sessaoValidation';
 import { ZodError } from 'zod';
 import { type_sessao_exercicio, type_sessao_serie, type_sessao_treino } from '../types/dbSchemas';
+import { notificarSessaoFinalizada, notificarSessaoIniciada, notificarTreinoConcluidoTreinador } from '../integrations/notificacoes';
+import { DataBase } from '../config/DbConnect';
+import { aluno, treinador, user } from '../config/db/schema';
+import { eq } from 'drizzle-orm';
 
 class SessaoService {
     private repository: SessaoRepository;
@@ -60,6 +64,23 @@ class SessaoService {
             }
 
             const sessaoId = await this.repository.create(novaSessao, sessaoExercicios, sessaoSeries);
+
+            // Enviar notificação push (não-bloqueante)
+            void (async () => {
+                try {
+                    const alunoData = await DataBase.select({ fcm_token: aluno.fcm_token })
+                        .from(aluno)
+                        .where(eq(aluno.id, perfil.alunoId!))
+                        .limit(1);
+
+                    const fcmToken = alunoData[0]?.fcm_token;
+                    if (fcmToken) {
+                        await notificarSessaoIniciada(fcmToken, treinoComExercicios.nome ?? 'Treino');
+                    }
+                } catch (e) {
+                    console.error('[SessaoService] Erro ao enviar notificação de início:', e);
+                }
+            })();
 
             return await this.repository.findById(sessaoId) as SessaoComDetalhe;
         } catch (error) {
@@ -392,6 +413,54 @@ class SessaoService {
             this.repository.findById(id) as Promise<SessaoComDetalhe>,
             this.repository.getSessaoResumo(id),
         ]);
+
+        // Enviar notificação push (não-bloqueante)
+        void (async () => {
+            try {
+                if (sessao) {
+                    const alunoData = await DataBase.select({ 
+                            fcm_token: aluno.fcm_token, 
+                            nome: user.name,
+                            treinador_id: aluno.treinador_id
+                        })
+                        .from(aluno)
+                        .innerJoin(user, eq(aluno.user_id, user.id))
+                        .where(eq(aluno.id, sessao.aluno_id))
+                        .limit(1);
+
+                    const alunoEncontrado = alunoData[0];
+                    if (!alunoEncontrado) return;
+
+                    const fcmTokenAluno = alunoEncontrado.fcm_token;
+                    if (fcmTokenAluno && resumo) {
+                        await notificarSessaoFinalizada(
+                            fcmTokenAluno,
+                            sessao.treino_nome ?? 'Treino',
+                            resumo.exercicios_concluidos
+                        );
+                    }
+
+                    // Notificar o treinador, se houver
+                    if (alunoEncontrado.treinador_id) {
+                        const treinadorData = await DataBase.select({ fcm_token: treinador.fcm_token })
+                            .from(treinador)
+                            .where(eq(treinador.id, alunoEncontrado.treinador_id))
+                            .limit(1);
+                        
+                        const fcmTokenTreinador = treinadorData[0]?.fcm_token;
+                        if (fcmTokenTreinador) {
+                            await notificarTreinoConcluidoTreinador(
+                                fcmTokenTreinador,
+                                alunoEncontrado.nome,
+                                sessao.treino_nome ?? 'Treino'
+                            );
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('[SessaoService] Erro ao enviar notificação de fim:', e);
+            }
+        })();
 
         return { ...sessao, resumo: resumo! };
     }

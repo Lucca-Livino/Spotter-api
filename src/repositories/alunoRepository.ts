@@ -1,6 +1,6 @@
 import { DataBase } from "../config/DbConnect";
 import { desc, eq, sql } from "drizzle-orm";
-import { aluno, user, avaliacao_fisica } from "../config/db/schema";
+import { aluno, user, avaliacao_fisica, aluno_academia, academia } from "../config/db/schema";
 import { type_aluno } from "../types/dbSchemas";
 import { parseDatabaseError } from "../utils/errors/DatabaseError";
 
@@ -12,7 +12,7 @@ class AlunoRepository {
 
   async findFullByUserId(userId: string): Promise<any | null> {
     try {
-      const resultado = await this.db
+      const rows = await this.db
         .select({
           id: aluno.id,
           nome: aluno.nome,
@@ -23,13 +23,33 @@ class AlunoRepository {
           academia_id: aluno.academia_id,
           peso_atual_kg: aluno.peso_atual_kg,
           altura_m: aluno.altura_m,
+          fcm_token: aluno.fcm_token,
+          academia_nome: academia.nome,
         })
         .from(aluno)
         .innerJoin(user, eq(aluno.user_id, user.id))
+        .leftJoin(academia, eq(aluno.academia_id, academia.id))
         .where(eq(aluno.user_id, userId))
         .limit(1);
 
-      return resultado[0] || null;
+      const alunoEncontrado = rows[0];
+      if (!alunoEncontrado) return null;
+
+      // Buscar todos os vínculos de academias
+      const vinculos = await this.db
+        .select({
+          id: academia.id,
+          nome: academia.nome,
+          endereco_cidade: academia.endereco_cidade,
+        })
+        .from(aluno_academia)
+        .innerJoin(academia, eq(aluno_academia.academia_id, academia.id))
+        .where(eq(aluno_academia.aluno_id, alunoEncontrado.id));
+
+      return {
+        ...alunoEncontrado,
+        academias: vinculos,
+      };
     } catch (error) {
       throw parseDatabaseError(error, "AlunoRepository.findFullByUserId");
     }
@@ -39,21 +59,50 @@ class AlunoRepository {
     console.log(
       "[StudentsRepository] [create] Iniciando inserção no banco de dados...",
     );
-    console.log(
-      "[StudentsRepository] [create] Dados a inserir:",
-      JSON.stringify(novoStudent, null, 2),
-    );
     try {
       const { academia_id, ...restStudent } = novoStudent;
-      const resultado = await this.db
-        .insert(aluno)
-        .values({ ...restStudent, academia_id })
-        .returning();
+      
+      const resultado = await this.db.transaction(async (tx) => {
+        // 1. Tentar buscar foto do usuário se não enviada
+        let urlFotoFinal = restStudent.url_foto;
+        if (!urlFotoFinal) {
+          const userData = await tx
+            .select({ image: user.image })
+            .from(user)
+            .where(eq(user.id, restStudent.user_id))
+            .limit(1);
+          urlFotoFinal = userData[0]?.image ?? null;
+        }
+
+        const insertData = {
+          ...restStudent,
+          url_foto: urlFotoFinal,
+          academia_id,
+          peso_atual_kg: restStudent.peso_atual_kg?.toString() ?? null,
+          altura_m: restStudent.altura_m?.toString() ?? null,
+        } as any;
+
+        // 2. Inserir Aluno
+        const [alunoCriado] = await tx
+          .insert(aluno)
+          .values(insertData)
+          .returning();
+
+        // 3. Vincular Aluno à Academia na tabela de relacionamento
+        await tx
+          .insert(aluno_academia)
+          .values({
+            aluno_id: alunoCriado.id,
+            academia_id: academia_id,
+          });
+
+        return alunoCriado;
+      });
+
       console.log(
-        "[StudentsRepository] [create] Inserção concluída. Registro retornado:",
-        JSON.stringify(resultado[0], null, 2),
+        "[StudentsRepository] [create] Inserção e vínculo concluídos.",
       );
-      return resultado[0] as unknown as type_aluno;
+      return resultado as unknown as type_aluno;
     } catch (error) {
       throw parseDatabaseError(error, "StudentsRepository.create");
     }
@@ -172,19 +221,46 @@ class AlunoRepository {
     }
   }
 
-  async update(id: string, alunoEditado: Partial<type_aluno>): Promise<type_aluno | null> {
+  async update(id: string, alunoEditado: Partial<type_aluno>, academias_ids?: string[]): Promise<type_aluno | null> {
     try {
-      const resultado = await this.db
-        .update(aluno)
-        .set(alunoEditado)
-        .where(eq(aluno.id, id))
-        .returning();
+      const updateData = {
+        ...alunoEditado,
+        peso_atual_kg: alunoEditado.peso_atual_kg?.toString(),
+        altura_m: alunoEditado.altura_m?.toString(),
+      } as any;
+        
+      const resultado = await this.db.transaction(async (tx) => {
+        // 1. Atualizar tabela aluno
+        const [alunoAtualizado] = await tx
+          .update(aluno)
+          .set(updateData)
+          .where(eq(aluno.id, id))
+          .returning();
 
-      if (resultado.length === 0) {
-        return null;
-      }
+        if (!alunoAtualizado) return null;
 
-      return resultado[0] as unknown as type_aluno;
+        // 2. Se informadas novas academias, sincronizar
+        if (academias_ids) {
+          // Remover vínculos antigos
+          await tx
+            .delete(aluno_academia)
+            .where(eq(aluno_academia.aluno_id, id));
+
+          // Inserir novos vínculos
+          if (academias_ids.length > 0) {
+            await tx
+              .insert(aluno_academia)
+              .values(academias_ids.map(acId => ({
+                aluno_id: id,
+                academia_id: acId
+              })));
+          }
+        }
+
+        return alunoAtualizado;
+      });
+
+      return resultado as unknown as type_aluno;
     } catch (error) {
       throw parseDatabaseError(error, "AlunoRepository.update");
     }

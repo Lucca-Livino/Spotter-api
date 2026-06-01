@@ -1,5 +1,5 @@
 import { DataBase } from "../config/DbConnect";
-import { aluno } from "../config/db/schema";
+import { aluno, aluno_academia } from "../config/db/schema";
 import { auth } from "../utils/auth";
 
 const alunosSeed = [
@@ -128,7 +128,17 @@ export async function seedUsuarios(academiasIds: string[], treinadores: Treinado
             ...seed.perfil,
         });
     }
-    const alunosCriados = await DataBase.insert(aluno).values(alunosValues).returning({ id: aluno.id });
+    const alunosCriados = await DataBase.insert(aluno).values(alunosValues).returning({ id: aluno.id, academia_id: aluno.academia_id });
+
+    // Criar vínculos na tabela N:N aluno_academia
+    const alunoAcademiaValues = alunosCriados.map(a => ({
+        aluno_id: a.id,
+        academia_id: a.academia_id
+    }));
+    
+    if (alunoAcademiaValues.length > 0) {
+        await DataBase.insert(aluno_academia).values(alunoAcademiaValues);
+    }
 
     return alunosCriados.map((a) => a.id);
 }

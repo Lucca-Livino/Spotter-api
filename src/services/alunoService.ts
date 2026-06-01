@@ -144,9 +144,11 @@ class AlunoService {
       throw new Error("Corpo da requisição é obrigatório");
     }
 
-    alunoUpdateSchema.parse(alunoEditado);
+    const dadosValidados = alunoUpdateSchema.parse(alunoEditado);
 
-    const alunoAtualizado = await this.repository.update(id, alunoEditado);
+    const { academias_ids, ...dadosRestantes } = dadosValidados;
+
+    const alunoAtualizado = await this.repository.update(id, dadosRestantes as any, academias_ids);
 
     if (!alunoAtualizado) {
       throw new Error(`Aluno com ID ${id} não encontrado`);

@@ -1,5 +1,5 @@
 import { DataBase } from "../config/DbConnect";
-import { treinador } from "../config/db/schema";
+import { treinador, treinador_academia } from "../config/db/schema";
 import { auth } from "../utils/auth";
 
 const treinadoresSeed = [
@@ -84,7 +84,17 @@ export async function seedTreinadores(academiasIds: string[]): Promise<Treinador
 	const treinadoresCriados = await DataBase
 		.insert(treinador)
 		.values(treinadoresValues)
-		.returning({ id: treinador.id, nome: treinador.nome });
+		.returning({ id: treinador.id, nome: treinador.nome, academia_id: treinador.academia_id });
 
-	return treinadoresCriados;
+	// Criar vínculos na tabela N:N treinador_academia
+	const treinadorAcademiaValues = treinadoresCriados.map(t => ({
+		treinador_id: t.id,
+		academia_id: t.academia_id
+	}));
+
+	if (treinadorAcademiaValues.length > 0) {
+		await DataBase.insert(treinador_academia).values(treinadorAcademiaValues);
+	}
+
+	return treinadoresCriados.map(t => ({ id: t.id, nome: t.nome }));
 }

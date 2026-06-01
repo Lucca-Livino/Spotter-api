@@ -17,10 +17,18 @@ class TreinadorController {
         }
 
         private async parseMultipartData(req: Request) {
+                console.log("[TreinadorController] [parseMultipartData] req.body:", JSON.stringify(req.body, null, 2));
                 if (req.body.data) {
                         try {
-                                return JSON.parse(req.body.data);
+                                let parsed = JSON.parse(req.body.data);
+                                // Se o resultado ainda for uma string, faz o parse novamente (corrige double encoding)
+                                if (typeof parsed === 'string') {
+                                        parsed = JSON.parse(parsed);
+                                }
+                                console.log("[TreinadorController] [parseMultipartData] JSON parsed successfully:", JSON.stringify(parsed, null, 2));
+                                return parsed;
                         } catch (e) {
+                                console.error("[TreinadorController] [parseMultipartData] Error parsing JSON:", e);
                                 throw new Error('VALIDATION: Campo "data" deve ser um JSON válido');
                         }
                 }
