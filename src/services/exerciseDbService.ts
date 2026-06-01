@@ -1,6 +1,7 @@
 import { DataBase } from "../config/DbConnect";
-import { aparelho, exercicio, exercicio_aparelho, exercicio_musculo, musculo } from "../config/db/schema";
+import { aparelho, exercicio, exercicio_aparelho, exercicio_musculo, musculo, exercicio_midia_cache } from "../config/db/schema";
 import { and, eq, isNull, sql } from "drizzle-orm";
+import { EXERCICIO_EXDB_NOME } from "../seeds/exercicioSeeds";
 import UploadService from "./uploadService";
 import type { type_grupo_muscular } from "../types/dbSchemas";
 import { spawn } from "child_process";
@@ -46,6 +47,14 @@ export interface SyncCompletoResult {
     musculos: SyncMusculosResult;
     aparelhos: SyncAparelhosResult;
     exercicios: SyncExerciciosResult;
+    requests_api_utilizadas: number;
+}
+
+export interface SyncMidiaLocaisResult {
+    sincronizados: number;
+    ja_possuiam_midia: number;
+    sem_match_exdb: number;
+    erros: { nome_pt: string; motivo: string }[];
     requests_api_utilizadas: number;
 }
 
@@ -382,6 +391,17 @@ class ExerciseDbService {
             .slice(0, 50) || 'exercicio';
     }
 
+    // Persiste URL no cache permanente para sobreviver re-execu\u00e7\u00f5es de seed.
+    private async salvarNoCache(nomePt: string, animacaoUrl: string, exercisedbId?: string): Promise<void> {
+        await DataBase
+            .insert(exercicio_midia_cache)
+            .values({ nome_pt: nomePt, animacao_url: animacaoUrl, exercisedb_id: exercisedbId ?? null })
+            .onConflictDoUpdate({
+                target: exercicio_midia_cache.nome_pt,
+                set: { animacao_url: animacaoUrl, exercisedb_id: exercisedbId ?? null, updated_at: new Date() },
+            });
+    }
+
     // Sincronização
 
     async syncMusculos(): Promise<SyncMusculosResult> {
@@ -502,6 +522,7 @@ class ExerciseDbService {
                                     .update(exercicio)
                                     .set({ animacao_url: animacaoUrl })
                                     .where(eq(exercicio.id, existente.id));
+                                await this.salvarNoCache(nomeExercicio, animacaoUrl, item.id);
                                 sincronizados += 1;
                                 continue;
                             }
@@ -569,6 +590,10 @@ class ExerciseDbService {
                             tipo_exercicio: tipoInferido,
                         })
                         .returning();
+
+                    if (animacaoUrl) {
+                        await this.salvarNoCache(nomeExercicio, animacaoUrl, item.id);
+                    }
 
                     await tx.insert(exercicio_musculo).values({
                         exercicio_id: exercicioCriado.id!,
@@ -688,7 +713,78 @@ class ExerciseDbService {
             .set({ animacao_url: animacaoUrl })
             .where(eq(exercicio.id, existente.id));
 
+        await this.salvarNoCache(nomePt, animacaoUrl, item.id);
+
         return { animacao_url: animacaoUrl, nome_pt: nomePt, exercicio_id: existente.id };
+    }
+
+    // Sincroniza mídia de todos os exercícios locais (seeds) que têm mapeamento na ExerciseDB.
+    // Útil após seed inicial: baixa GIFs para exercícios que ainda não têm animacao_url.
+    async syncMidiaExerciciosLocais(opcoes: { forcar?: boolean } = {}): Promise<SyncMidiaLocaisResult> {
+        this.resetRequests();
+        const forcar = opcoes.forcar === true;
+
+        const exerciciosLocais = await DataBase
+            .select({ id: exercicio.id, nome: exercicio.nome, animacao_url: exercicio.animacao_url })
+            .from(exercicio)
+            .where(isNull(exercicio.aluno_id));
+
+        let sincronizados = 0;
+        let jaPossuiamMidia = 0;
+        let semMatchExdb = 0;
+        const erros: { nome_pt: string; motivo: string }[] = [];
+
+        for (const ex of exerciciosLocais) {
+            const nomeEn = EXERCICIO_EXDB_NOME[ex.nome];
+
+            if (!nomeEn) {
+                semMatchExdb += 1;
+                continue;
+            }
+
+            if (ex.animacao_url && !forcar) {
+                jaPossuiamMidia += 1;
+                continue;
+            }
+
+            try {
+                const resultados = await this.searchByName(nomeEn, 1, 0);
+                if (!resultados.length) {
+                    erros.push({ nome_pt: ex.nome, motivo: `Não encontrado na ExerciseDB: "${nomeEn}"` });
+                    continue;
+                }
+
+                const item = resultados[0];
+                const gifBuffer = await this.fetchImageBuffer(item.id, '360');
+                if (!gifBuffer) {
+                    erros.push({ nome_pt: ex.nome, motivo: 'Imagem não disponível na ExerciseDB' });
+                    continue;
+                }
+
+                const animacaoUrl = await this.cacheGifBufferToS3(gifBuffer, `${item.id}-${item.name}`);
+
+                await DataBase
+                    .update(exercicio)
+                    .set({ animacao_url: animacaoUrl })
+                    .where(eq(exercicio.id, ex.id));
+
+                await this.salvarNoCache(ex.nome, animacaoUrl, item.id);
+
+                sincronizados += 1;
+            } catch (err) {
+                if (err instanceof Error && err.message.startsWith('RATE_LIMIT:')) throw err;
+                const motivo = err instanceof Error ? err.message : 'erro desconhecido';
+                erros.push({ nome_pt: ex.nome, motivo });
+            }
+        }
+
+        return {
+            sincronizados,
+            ja_possuiam_midia: jaPossuiamMidia,
+            sem_match_exdb: semMatchExdb,
+            erros,
+            requests_api_utilizadas: this.getRequestsRealizadas(),
+        };
     }
 
     private capitalizar(s: string): string {

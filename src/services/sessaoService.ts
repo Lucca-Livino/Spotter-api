@@ -105,7 +105,7 @@ class SessaoService {
             throw new Error('FORBIDDEN: perfil de acesso não autorizado');
         }
 
-        if (!perfil.isAdmin) {
+        if (!perfil.isAdmin || perfil.isAluno) {
             if (perfil.isAluno && perfil.alunoId !== sessao.aluno_id) {
                 throw new Error('FORBIDDEN: você não tem permissão para visualizar esta sessão');
             }
@@ -131,7 +131,7 @@ class SessaoService {
 
         const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
 
-        if (perfil.isAdmin) {
+        if (perfil.isAdmin && !perfil.isAluno) {
             return this.repository.findAll(filtros);
         }
 
@@ -191,7 +191,7 @@ class SessaoService {
             throw new Error('FORBIDDEN: perfil de acesso não autorizado');
         }
 
-        if (!perfil.isAdmin) {
+        if (!perfil.isAdmin || perfil.isAluno) {
             if (perfil.isAluno && perfil.alunoId !== sessaoStatus.aluno_id) {
                 throw new Error('FORBIDDEN: você não tem permissão para atualizar esta sessão');
             }
@@ -233,7 +233,7 @@ class SessaoService {
             throw new Error('FORBIDDEN: perfil de acesso não autorizado');
         }
 
-        if (!perfil.isAdmin) {
+        if (!perfil.isAdmin || perfil.isAluno) {
             if (perfil.isAluno && perfil.alunoId !== sessaoStatus.aluno_id) {
                 throw new Error('FORBIDDEN: você não tem permissão para atualizar esta sessão');
             }
@@ -282,7 +282,7 @@ class SessaoService {
             throw new Error('FORBIDDEN: perfil de acesso não autorizado');
         }
 
-        if (!perfil.isAdmin) {
+        if (!perfil.isAdmin || perfil.isAluno) {
             if (perfil.isAluno && perfil.alunoId !== sessaoAlunoId) {
                 throw new Error('FORBIDDEN: você não tem permissão para acessar esta sessão');
             }
@@ -543,7 +543,7 @@ class SessaoService {
             throw new Error('FORBIDDEN: perfil de acesso não autorizado');
         }
 
-        if (!perfil.isAdmin) {
+        if (!perfil.isAdmin || perfil.isAluno) {
             if (perfil.isAluno && perfil.alunoId !== sessao.aluno_id) {
                 throw new Error('FORBIDDEN: você não tem permissão para visualizar esta sessão');
             }

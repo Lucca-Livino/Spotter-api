@@ -141,6 +141,12 @@ const exercicioQuerySchema = z.object({
             description: "Filtra exercícios que já estão (ou não) vinculados a algum treino",
             example: "true",
         }),
+    com_midia: booleanQueryParam
+        .optional()
+        .openapi({
+            description: "true = somente exercícios com animação; false = somente sem animação",
+            example: "true",
+        }),
     ordem_nome: z
         .enum(['asc', 'desc'])
         .default('asc')
