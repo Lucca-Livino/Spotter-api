@@ -1,5 +1,7 @@
 import { DataBase } from "../config/DbConnect";
 import { aluno, aluno_academia } from "../config/db/schema";
+import { user } from "../config/db/schema";
+import { eq } from "drizzle-orm";
 import { auth } from "../utils/auth";
 
 const alunosSeed = [
@@ -120,6 +122,8 @@ export async function seedUsuarios(academiasIds: string[], treinadores: Treinado
         if (seed.treinadorNome && !treinadorId) {
             throw new Error(`Treinador não encontrado para o aluno ${seed.name}: ${seed.treinadorNome}`);
         }
+
+        await DataBase.update(user).set({ emailVerified: true }).where(eq(user.id, authUser.user.id));
 
         alunosValues.push({
             user_id: authUser.user.id,

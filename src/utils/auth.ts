@@ -31,6 +31,14 @@ export const auth = betterAuth({
     autoSignIn: process.env.NODE_ENV !== "production",
   },
 
+  account: {
+    accountLinking: {
+      enabled: true,
+      requireLocalEmailVerified: false,
+      trustedProviders: ["google"],
+    },
+  },
+
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID!,

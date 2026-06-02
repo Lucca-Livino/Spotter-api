@@ -1,5 +1,6 @@
 import { DataBase } from "../config/DbConnect";
-import { treinador, treinador_academia } from "../config/db/schema";
+import { treinador, treinador_academia, user } from "../config/db/schema";
+import { eq } from "drizzle-orm";
 import { auth } from "../utils/auth";
 
 const treinadoresSeed = [
@@ -73,6 +74,8 @@ export async function seedTreinadores(academiasIds: string[]): Promise<Treinador
 	                        tipo: "treinador"
 	                } as any,
 	        });
+
+		await DataBase.update(user).set({ emailVerified: true }).where(eq(user.id, authUser.user.id));
 
 		treinadoresValues.push({
 			user_id: authUser.user.id,
