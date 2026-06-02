@@ -4,6 +4,22 @@ import { auth } from "../utils/auth";
 
 const treinadoresSeed = [
 	{
+		name: "Carlos Silva",
+		email: "carlos.silva@gmail.com",
+		password: "Admin@2026!",
+		perfil: {
+			nome: "Carlos Silva",
+			data_nascimento: "1982-05-10",
+			sexo: "M" as const,
+			cref: "000001-G/RO",
+			turnos: ["MANHA", "TARDE", "NOITE"] as ("MANHA" | "TARDE" | "NOITE")[],
+			especializacao: "Gestão e Administração",
+			graduacao: "Educação Física - Bacharel",
+			is_admin: true,
+		},
+		academiaIndex: 0,
+	},
+	{
 		name: "Marcos Antônio Rocha",
 		email: "marcos.rocha@personalfit.com",
 		password: "Treinador@2026!",
