@@ -88,8 +88,11 @@ router.patch("/me/fcm-token", authMiddleware, async (req, res) => {
   try {
     const user = (req as any).user;
     const { fcm_token } = req.body as { fcm_token?: string };
+    
+    console.log(`\n[FCM Token] Recebida solicitação para atualizar token do usuário ${user.id}. Token: ${fcm_token || 'VAZIO'}`);
 
     if (fcm_token === undefined) {
+      console.warn(`[FCM Token] Falha: fcm_token não foi fornecido na requisição.`);
       res.status(400).json({ success: false, message: "fcm_token é obrigatório" });
       return;
     }
@@ -101,10 +104,14 @@ router.patch("/me/fcm-token", authMiddleware, async (req, res) => {
       await DataBase.update(treinador)
         .set({ fcm_token })
         .where(eq(treinador.user_id, user.id));
+      console.log(`[FCM Token] Atualizado com sucesso para o Treinador (User ID: ${user.id}).`);
     } else if (perfilAcesso.isAluno) {
       await DataBase.update(aluno)
         .set({ fcm_token })
         .where(eq(aluno.user_id, user.id));
+      console.log(`[FCM Token] Atualizado com sucesso para o Aluno (User ID: ${user.id}).`);
+    } else {
+      console.warn(`[FCM Token] Usuário ${user.id} não possui perfil de Aluno nem Treinador. Token não salvo.`);
     }
 
     res.json({ success: true, message: "Token FCM atualizado" });
@@ -112,6 +119,48 @@ router.patch("/me/fcm-token", authMiddleware, async (req, res) => {
     console.error("[authRoutes] Erro ao atualizar token FCM:", error);
     res.status(500).json({ success: false, message: "Erro ao atualizar token FCM" });
   }
+});
+
+// Redirecionamento Web -> App (Solução para emails clicáveis localmente)
+router.get("/redirect-app", (req, res) => {
+  const token = req.query.token;
+  if (!token) {
+    res.status(400).send("Token não fornecido");
+    return;
+  }
+  
+  // HTML com fallback JavaScript: 
+  // Tenta redirecionar para academia://reset-password?token=XYZ
+  // E pede ao usuário para clicar se o navegador bloquear o redirecionamento automático
+  const deepLink = `academia://reset-password?token=${token}`;
+  
+  const html = `
+    <!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Redirecionando para o App...</title>
+      <script>
+        // Tenta o redirecionamento imediato via JavaScript
+        window.onload = function() {
+          window.location.href = "${deepLink}";
+        };
+      </script>
+      <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px 20px; background: #121212; color: #fff; }
+        a { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #007bff; color: #fff; text-decoration: none; border-radius: 5px; font-weight: bold; }
+      </style>
+    </head>
+    <body>
+      <h2>Redirecionando para o aplicativo Spotter...</h2>
+      <p>Se o aplicativo não abrir automaticamente em alguns segundos, clique no botão abaixo:</p>
+      <a href="${deepLink}">Abrir no Aplicativo</a>
+    </body>
+    </html>
+  `;
+  
+  res.send(html);
 });
 
 export default router;

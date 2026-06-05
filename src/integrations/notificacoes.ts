@@ -1,4 +1,5 @@
 import npaasClient from "./npaas";
+import { sendHermesEmail } from "./hermes";
 
 /**
  * Envia uma notificação push para um único token FCM via NPaaS.
@@ -13,15 +14,23 @@ export async function enviarPushParaUsuario(
   corpo: string,
   dados?: Record<string, string>,
 ): Promise<void> {
+  console.log(`\n[Push Notification] Preparando envio de notificação "${titulo}" para o token FCM: ${fcmToken || 'NÃO FORNECIDO'}`);
+  
+  if (!fcmToken) {
+    console.warn(`[Push Notification] Abortado: fcmToken está vazio ou indefinido.`);
+    return;
+  }
+
   try {
-    await npaasClient.post("/notifications/send", {
+    const response = await npaasClient.post("/notifications/send", {
       to:       fcmToken,
       title:    titulo,
       body:     corpo,
       data:     dados ?? {},
     });
-  } catch (error) {
-    console.error("[NPaaS] Falha ao enviar notificação push:", error);
+    console.log(`[Push Notification] Enviada com sucesso! Resposta do NPaaS:`, response.data);
+  } catch (error: any) {
+    console.error("[Push Notification] Falha ao enviar notificação via NPaaS:", error?.response?.data || error.message || error);
   }
 }
 
@@ -111,4 +120,33 @@ export async function notificarAvaliacaoFisicaAgendada(
     "Sua avaliação física foi registrada. Confira os detalhes no app.",
     { tipo: "AVALIACAO_AGENDADA" },
   );
+}
+
+// ── Notificações por e-mail ──────────────
+
+export async function enviarEmailResetSenha(email: string, nome: string, link: string): Promise<void> {
+  const apiKey = process.env.HERMES_API_KEY;
+  const templateId = "63b95631-70ef-49fc-b883-47bad53174de";
+  
+  if (!apiKey) {
+    console.warn("[Notificacoes] HERMES_API_KEY não configurada. E-mail de reset não enviado.");
+    return;
+  }
+
+  await sendHermesEmail({
+    apiKey,
+    to: email,
+    subject: "Recuperação de Senha - Spotter",
+    templateId,
+    variables: {
+      nome_sistema: "Spotter",
+      nome_usuario: nome,
+      tempo_expiracao: "30 minutos",
+      link_recuperacao: link,
+    }
+  });
+}
+
+export async function enviarEmailBoasVindas() {
+  // TODO: Implementar depois
 }

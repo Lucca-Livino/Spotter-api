@@ -29,6 +29,17 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: process.env.NODE_ENV !== "production",
+    sendResetPassword: async ({ user, url, token }, request) => {
+      console.log("\n[Auth] Solicitação de Reset de Senha detectada!");
+      console.log(`[Auth] Email do usuário: ${user.email}`);
+      console.log(`[Auth] Token gerado: ${token}`);
+
+      const apiUrl = process.env.API_BASE_URL || "http://localhost:1350/api";
+      const deepLink = `${apiUrl}/redirect-app?token=${token}`;
+      
+      const { enviarEmailResetSenha } = await import("../integrations/notificacoes");
+      await enviarEmailResetSenha(user.email, user.name, deepLink);
+    },
   },
 
   account: {
