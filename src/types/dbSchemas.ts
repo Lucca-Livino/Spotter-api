@@ -59,6 +59,7 @@ export type type_conversa = {
     ativa?: boolean;
     ultima_mensagem_em?: Date | null;
     created_at?: Date;
+    mensagens_nao_lidas?: number;
 }
 
 export type type_mensagem_conversa = {

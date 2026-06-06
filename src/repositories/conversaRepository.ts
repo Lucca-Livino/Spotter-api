@@ -1,5 +1,5 @@
 import { DataBase } from '../config/DbConnect';
-import { conversa } from '../config/db/schema';
+import { conversa, mensagem_conversa } from '../config/db/schema';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { type_conversa } from '../types/dbSchemas';
 import { parseDatabaseError } from '../utils/errors/DatabaseError';
@@ -50,7 +50,21 @@ class ConversaRepository {
       const offset = (page - 1) * limite;
       const [dados, countResult] = await Promise.all([
         this.db
-          .select()
+          .select({
+            id: conversa.id,
+            treinador_id: conversa.treinador_id,
+            aluno_id: conversa.aluno_id,
+            ativa: conversa.ativa,
+            ultima_mensagem_em: conversa.ultima_mensagem_em,
+            created_at: conversa.created_at,
+            mensagens_nao_lidas: sql<number>`(
+              SELECT COUNT(*) FROM mensagem_conversa
+              WHERE mensagem_conversa.conversa_id = ${conversa.id}
+                AND mensagem_conversa.remetente_tipo = 'ALUNO'
+                AND mensagem_conversa.lida_em IS NULL
+                AND mensagem_conversa.ativa = true
+            )::int`,
+          })
           .from(conversa)
           .where(and(eq(conversa.treinador_id, treinadorId), eq(conversa.ativa, true)))
           .orderBy(desc(conversa.ultima_mensagem_em), desc(conversa.created_at))
