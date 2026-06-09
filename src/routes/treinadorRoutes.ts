@@ -22,6 +22,7 @@ const treinadorController = new TreinadorController();
 
 router
 		.get("/treinadores/me/alunos", authMiddleware, treinadorController.getAlunosVinculados)
+		.delete("/treinadores/me/alunos/:alunoId", authMiddleware, treinadorController.desvincularAluno)
         .get("/treinadores", authMiddleware, treinadorController.getAllTreinadores)
         .get("/treinadores/:id", authMiddleware, treinadorController.getTreinadorById)
         .post("/treinadores", authMiddleware, upload.single('foto'), treinadorController.createTreinador)

@@ -217,6 +217,23 @@ class TreinadorController {
 	                return this.handleError(res, error, "updateTreinador");
 	        }
 	};
+	desvincularAluno = async (req: Request, res: Response) => {
+		const userId = (req as any).user?.id as string | undefined;
+		if (!userId) {
+			return CommonResponse.error(res, HttpStatusCode.UNAUTHORIZED.code, null, null, [], "Usuário não autenticado");
+		}
+		const alunoId = req.params.alunoId;
+		if (!alunoId) {
+			return CommonResponse.error(res, HttpStatusCode.BAD_REQUEST.code, null, "alunoId", [], "O alunoId é obrigatório");
+		}
+		try {
+			await this.service.desvincularAluno(userId, alunoId);
+			return CommonResponse.success(res, null, HttpStatusCode.OK.code, "Aluno desvinculado com sucesso");
+		} catch (error) {
+			return this.handleError(res, error, "desvincularAluno");
+		}
+	};
+
 	private handleError(res: Response, error: unknown, context: string) {
 		if (error instanceof ZodError) {
 			console.warn(

@@ -124,6 +124,21 @@ class TreinadorService {
 		return treinadorAtualizado;
 	}
 
+	async desvincularAluno(userId: string, alunoId: string): Promise<void> {
+		const treinador = await this.repository.findByUserId(userId);
+		if (!treinador || !treinador.id) {
+			throw new Error("Perfil de treinador não encontrado");
+		}
+		const aluno = await this.alunoRepository.findById(alunoId);
+		if (!aluno || !aluno.id) {
+			throw new Error("Aluno não encontrado");
+		}
+		if (aluno.treinador_id !== treinador.id) {
+			throw new Error("FORBIDDEN: aluno não está vinculado a este treinador");
+		}
+		await this.alunoRepository.update(aluno.id, { treinador_id: null });
+	}
+
 	async getAlunosVinculados(userId: string, query: any) {
 		const { page, limite } = alunoQuerySchema.parse(query);
 		const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
