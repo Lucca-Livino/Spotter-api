@@ -8,6 +8,7 @@ export const turnoEnum = pgEnum('turno', ['MANHA', 'TARDE', 'NOITE']);
 export const grupoMuscularEnum = pgEnum('grupo_muscular', ['PEITO', 'COSTAS', 'PERNAS', 'BRAÇOS', 'OMBROS', 'ABDOMEN', 'PESCOÇO', 'CARDIO']);
 export const diaSemanaEnum = pgEnum('dia_semana', ['SEGUNDA', 'TERCA', 'QUARTA', 'QUINTA', 'SEXTA', 'SABADO', 'DOMINGO']);
 export const remetenteTipoEnum = pgEnum('remetente_tipo', ['ALUNO', 'TREINADOR']);
+export const statusSolicitacaoEnum = pgEnum('status_solicitacao', ['PENDENTE', 'ACEITA', 'RECUSADA']);
 export const tipoExercicioEnum = pgEnum('tipo_exercicio', ['REPETICAO', 'TEMPO', 'DISTANCIA']);
 
 // Tabelas do BetterAuth (autenticação)
@@ -497,6 +498,26 @@ export const sessaoSerieRelations = relations(sessao_serie, ({ one }) => ({
 
 // Cache de mídia dos exercícios — não incluída no TRUNCATE dos seeds.
 // Preserva URLs do S3 entre re-execuções de seed para evitar re-download.
+export const solicitacao_treinador = pgTable('solicitacao_treinador', {
+    id: uuid('id').defaultRandom().primaryKey(),
+    aluno_id: uuid('aluno_id').notNull().references(() => aluno.id, { onDelete: 'cascade' }),
+    treinador_id: uuid('treinador_id').notNull().references(() => treinador.id, { onDelete: 'cascade' }),
+    status: statusSolicitacaoEnum('status').notNull().default('PENDENTE'),
+    created_at: timestamp('created_at').defaultNow().notNull(),
+    updated_at: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const solicitacaoTreinadorRelations = relations(solicitacao_treinador, ({ one }) => ({
+    aluno: one(aluno, {
+        fields: [solicitacao_treinador.aluno_id],
+        references: [aluno.id],
+    }),
+    treinador: one(treinador, {
+        fields: [solicitacao_treinador.treinador_id],
+        references: [treinador.id],
+    }),
+}));
+
 export const exercicio_midia_cache = pgTable('exercicio_midia_cache', {
     nome_pt: varchar('nome_pt', { length: 255 }).primaryKey(),
     animacao_url: varchar('animacao_url', { length: 500 }).notNull(),
