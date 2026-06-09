@@ -133,6 +133,17 @@ class AlunoService {
     return alunoDeletado;
   }
 
+  async desvincularTreinador(userId: string): Promise<void> {
+    const aluno = await this.repository.findByUserId(userId);
+    if (!aluno || !aluno.id) {
+      throw new Error("Perfil de aluno não encontrado");
+    }
+    if (!aluno.treinador_id) {
+      throw new Error("CONFLITO: Aluno não possui treinador vinculado");
+    }
+    await this.repository.update(aluno.id, { treinador_id: null });
+  }
+
   async updateAluno(id: string, alunoEditado: Partial<type_aluno>): Promise<type_aluno> {
     console.log(
       `[AlunoService] [updateAluno] Atualizando aluno com ID: ${id}`,
