@@ -17,7 +17,7 @@ import {
 } from '../utils/validations/treinoValidation';
 import { type_treino } from '../types/dbSchemas';
 import { mapTreinoTemplateParaAluno } from '../utils/treinoTemplateMapper';
-import { notificarTreinoAtribuido, notificarTreinoAtualizado } from '../integrations/notificacoes';
+import { notificarTreinoAtribuido, notificarTreinoAtualizado, notificarTreinoRemovido } from '../integrations/notificacoes';
 import { DataBase } from '../config/DbConnect';
 import { aluno } from '../config/db/schema';
 import { eq } from 'drizzle-orm';
@@ -223,14 +223,14 @@ class TreinoService {
             if (perfil.isTreinador && alunoIdDestino && alunoIdDestino !== perfil.alunoId) {
                 void (async () => {
                     try {
-                        const alunoData = await DataBase.select({ fcm_token: aluno.fcm_token })
+                        const alunoData = await DataBase.select({ user_id: aluno.user_id })
                             .from(aluno)
                             .where(eq(aluno.id, alunoIdDestino))
                             .limit(1);
 
-                        const fcmToken = alunoData[0]?.fcm_token;
-                        if (fcmToken) {
-                            await notificarTreinoAtribuido(fcmToken, treinoDetalhado.nome);
+                        const alunoUserId = alunoData[0]?.user_id;
+                        if (alunoUserId) {
+                            await notificarTreinoAtribuido(alunoUserId, treinoDetalhado.nome);
                         }
                     } catch (e) {
                         console.error('[TreinoService] Erro ao enviar notificação de novo treino:', e);
@@ -543,14 +543,14 @@ class TreinoService {
         if (perfil.isTreinador && treinoAtualizadoComExercicios.usuario_id && treinoAtualizadoComExercicios.usuario_id !== perfil.alunoId) {
             void (async () => {
                 try {
-                    const alunoData = await DataBase.select({ fcm_token: aluno.fcm_token })
+                    const alunoData = await DataBase.select({ user_id: aluno.user_id })
                         .from(aluno)
                         .where(eq(aluno.id, treinoAtualizadoComExercicios.usuario_id as string))
                         .limit(1);
 
-                    const fcmToken = alunoData[0]?.fcm_token;
-                    if (fcmToken) {
-                        await notificarTreinoAtualizado(fcmToken, treinoAtualizadoComExercicios.nome);
+                    const alunoUserId = alunoData[0]?.user_id;
+                    if (alunoUserId) {
+                        await notificarTreinoAtualizado(alunoUserId, treinoAtualizadoComExercicios.nome);
                     }
                 } catch (e) {
                     console.error('[TreinoService] Erro ao enviar notificação de treino atualizado:', e);
@@ -604,6 +604,26 @@ class TreinoService {
         }
 
         const treinoDeletado = await this.repository.softDelete(id);
+
+        // Notificar o aluno se o treino foi removido pelo treinador (não-bloqueante)
+        if (perfil.isTreinador && treinoExistente.usuario_id) {
+            void (async () => {
+                try {
+                    const alunoData = await DataBase.select({ user_id: aluno.user_id })
+                        .from(aluno)
+                        .where(eq(aluno.id, treinoExistente.usuario_id as string))
+                        .limit(1);
+
+                    const alunoUserId = alunoData[0]?.user_id;
+                    if (alunoUserId) {
+                        await notificarTreinoRemovido(alunoUserId, treinoExistente.nome);
+                    }
+                } catch (e) {
+                    console.error('[TreinoService] Erro ao enviar notificação de remoção:', e);
+                }
+            })();
+        }
+
         return { treino: treinoDeletado, tipo_exclusao: 'soft' };
     }
 
