@@ -2,46 +2,51 @@ import npaasClient from "./npaas";
 import { sendHermesEmail } from "./hermes";
 
 /**
- * Envia uma notificação push para um único token FCM via NPaaS.
- * @param fcmToken  Token do dispositivo do aluno
- * @param titulo    Título da notificação
- * @param corpo     Corpo da mensagem
- * @param dados     Payload extra (navegação, IDs de entidade, etc.)
+ * Envia uma notificação push para um usuário via NPaaS.
+ * O envio é assíncrono: a resposta imediata confirma o enfileiramento.
+ * As estatísticas reais (sucessos/falhas) são preenchidas pelo NPaaS
+ * após o processamento e podem ser consultadas via GET /api/v1/notificacoes/{id}.
+ *
+ * @param userId  ID do usuário destinatário
+ * @param titulo  Título da notificação
+ * @param corpo   Corpo da mensagem
+ * @param dados   Payload extra (navegação, IDs de entidade, etc.)
  */
 export async function enviarPushParaUsuario(
-  fcmToken: string,
+  userId: string,
   titulo: string,
   corpo: string,
   dados?: Record<string, string>,
 ): Promise<void> {
-  console.log(`\n[Push Notification] Preparando envio de notificação "${titulo}" para o token FCM: ${fcmToken || 'NÃO FORNECIDO'}`);
-  
-  if (!fcmToken) {
-    console.warn(`[Push Notification] Abortado: fcmToken está vazio ou indefinido.`);
-    return;
-  }
+  console.log(`\n[NPaaS] Enviando push "${titulo}" para usuário: ${userId}`);
 
   try {
-    const response = await npaasClient.post("/notifications/send", {
-      to:       fcmToken,
-      title:    titulo,
-      body:     corpo,
-      data:     dados ?? {},
+    const response = await npaasClient.post("/api/v1/notificacoes/enviar", {
+      usuarioId:  userId,
+      titulo,
+      corpo,
+      dados:      dados ?? {},
+      canal:      "push",
+      prioridade: "alta",
     });
-    console.log(`[Push Notification] Enviada com sucesso! Resposta do NPaaS:`, response.data);
+    const notificacao = response.data?.dados;
+    // Nota: as estatísticas aqui refletem o estado no momento do enfileiramento.
+    // O processamento real pelo FCM é assíncrono — consulte GET /api/v1/notificacoes/{id}
+    // para ver o status final (sucessos/falhas por dispositivo).
+    console.log(`[NPaaS] Push enfileirado com sucesso! ID: ${notificacao?._id ?? '?'}, Status: ${notificacao?.status ?? '?'}, Dispositivos encontrados: ${notificacao?.estatisticas?.totalDispositivos ?? '?'}`);
   } catch (error: any) {
-    console.error("[Push Notification] Falha ao enviar notificação via NPaaS:", error?.response?.data || error.message || error);
+    console.error("[NPaaS] Falha ao enviar notificação push:", error?.response?.data || error.message);
   }
 }
 
 // ── Notificações contextuais do app de academia ──────────────
 
 export async function notificarSessaoIniciada(
-  fcmToken: string,
+  userId: string,
   nomeTreino: string,
 ): Promise<void> {
   await enviarPushParaUsuario(
-    fcmToken,
+    userId,
     "💪 Treino iniciado!",
     `Sua sessão de ${nomeTreino} foi registrada. Bora!`,
     { tipo: "SESSAO_INICIADA" },
@@ -49,12 +54,12 @@ export async function notificarSessaoIniciada(
 }
 
 export async function notificarSessaoFinalizada(
-  fcmToken: string,
+  userId: string,
   nomeTreino: string,
   totalExercicios: number,
 ): Promise<void> {
   await enviarPushParaUsuario(
-    fcmToken,
+    userId,
     "🏆 Treino concluído!",
     `Você finalizou ${totalExercicios} exercício(s) de ${nomeTreino}. Continue assim!`,
     { tipo: "SESSAO_FINALIZADA" },
@@ -62,11 +67,11 @@ export async function notificarSessaoFinalizada(
 }
 
 export async function notificarTreinoAtribuido(
-  fcmToken: string,
+  userId: string,
   nomeTreino: string,
 ): Promise<void> {
   await enviarPushParaUsuario(
-    fcmToken,
+    userId,
     "📋 Novo treino disponível!",
     `Seu treinador criou o treino "${nomeTreino}" para você.`,
     { tipo: "TREINO_ATRIBUIDO" },
@@ -74,11 +79,11 @@ export async function notificarTreinoAtribuido(
 }
 
 export async function notificarTreinoAtualizado(
-  fcmToken: string,
+  userId: string,
   nomeTreino: string,
 ): Promise<void> {
   await enviarPushParaUsuario(
-    fcmToken,
+    userId,
     "🔄 Treino atualizado",
     `O treino "${nomeTreino}" foi atualizado pelo seu treinador.`,
     { tipo: "TREINO_ATUALIZADO" },
@@ -86,12 +91,12 @@ export async function notificarTreinoAtualizado(
 }
 
 export async function notificarTreinoConcluidoTreinador(
-  fcmToken: string,
+  userId: string,
   nomeAluno: string,
   nomeTreino: string,
 ): Promise<void> {
   await enviarPushParaUsuario(
-    fcmToken,
+    userId,
     "✅ Aluno concluiu um treino",
     `${nomeAluno} finalizou a sessão de ${nomeTreino}.`,
     { tipo: "SESSAO_FINALIZADA_TREINADOR" },
@@ -99,12 +104,12 @@ export async function notificarTreinoConcluidoTreinador(
 }
 
 export async function notificarNovaMensagem(
-  fcmToken: string,
+  userId: string,
   nomeRemetente: string,
   conversaId: string,
 ): Promise<void> {
   await enviarPushParaUsuario(
-    fcmToken,
+    userId,
     "💬 Nova Mensagem",
     `${nomeRemetente} enviou uma mensagem para você.`,
     { tipo: "NOVA_MENSAGEM", conversa_id: conversaId },
@@ -112,13 +117,37 @@ export async function notificarNovaMensagem(
 }
 
 export async function notificarAvaliacaoFisicaAgendada(
-  fcmToken: string,
+  userId: string,
 ): Promise<void> {
   await enviarPushParaUsuario(
-    fcmToken,
+    userId,
     "📊 Avaliação Física Agendada",
     "Sua avaliação física foi registrada. Confira os detalhes no app.",
     { tipo: "AVALIACAO_AGENDADA" },
+  );
+}
+
+export async function notificarSessaoCancelada(
+  userId: string,
+  nomeTreino: string,
+): Promise<void> {
+  await enviarPushParaUsuario(
+    userId,
+    "❌ Treino cancelado",
+    `A sessão de ${nomeTreino} foi cancelada.`,
+    { tipo: "SESSAO_CANCELADA" },
+  );
+}
+
+export async function notificarTreinoRemovido(
+  userId: string,
+  nomeTreino: string,
+): Promise<void> {
+  await enviarPushParaUsuario(
+    userId,
+    "🗑️ Treino removido",
+    `O treino "${nomeTreino}" foi removido pelo seu treinador.`,
+    { tipo: "TREINO_REMOVIDO" },
   );
 }
 

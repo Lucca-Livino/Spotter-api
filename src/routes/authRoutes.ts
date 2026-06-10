@@ -22,6 +22,7 @@ import TreinadorRepository from "../repositories/treinadorRepository";
 import { DataBase } from "../config/DbConnect";
 import { aluno, treinador, user } from "../config/db/schema";
 import { eq } from "drizzle-orm";
+import npaasClient from "../integrations/npaas";
 
 const router = express.Router();
 
@@ -87,9 +88,9 @@ router.get("/me", authMiddleware, async (req, res) => {
 router.patch("/me/fcm-token", authMiddleware, async (req, res) => {
   try {
     const user = (req as any).user;
-    const { fcm_token } = req.body as { fcm_token?: string };
+    const { fcm_token, plataforma } = req.body as { fcm_token?: string; plataforma?: string };
     
-    console.log(`\n[FCM Token] Recebida solicitação para atualizar token do usuário ${user.id}. Token: ${fcm_token || 'VAZIO'}`);
+    console.log(`\n[FCM Token] Recebida solicitação para atualizar token do usuário ${user.id}. Plataforma: ${plataforma ?? 'não informada'}. Token: ${fcm_token || 'VAZIO'}`);
 
     if (fcm_token === undefined) {
       console.warn(`[FCM Token] Falha: fcm_token não foi fornecido na requisição.`);
@@ -112,6 +113,26 @@ router.patch("/me/fcm-token", authMiddleware, async (req, res) => {
       console.log(`[FCM Token] Atualizado com sucesso para o Aluno (User ID: ${user.id}).`);
     } else {
       console.warn(`[FCM Token] Usuário ${user.id} não possui perfil de Aluno nem Treinador. Token não salvo.`);
+    }
+
+    // Registrar/atualizar no NPaaS para associar o token ao usuário
+    if (fcm_token) {
+      const plataformaValida = (["android", "ios", "web"] as const).includes(plataforma as any)
+        ? (plataforma as "android" | "ios" | "web")
+        : "android";
+
+      try {
+        console.log(`[NPaaS] Registrando/Atualizando dispositivo para o usuário: ${user.id} (plataforma: ${plataformaValida})...`);
+        await npaasClient.post("/api/v1/dispositivos", {
+          tokenFcm:         fcm_token,
+          usuarioId:        user.id,
+          plataforma:       plataformaValida,
+          nomeDispositivo:  `App ${plataformaValida}`,
+        });
+        console.log(`[NPaaS] Dispositivo registrado com sucesso para o usuário ${user.id}`);
+      } catch (npaasError: any) {
+        console.error(`[NPaaS] Falha ao registrar dispositivo no NPaaS:`, npaasError?.response?.data || npaasError.message);
+      }
     }
 
     res.json({ success: true, message: "Token FCM atualizado" });
