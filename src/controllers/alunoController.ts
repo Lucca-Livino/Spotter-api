@@ -107,7 +107,7 @@ class AlunoController {
         url_foto: fotoUrl || body.url_foto || null,
         status_conta: body.status_conta ?? true,
         peso_atual_kg: body.peso_atual_kg,
-        altura_m: body.altura_m,
+        altura_cm: body.altura_cm,
         academia_id: body.academia_id,
         treinador_id: body.treinador_id ?? null,
       };

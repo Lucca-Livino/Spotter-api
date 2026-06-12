@@ -48,13 +48,14 @@ const alunoSchema = z.object({
         .optional()
         .nullable()
         .openapi({ description: "Peso em kg", example: 75.5 }),
-    altura_m: z.coerce
+    altura_cm: z.coerce
         .number()
+        .int({ message: "Altura deve ser um número inteiro de centímetros" })
         .positive({ message: "Altura deve ser um número positivo" })
-        .max(3, { message: "Altura não pode exceder 3 metros" })
+        .max(300, { message: "Altura não pode exceder 300 cm" })
         .optional()
         .nullable()
-        .openapi({ description: "Altura em metros", example: 1.75 }),
+        .openapi({ description: "Altura em centímetros", example: 175 }),
     academia_id: z
         .string()
         .uuid({ message: "O ID da academia deve ser um UUID válido" })
@@ -82,11 +83,12 @@ const physicalDataSchema = z.object({
         .positive({ message: "Peso deve ser um número positivo" })
         .max(500, { message: "Peso não pode exceder 500 kg" })
         .openapi({ description: "Peso em kg", example: 75.5 }),
-    altura_m: z
+    altura_cm: z
         .number()
+        .int({ message: "Altura deve ser um número inteiro de centímetros" })
         .positive({ message: "Altura deve ser um número positivo" })
-        .max(3, { message: "Altura não pode exceder 3 metros" })
-        .openapi({ description: "Altura em metros", example: 1.75 }),
+        .max(300, { message: "Altura não pode exceder 300 cm" })
+        .openapi({ description: "Altura em centímetros", example: 175 }),
 }).openapi("PhysicalDataInput");
 
 const physicalDataUpdateSchema = physicalDataSchema.partial().openapi("PhysicalDataUpdateInput");
