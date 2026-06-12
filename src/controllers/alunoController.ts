@@ -207,6 +207,20 @@ class AlunoController {
     }
   };
 
+  getHistoricoPeso = async (req: Request, res: Response) => {
+    const id = this.getRequestIdParam(req);
+    if (!id) {
+      return CommonResponse.error(res, HttpStatusCode.BAD_REQUEST.code, null, "id", [], "O id é obrigatório");
+    }
+    try {
+      const userId = (req as any).user?.id;
+      const historico = await this.service.getHistoricoPeso(id, userId);
+      return CommonResponse.success(res, historico, HttpStatusCode.OK.code);
+    } catch (error) {
+      return this.handleError(res, error, "getHistoricoPeso");
+    }
+  };
+
   private handleError(res: Response, error: unknown, context: string) {
     if (error instanceof ZodError) {
       console.warn(
