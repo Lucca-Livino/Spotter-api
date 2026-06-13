@@ -24,10 +24,17 @@ class TreinadorService {
 		this.usuarioRepository = new UsuarioRepository();
 	}
 
-	async getAllTreinadores(query: any) {
+	async getAllTreinadores(query: any, userId?: string) {
 		console.log("[TreinadorService] [getAllTreinadores] Buscando todos os treinadores");
 		const { page, limite } = treinadorQuerySchema.parse(query);
-		const resultado = await this.repository.getAllTreinadores(page, limite);
+
+		let alunoId: string | undefined;
+		if (userId) {
+			const aluno = await this.alunoRepository.findByUserId(userId);
+			alunoId = aluno?.id ?? undefined;
+		}
+
+		const resultado = await this.repository.getAllTreinadores(page, limite, alunoId);
 		console.log(`[TreinadorService] [getAllTreinadores] ${resultado.total} treinador(es) encontrado(s)`);
 		return resultado;
 	}

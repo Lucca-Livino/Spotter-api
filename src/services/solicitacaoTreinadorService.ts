@@ -29,11 +29,6 @@ class SolicitacaoTreinadorService {
             throw new Error("CONFLITO: Aluno já possui um treinador vinculado");
         }
 
-        const pendente = await this.repository.findPendenteByAlunoId(alunoEncontrado.id);
-        if (pendente) {
-            throw new Error("CONFLITO: Já existe uma solicitação pendente para este aluno");
-        }
-
         const treinadorEncontrado = await this.treinadorRepository.findById(treinador_id);
         if (!treinadorEncontrado) {
             throw new Error(`Treinador com ID ${treinador_id} não encontrado`);

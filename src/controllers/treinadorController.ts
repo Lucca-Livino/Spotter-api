@@ -56,8 +56,10 @@ class TreinadorController {
 
 		console.log("[TreinadorController] [getAllTreinadores] Requisição recebida");
 
+		const userId = (req as any).user?.id as string | undefined;
+
 		try {
-			const resultado = await this.service.getAllTreinadores(req.query);
+			const resultado = await this.service.getAllTreinadores(req.query, userId);
 			return CommonResponse.success(res, resultado, HttpStatusCode.OK.code);
 		} catch (error) {
 			return this.handleError(res, error, "getAllTreinadores");

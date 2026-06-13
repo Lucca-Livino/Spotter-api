@@ -56,7 +56,7 @@ class SolicitacaoTreinadorRepository {
         }
     }
 
-    async findAtivaPorUserId(userId: string): Promise<any | null> {
+    async findAtivaPorUserId(userId: string): Promise<any[]> {
         try {
             const rows = await this.db
                 .select({
@@ -79,12 +79,9 @@ class SolicitacaoTreinadorRepository {
                     eq(aluno.user_id, userId),
                     eq(solicitacao_treinador.status, 'PENDENTE')
                 ))
-                .orderBy(desc(solicitacao_treinador.created_at))
-                .limit(1);
+                .orderBy(desc(solicitacao_treinador.created_at));
 
-            if (rows.length === 0) return null;
-            const row = rows[0];
-            return {
+            return rows.map(row => ({
                 id: row.id,
                 aluno_id: row.aluno_id,
                 treinador_id: row.treinador_id,
@@ -99,7 +96,7 @@ class SolicitacaoTreinadorRepository {
                     especializacao: row.treinador_especializacao,
                     graduacao: row.treinador_graduacao,
                 },
-            };
+            }));
         } catch (error) {
             throw parseDatabaseError(error, "SolicitacaoTreinadorRepository.findAtivaPorUserId");
         }
