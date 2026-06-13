@@ -53,7 +53,7 @@ class SolicitacaoTreinadorController {
 
     responder = async (req: Request, res: Response) => {
         const userId = (req as any).user?.id as string | undefined;
-        const { id } = req.params;
+        const id = req.params.id as string;
         if (!userId) {
             return CommonResponse.error(res, HttpStatusCode.UNAUTHORIZED.code, null, null, [], "Não autorizado");
         }

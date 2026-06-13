@@ -1,7 +1,8 @@
 import { DataBase } from "../config/DbConnect";
 import { and, eq, desc } from "drizzle-orm";
 import { solicitacao_treinador, aluno, treinador } from "../config/db/schema";
-import { type_solicitacao_treinador, enum_status_solicitacao } from "../types/dbSchemas";
+import { type_solicitacao_treinador } from "../types/dbSchemas";
+import { enum_status_solicitacao } from "../types/enum";
 import { parseDatabaseError } from "../utils/errors/DatabaseError";
 
 class SolicitacaoTreinadorRepository {

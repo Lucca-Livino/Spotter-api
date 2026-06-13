@@ -224,7 +224,7 @@ class TreinadorController {
 		if (!userId) {
 			return CommonResponse.error(res, HttpStatusCode.UNAUTHORIZED.code, null, null, [], "Usuário não autenticado");
 		}
-		const alunoId = req.params.alunoId;
+		const alunoId = req.params.alunoId as string;
 		if (!alunoId) {
 			return CommonResponse.error(res, HttpStatusCode.BAD_REQUEST.code, null, "alunoId", [], "O alunoId é obrigatório");
 		}
