@@ -11,3 +11,5 @@ export type enum_status_serie = 'PENDENTE' | 'CONCLUIDA' | 'PULADA';
 export type enum_remetente_tipo = 'ALUNO' | 'TREINADOR';
 
 export type enum_tipo_exercicio = 'REPETICAO' | 'TEMPO' | 'DISTANCIA';
+
+export type enum_status_solicitacao = 'PENDENTE' | 'ACEITA' | 'RECUSADA';

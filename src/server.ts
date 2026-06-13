@@ -22,6 +22,7 @@ import aparelhoRoutes from './routes/aparelhoRoutes';
 import authRoutes from "./routes/authRoutes";
 import uploadRoutes from "./routes/uploadRoutes";
 import conversaRoutes from './routes/conversaRoutes';
+import solicitacaoTreinadorRoutes from './routes/solicitacaoTreinadorRoutes';
 import exerciseDbRoutes from './routes/exerciseDbRoutes';
 import mediaRoutes from './routes/mediaRoutes';
 import { initSocketIO } from './config/socketIo';
@@ -111,6 +112,7 @@ app.use('/api', aparelhoRoutes);
 app.use('/api', authRoutes);
 app.use('/api', uploadRoutes);
 app.use('/api', conversaRoutes);
+app.use('/api', solicitacaoTreinadorRoutes);
 app.use('/api', exerciseDbRoutes);
 app.use('/api', mediaRoutes);
 

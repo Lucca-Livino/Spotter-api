@@ -1,4 +1,4 @@
-import { enum_dia_semana, enum_remetente_tipo, enum_sexo, enum_status_serie, enum_status_sessao, enum_tipo_exercicio, enum_turnos } from "./enum";
+import { enum_dia_semana, enum_remetente_tipo, enum_sexo, enum_status_serie, enum_status_sessao, enum_status_solicitacao, enum_tipo_exercicio, enum_turnos } from "./enum";
 
 export type type_academia = {
     id?: string;
@@ -169,6 +169,15 @@ export type type_sessao_serie = {
     distancia_realizada_metros?: number | null;
     status?: enum_status_serie;
     observacoes?: string | null;
+}
+
+export type type_solicitacao_treinador = {
+    id?: string;
+    aluno_id: string;
+    treinador_id: string;
+    status?: enum_status_solicitacao;
+    created_at?: Date;
+    updated_at?: Date;
 }
 
 // Tipo do usuário autenticado

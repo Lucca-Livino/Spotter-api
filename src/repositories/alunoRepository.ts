@@ -42,6 +42,7 @@ class AlunoRepository {
           sexo: aluno.sexo,
           url_foto: aluno.url_foto,
           academia_id: aluno.academia_id,
+          treinador_id: aluno.treinador_id,
           peso_atual_kg: aluno.peso_atual_kg,
           altura_cm: aluno.altura_cm,
           fcm_token: aluno.fcm_token,

@@ -734,7 +734,7 @@ describe('TreinadorService.getAllTreinadores', () => {
 
         const result = await service.getAllTreinadores({});
 
-        expect(mockRepository.getAllTreinadores).toHaveBeenCalledWith(1, 10);
+        expect(mockRepository.getAllTreinadores).toHaveBeenCalledWith(1, 10, undefined);
         expect(result).toEqual(mockResult);
     });
 

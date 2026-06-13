@@ -207,6 +207,36 @@ class AlunoController {
     }
   };
 
+  getMe = async (req: Request, res: Response) => {
+    const userId = (req as any).user?.id as string | undefined;
+    if (!userId) {
+      return CommonResponse.error(res, HttpStatusCode.UNAUTHORIZED.code, null, null, [], "Usuário não autenticado");
+    }
+    try {
+      const aluno = await this.service.getAlunoByUserId(userId);
+      return CommonResponse.success(res, aluno, HttpStatusCode.OK.code);
+    } catch (error) {
+      return this.handleError(res, error, "getMe");
+    }
+  };
+
+  desvincularTreinador = async (req: Request, res: Response) => {
+    const userId = (req as any).user?.id as string | undefined;
+    if (!userId) {
+      return CommonResponse.error(res, HttpStatusCode.UNAUTHORIZED.code, null, null, [], "Usuário não autenticado");
+    }
+    try {
+      await this.service.desvincularTreinador(userId);
+      return CommonResponse.success(res, null, HttpStatusCode.OK.code, "Treinador desvinculado com sucesso");
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Erro desconhecido";
+      if (msg.startsWith("CONFLITO:")) {
+        return CommonResponse.error(res, 409, null, null, [], msg.replace("CONFLITO: ", ""));
+      }
+      return this.handleError(res, error, "desvincularTreinador");
+    }
+  };
+
   getHistoricoPeso = async (req: Request, res: Response) => {
     const id = this.getRequestIdParam(req);
     if (!id) {

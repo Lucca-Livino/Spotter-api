@@ -1,6 +1,6 @@
 import { DataBase } from "../config/DbConnect";
-import { eq, sql } from "drizzle-orm";
-import { treinador, user, treinador_academia, academia } from "../config/db/schema";
+import { eq, sql, and } from "drizzle-orm";
+import { treinador, user, treinador_academia, academia, solicitacao_treinador } from "../config/db/schema";
 import { type_treinador } from "../types/dbSchemas";
 import { parseDatabaseError } from "../utils/errors/DatabaseError";
 
@@ -103,15 +103,40 @@ class TreinadorRepository {
 		}
 	}
 
-	async getAllTreinadores(page: number, limite: number): Promise<{ dados: type_treinador[]; total: number; page: number; limite: number; totalPages: number }> {
+	async getAllTreinadores(page: number, limite: number, alunoId?: string): Promise<{ dados: any[]; total: number; page: number; limite: number; totalPages: number }> {
 		try {
 			const offset = (page - 1) * limite;
-			const [dados, countResult] = await Promise.all([
-				this.db.select().from(treinador).limit(limite).offset(offset),
+			const [rows, countResult] = await Promise.all([
+				alunoId
+					? this.db
+						.select({
+							id: treinador.id,
+							nome: treinador.nome,
+							cref: treinador.cref,
+							especializacao: treinador.especializacao,
+							graduacao: treinador.graduacao,
+							turnos: treinador.turnos,
+							url_foto: treinador.url_foto,
+							academia_id: treinador.academia_id,
+							status_conta: treinador.status_conta,
+							user_id: treinador.user_id,
+							solicitacao_status: solicitacao_treinador.status,
+						})
+						.from(treinador)
+						.leftJoin(
+							solicitacao_treinador,
+							and(
+								eq(solicitacao_treinador.treinador_id, treinador.id),
+								eq(solicitacao_treinador.aluno_id, alunoId)
+							)
+						)
+						.limit(limite)
+						.offset(offset)
+					: this.db.select().from(treinador).limit(limite).offset(offset),
 				this.db.select({ count: sql<number>`count(*)` }).from(treinador),
 			]);
 			const total = Number(countResult[0].count);
-			return { dados: dados as unknown as type_treinador[], total, page, limite, totalPages: Math.ceil(total / limite) };
+			return { dados: rows as any[], total, page, limite, totalPages: Math.ceil(total / limite) };
 		} catch (error) {
 			throw parseDatabaseError(error, "TreinadorRepository.getAllTreinadores");
 		}
