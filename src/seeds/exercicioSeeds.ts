@@ -59,7 +59,7 @@ export const EXERCICIO_EXDB_NOME: Record<string, string> = {
     "Supino Inclinado com Halter":                   "dumbbell incline bench press",
     "Supino Declinado com Barra":                    "barbell decline bench press",
     "Crucifixo com Halter":                          "dumbbell fly",
-    "Crossover na Polia":                            "cable standing up straight crossovers",
+    "Crossover na Polia":                            "cable crossover",
     "Flexão de Braço":                               "push-up",
     "Supino na Máquina Smith":                       "smith bench press",
     // COSTAS
@@ -79,7 +79,7 @@ export const EXERCICIO_EXDB_NOME: Record<string, string> = {
     "Levantamento Terra com Perna Estendida com Barra": "barbell stiff leg deadlift",
     "Afundo com Halter":                             "dumbbell lunge",
     "Elevação de Panturrilha em Pé":                 "standing calf raise",
-    "Agachamento Sumô com Halter":                   "smith sumo squat",
+    "Agachamento Sumô com Halter":                   "dumbbell sumo squat",
     "Elevação de Quadril com Barra":                 "barbell hip thrust",
     // BRAÇOS
     "Rosca Direta com Barra":                        "barbell biceps curl",
@@ -106,7 +106,7 @@ export const EXERCICIO_EXDB_NOME: Record<string, string> = {
     "Roda Abdominal":                                "standing wheel rollerout",
     "Abdominal na Polia":                            "cable kneeling crunch",
     "Prancha Lateral":                               "side plank",
-    "Torção Russa com Bola Medicinal":               "assisted motion russian twist",
+    "Torção Russa com Bola Medicinal":               "russian twist",
     "Abdominal no Banco Declinado":                  "decline crunch",
     // PESCOÇO
     "Extensão de Pescoço com Halter":                "weighted seated neck extension (with head harness)",
@@ -134,12 +134,12 @@ export const EXERCICIO_EXDB_NOME: Record<string, string> = {
     "Abdominal Oblíquo":                             "oblique crunch",
     "Elevação de Pernas no Chão":                    "leg raises",
     // CARDIO
-    "Corrida na Esteira":                            "walking on incline treadmill",
+    "Corrida na Esteira":                            "run",
     "Pedalar na Bicicleta Ergométrica":              "stationary bike walk",
     "Elíptico":                                      "walk elliptical cross trainer",
     "Pulo com Corda":                                "jump rope",
     "Burpee":                                        "burpee",
-    "Polichinelo":                                   "jack burpee",
+    "Polichinelo":                                   "jumping jacks",
     "Escalador":                                     "mountain climber",
     // CARDIO (adicional)
     "Agachamento com Salto":                         "squat jump",
