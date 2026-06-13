@@ -22,7 +22,7 @@ class AlunoRepository {
           url_foto: aluno.url_foto,
           academia_id: aluno.academia_id,
           peso_atual_kg: aluno.peso_atual_kg,
-          altura_m: aluno.altura_m,
+          altura_cm: aluno.altura_cm,
           fcm_token: aluno.fcm_token,
           academia_nome: academia.nome,
         })
@@ -79,7 +79,7 @@ class AlunoRepository {
           url_foto: urlFotoFinal,
           academia_id,
           peso_atual_kg: restStudent.peso_atual_kg?.toString() ?? null,
-          altura_m: restStudent.altura_m?.toString() ?? null,
+          altura_cm: restStudent.altura_cm ?? null,
         } as any;
 
         // 2. Inserir Aluno
@@ -226,7 +226,7 @@ class AlunoRepository {
       const updateData = {
         ...alunoEditado,
         peso_atual_kg: alunoEditado.peso_atual_kg?.toString(),
-        altura_m: alunoEditado.altura_m?.toString(),
+        altura_cm: alunoEditado.altura_cm ?? undefined,
       } as any;
         
       const resultado = await this.db.transaction(async (tx) => {

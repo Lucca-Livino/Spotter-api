@@ -103,7 +103,7 @@ export const aluno = pgTable('aluno', {
     is_admin: boolean('is_admin').notNull().default(false),
     status_conta: boolean('status_conta').notNull().default(true),
     peso_atual_kg: decimal('peso_atual_kg', { precision: 5, scale: 2 }),
-    altura_m: decimal('altura_m', { precision: 3, scale: 2 }),
+    altura_cm: integer('altura_cm'),
     created_at: timestamp('created_at').defaultNow().notNull(),
     fcm_token: text('fcm_token'),
     academia_id: uuid('academia_id').notNull().references(() => academia.id),
@@ -120,8 +120,8 @@ export const aluno_academia = pgTable('aluno_academia', {
 export const avaliacao_fisica = pgTable('avaliacao_fisica', {
     id: uuid('id').defaultRandom().primaryKey(),
     data_avaliacao: date('data_avaliacao').notNull().default(sql`CURRENT_DATE`),
-    peso_kg: decimal('peso_kg', { precision: 5, scale: 2 }).notNull(), // Ex: 85.50
-    altura_m: decimal('altura_m', { precision: 3, scale: 2 }).notNull(), // Ex: 1.75
+    peso_kg: decimal('peso_kg', { precision: 5, scale: 2 }).notNull(),
+    altura_cm: integer('altura_cm'),
     aluno_id: uuid('aluno_id').notNull().references(() => aluno.id, { onDelete: 'cascade' }),
 });
 
