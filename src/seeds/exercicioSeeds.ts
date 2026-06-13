@@ -112,6 +112,27 @@ export const EXERCICIO_EXDB_NOME: Record<string, string> = {
     "Extensão de Pescoço com Halter":                "weighted seated neck extension (with head harness)",
     "Flexão de Pescoço com Elástico":                "weighted lying neck flexion (with head harness)",
     "Inclinação Lateral de Pescoço":                 "neck side stretch",
+    // PEITO (adicional)
+    "Supino com Halter":                             "dumbbell bench press",
+    // COSTAS (adicional)
+    "Remada Alta com Barra":                         "barbell upright row",
+    "Hiperextensão Lombar":                          "hyperextension",
+    // PERNAS (adicional)
+    "Afundo Búlgaro com Halter":                     "dumbbell bulgarian split squat",
+    "Elevação de Panturrilha Sentado":               "seated calf raise",
+    "Agachamento Goblet com Halter":                 "dumbbell goblet squat",
+    // BRAÇOS (adicional)
+    "Rosca Alternada com Halter":                    "dumbbell alternate bicep curl",
+    "Extensão de Tríceps com Halter":                "dumbbell one arm tricep extension",
+    "Kickback de Tríceps com Halter":                "dumbbell kickback",
+    "Rosca Inversa com Barra":                       "barbell reverse biceps curl",
+    // OMBROS (adicional)
+    "Arnold Press com Halter":                       "dumbbell arnold press",
+    "Remada Alta com Halter":                        "dumbbell upright row",
+    // ABDOMEN (adicional)
+    "Abdominal Bicicleta":                           "bicycle crunch",
+    "Abdominal Oblíquo":                             "oblique crunch",
+    "Elevação de Pernas no Chão":                    "leg raises",
     // CARDIO
     "Corrida na Esteira":                            "walking on incline treadmill",
     "Pedalar na Bicicleta Ergométrica":              "stationary bike walk",
@@ -120,6 +141,9 @@ export const EXERCICIO_EXDB_NOME: Record<string, string> = {
     "Burpee":                                        "burpee",
     "Polichinelo":                                   "jack burpee",
     "Escalador":                                     "mountain climber",
+    // CARDIO (adicional)
+    "Agachamento com Salto":                         "squat jump",
+    "Step Up com Halter":                            "dumbbell step-up",
 };
 
 const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
@@ -174,6 +198,13 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             primario: "Peitoral Maior",
             secundarios: ["Tríceps"],
             aparelhos: ["Máquina Smith", "Banco Reto"],
+        },
+        {
+            nome: "Supino com Halter",
+            descricao: "Deitado no banco reto, pressione os halteres do nível do peito até a extensão dos braços. Maior amplitude de movimento e ativação bilateral independente comparado ao supino com barra.",
+            primario: "Peitoral Maior",
+            secundarios: ["Tríceps", "Deltóide Anterior"],
+            aparelhos: ["Halter", "Banco Reto"],
         },
     ],
 
@@ -234,6 +265,20 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             primario: "Latíssimo do Dorso",
             secundarios: ["Bíceps", "Rombóide"],
             aparelhos: ["Peso Corporal"],
+        },
+        {
+            nome: "Remada Alta com Barra",
+            descricao: "Em pé com a barra na frente, puxe verticalmente até a linha do queixo com os cotovelos acima dos ombros. Ativa trapézio superior, deltóides laterais e bíceps.",
+            primario: "Trapézio",
+            secundarios: ["Deltóide Lateral", "Bíceps"],
+            aparelhos: ["Barra Reta"],
+        },
+        {
+            nome: "Hiperextensão Lombar",
+            descricao: "Apoiado no banco romano com os quadris na borda, desça o tronco e retorne à posição horizontal contraindo os eretores da coluna e glúteos. Exercício essencial para lombar.",
+            primario: "Eretores da Coluna",
+            secundarios: ["Glúteos", "Isquiotibiais"],
+            aparelhos: ["Máquina de Alavanca"],
         },
     ],
 
@@ -302,6 +347,27 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             secundarios: ["Isquiotibiais"],
             aparelhos: ["Barra Reta", "Banco Reto"],
         },
+        {
+            nome: "Afundo Búlgaro com Halter",
+            descricao: "Com o pé traseiro apoiado em um banco, desça o joelho da perna dianteira até próximo ao chão e retorne. Exercício unilateral de alta ativação de quadríceps e glúteos com grande demanda de equilíbrio.",
+            primario: "Quadríceps",
+            secundarios: ["Glúteos", "Isquiotibiais"],
+            aparelhos: ["Halter", "Banco Reto"],
+        },
+        {
+            nome: "Elevação de Panturrilha Sentado",
+            descricao: "Sentado na máquina com a almofada sobre os joelhos, eleve os calcanhares o máximo possível e desça controladamente. Exercício de isolamento com ênfase no músculo sóleo.",
+            primario: "Panturrilha",
+            secundarios: [],
+            aparelhos: ["Máquina de Panturrilha"],
+        },
+        {
+            nome: "Agachamento Goblet com Halter",
+            descricao: "Segure um halter na vertical com ambas as mãos na frente do peito e agache profundamente mantendo o tronco ereto. Excelente para iniciantes e mobilidade de quadril.",
+            primario: "Quadríceps",
+            secundarios: ["Glúteos", "Adutores"],
+            aparelhos: ["Halter"],
+        },
     ],
 
     // BRAÇOS
@@ -362,6 +428,34 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             secundarios: ["Antebraço"],
             aparelhos: ["Barra EZ", "Polia / Cabo"],
         },
+        {
+            nome: "Rosca Alternada com Halter",
+            descricao: "Em pé ou sentado, flexione um braço de cada vez elevando o halter até o ombro em pegada supinada. Permite maior concentração em cada lado e maior amplitude de rotação do antebraço.",
+            primario: "Bíceps",
+            secundarios: ["Braquial", "Antebraço"],
+            aparelhos: ["Halter"],
+        },
+        {
+            nome: "Extensão de Tríceps com Halter",
+            descricao: "Sentado ou em pé, segure o halter com ambas as mãos atrás da cabeça e estenda os cotovelos elevando o halter. Exercício de longa tensão para a cabeça longa do tríceps.",
+            primario: "Tríceps",
+            secundarios: [],
+            aparelhos: ["Halter"],
+        },
+        {
+            nome: "Kickback de Tríceps com Halter",
+            descricao: "Inclinado para frente com cotovelo fixo na linha do tronco, estenda o antebraço para trás até a extensão total. Exercício de isolamento com máxima contração do tríceps.",
+            primario: "Tríceps",
+            secundarios: [],
+            aparelhos: ["Halter"],
+        },
+        {
+            nome: "Rosca Inversa com Barra",
+            descricao: "Em pé com a barra em pegada pronada (palmas para baixo), flexione os cotovelos elevando a barra. Ativa fortemente os extensores do antebraço e a porção braquiorradial.",
+            primario: "Antebraço",
+            secundarios: ["Bíceps", "Braquial"],
+            aparelhos: ["Barra Reta"],
+        },
     ],
 
     // OMBROS
@@ -421,6 +515,20 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             primario: "Deltóide Lateral",
             secundarios: [],
             aparelhos: ["Polia / Cabo"],
+        },
+        {
+            nome: "Arnold Press com Halter",
+            descricao: "Inicie com os halteres na frente do rosto com palmas para dentro, e ao pressionar para cima gire os pulsos de modo que as palmas fiquem para fora no topo. Exercício criado por Arnold Schwarzenegger que ativa os três feixes do deltóide.",
+            primario: "Deltóide Anterior",
+            secundarios: ["Deltóide Lateral", "Tríceps"],
+            aparelhos: ["Halter"],
+        },
+        {
+            nome: "Remada Alta com Halter",
+            descricao: "Em pé com os halteres à frente, puxe verticalmente até a linha do queixo elevando os cotovelos acima dos ombros. Alternativa unilateral à remada alta com barra com maior liberdade de movimento.",
+            primario: "Trapézio",
+            secundarios: ["Deltóide Lateral", "Bíceps"],
+            aparelhos: ["Halter"],
         },
     ],
 
@@ -484,6 +592,27 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             secundarios: ["Oblíquos"],
             aparelhos: ["Banco Declinado"],
         },
+        {
+            nome: "Abdominal Bicicleta",
+            descricao: "Deitado com mãos atrás da cabeça, alterne levar cada cotovelo ao joelho oposto enquanto estende a perna contrária. Um dos exercícios mais eficazes para ativação de abdominais e oblíquos simultaneamente.",
+            primario: "Abdominais",
+            secundarios: ["Oblíquos", "Flexores do Quadril"],
+            aparelhos: ["Peso Corporal"],
+        },
+        {
+            nome: "Abdominal Oblíquo",
+            descricao: "Deitado com joelhos dobrados e os dois lados do quadril rotacionados para um lado, execute o crunch em direção ao joelho superior. Isolamento direto do oblíquo.",
+            primario: "Oblíquos",
+            secundarios: ["Abdominais"],
+            aparelhos: ["Peso Corporal"],
+        },
+        {
+            nome: "Elevação de Pernas no Chão",
+            descricao: "Deitado com as costas no chão e as mãos sob o lombar, eleve as pernas estendidas até 90° e desça controladamente sem tocar o chão. Trabalha reto abdominal inferior e flexores do quadril.",
+            primario: "Abdominais",
+            secundarios: ["Flexores do Quadril"],
+            aparelhos: ["Peso Corporal"],
+        },
     ],
 
     // PESCOÇO
@@ -533,6 +662,7 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             primario: "Sistema Cardiovascular",
             secundarios: [],
             aparelhos: ["Esteira"],
+            tipo: "DISTANCIA",
         },
         {
             nome: "Pedalar na Bicicleta Ergométrica",
@@ -540,6 +670,7 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             primario: "Sistema Cardiovascular",
             secundarios: ["Quadríceps", "Isquiotibiais"],
             aparelhos: ["Bicicleta Ergométrica"],
+            tipo: "DISTANCIA",
         },
         {
             nome: "Elíptico",
@@ -547,6 +678,7 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             primario: "Sistema Cardiovascular",
             secundarios: [],
             aparelhos: ["Elíptico"],
+            tipo: "DISTANCIA",
         },
         {
             nome: "Pulo com Corda",
@@ -554,6 +686,7 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             primario: "Sistema Cardiovascular",
             secundarios: ["Panturrilha"],
             aparelhos: ["Corda de Pular"],
+            tipo: "TEMPO",
         },
         {
             nome: "Burpee",
@@ -575,6 +708,21 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             primario: "Sistema Cardiovascular",
             secundarios: ["Abdominais", "Quadríceps"],
             aparelhos: ["Peso Corporal"],
+            tipo: "TEMPO",
+        },
+        {
+            nome: "Agachamento com Salto",
+            descricao: "Execute um agachamento completo e ao subir realize um salto explosivo, aterrissando suavemente voltando ao agachamento. Exercício pliométrico que combina força de quadríceps com potência cardiovascular.",
+            primario: "Sistema Cardiovascular",
+            secundarios: ["Quadríceps", "Glúteos"],
+            aparelhos: ["Peso Corporal"],
+        },
+        {
+            nome: "Step Up com Halter",
+            descricao: "Segurando halteres, suba alternando os pés em um banco ou caixa de altura moderada. Exercício funcional que melhora força unilateral de pernas e capacidade aeróbica.",
+            primario: "Sistema Cardiovascular",
+            secundarios: ["Quadríceps", "Glúteos"],
+            aparelhos: ["Halter", "Banco Reto"],
         },
     ],
 };

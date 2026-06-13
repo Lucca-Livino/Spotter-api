@@ -10,10 +10,12 @@ type TreinoSeedInput = {
     exercicios: Array<{
         nome: string;
         series: number;
-        repeticoes: string;
+        repeticoes: string | null;
         carga_sugerida: string | null;
         tempo_descanso_segundos: number;
         ordem_execucao: number;
+        duracao_sugerida_segundos?: number | null;
+        distancia_sugerida_metros?: number | null;
     }>;
 };
 
@@ -363,7 +365,8 @@ const treinosSeed: TreinoSeedInput[] = [
             {
                 nome: 'Prancha',
                 series: 3,
-                repeticoes: '45',
+                repeticoes: null,
+                duracao_sugerida_segundos: 60,
                 carga_sugerida: null,
                 tempo_descanso_segundos: 60,
                 ordem_execucao: 6,
@@ -483,6 +486,121 @@ const treinosSeed: TreinoSeedInput[] = [
         ],
     },
     {
+        nome: 'Treino K - Braços',
+        descricao: 'Treino dedicado a bíceps e tríceps para Carlos, com volume alto e exercícios variados para máxima hipertrofia dos braços.',
+        alunoNome: 'Carlos Eduardo Silva',
+        treinadorNome: null,
+        exercicios: [
+            {
+                nome: 'Rosca Direta com Barra',
+                series: 4,
+                repeticoes: '10-12',
+                carga_sugerida: '30.00',
+                tempo_descanso_segundos: 75,
+                ordem_execucao: 1,
+            },
+            {
+                nome: 'Extensão de Tríceps na Polia',
+                series: 4,
+                repeticoes: '12-15',
+                carga_sugerida: null,
+                tempo_descanso_segundos: 60,
+                ordem_execucao: 2,
+            },
+            {
+                nome: 'Rosca Alternada com Halter',
+                series: 3,
+                repeticoes: '10-12',
+                carga_sugerida: '16.00',
+                tempo_descanso_segundos: 60,
+                ordem_execucao: 3,
+            },
+            {
+                nome: 'Tríceps Testa com Barra EZ',
+                series: 3,
+                repeticoes: '10-12',
+                carga_sugerida: '25.00',
+                tempo_descanso_segundos: 75,
+                ordem_execucao: 4,
+            },
+            {
+                nome: 'Rosca Martelo com Halter',
+                series: 3,
+                repeticoes: '10-12',
+                carga_sugerida: '18.00',
+                tempo_descanso_segundos: 60,
+                ordem_execucao: 5,
+            },
+            {
+                nome: 'Kickback de Tríceps com Halter',
+                series: 3,
+                repeticoes: '12-15',
+                carga_sugerida: '12.00',
+                tempo_descanso_segundos: 60,
+                ordem_execucao: 6,
+            },
+        ],
+    },
+    {
+        nome: 'Treino L - Força e Condicionamento',
+        descricao: 'Treino completo de Carlos combinando força com repetições, resistência isométrica e condicionamento aeróbico com distância. Cobre os três tipos de exercício do app.',
+        alunoNome: 'Carlos Eduardo Silva',
+        treinadorNome: null,
+        exercicios: [
+            {
+                nome: 'Levantamento Terra com Barra',
+                series: 4,
+                repeticoes: '5-6',
+                carga_sugerida: '100.00',
+                tempo_descanso_segundos: 180,
+                ordem_execucao: 1,
+            },
+            {
+                nome: 'Supino com Barra',
+                series: 3,
+                repeticoes: '8-10',
+                carga_sugerida: '65.00',
+                tempo_descanso_segundos: 120,
+                ordem_execucao: 2,
+            },
+            {
+                nome: 'Puxada Frontal na Polia',
+                series: 3,
+                repeticoes: '10-12',
+                carga_sugerida: '60.00',
+                tempo_descanso_segundos: 90,
+                ordem_execucao: 3,
+            },
+            {
+                nome: 'Prancha',
+                series: 3,
+                repeticoes: null,
+                duracao_sugerida_segundos: 60,
+                carga_sugerida: null,
+                tempo_descanso_segundos: 60,
+                ordem_execucao: 4,
+            },
+            {
+                nome: 'Prancha Lateral',
+                series: 2,
+                repeticoes: null,
+                duracao_sugerida_segundos: 45,
+                carga_sugerida: null,
+                tempo_descanso_segundos: 60,
+                ordem_execucao: 5,
+            },
+            {
+                nome: 'Corrida na Esteira',
+                series: 1,
+                repeticoes: null,
+                distancia_sugerida_metros: 3000,
+                carga_sugerida: null,
+                tempo_descanso_segundos: 0,
+                ordem_execucao: 6,
+            },
+        ],
+    },
+    {
         nome: 'Treino J - Costas e Bíceps',
         descricao: 'Treino de costas completo com isolamento de bíceps ao final para máxima ativação.',
         alunoNome: 'José Lucas Brandão Montes',
@@ -584,8 +702,10 @@ export async function seedTreinos(): Promise<void> {
                 treino_id: treinoCriado.id,
                 exercicio_id: exercicioEncontrado.id,
                 series: item.series,
-                repeticoes: item.repeticoes,
+                repeticoes: item.repeticoes ?? null,
                 carga_sugerida: item.carga_sugerida,
+                duracao_sugerida_segundos: item.duracao_sugerida_segundos ?? null,
+                distancia_sugerida_metros: item.distancia_sugerida_metros ?? null,
                 tempo_descanso_segundos: item.tempo_descanso_segundos,
                 ordem_execucao: item.ordem_execucao,
             });
