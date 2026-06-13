@@ -1,8 +1,14 @@
 import { DataBase } from "../config/DbConnect";
-import { aluno, aluno_academia } from "../config/db/schema";
+import { aluno, aluno_academia, avaliacao_fisica } from "../config/db/schema";
 import { user } from "../config/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "../utils/auth";
+
+function diasAtras(dias: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() - dias);
+    return d.toISOString().slice(0, 10);
+}
 
 const alunosSeed = [
     {
@@ -18,6 +24,13 @@ const alunosSeed = [
             altura_cm: 180,
         },
         academiaIndex: 0,
+        historicoAvaliacao: [
+            { diasAtrasNum: 90, peso_kg: "88.00", altura_cm: 180 },
+            { diasAtrasNum: 63, peso_kg: "87.00", altura_cm: 180 },
+            { diasAtrasNum: 49, peso_kg: "86.50", altura_cm: 180 },
+            { diasAtrasNum: 35, peso_kg: "86.00", altura_cm: 180 },
+            { diasAtrasNum: 14, peso_kg: "85.50", altura_cm: 180 },
+        ],
     },
     {
         name: "Ana Beatriz Oliveira",
@@ -33,6 +46,11 @@ const alunosSeed = [
         },
         academiaIndex: 0,
         treinadorNome: "Marcos Antônio Rocha",
+        historicoAvaliacao: [
+            { diasAtrasNum: 60, peso_kg: "63.50", altura_cm: 165 },
+            { diasAtrasNum: 30, peso_kg: "62.80", altura_cm: 165 },
+            { diasAtrasNum: 7,  peso_kg: "62.00", altura_cm: 165 },
+        ],
     },
     {
         name: "Rafael Mendes Costa",
@@ -48,6 +66,11 @@ const alunosSeed = [
         },
         academiaIndex: 1,
         treinadorNome: "Marcos Antônio Rocha",
+        historicoAvaliacao: [
+            { diasAtrasNum: 30, peso_kg: "79.50", altura_cm: 175 },
+            { diasAtrasNum: 14, peso_kg: "78.80", altura_cm: 175 },
+            { diasAtrasNum: 3,  peso_kg: "78.20", altura_cm: 175 },
+        ],
     },
     {
         name: "Juliana Ferreira Lima",
@@ -63,6 +86,11 @@ const alunosSeed = [
         },
         academiaIndex: 2,
         treinadorNome: "Fernanda Souza Almeida",
+        historicoAvaliacao: [
+            { diasAtrasNum: 28, peso_kg: "59.00", altura_cm: 160 },
+            { diasAtrasNum: 14, peso_kg: "58.50", altura_cm: 160 },
+            { diasAtrasNum: 2,  peso_kg: "58.00", altura_cm: 160 },
+        ],
     },
     {
         name: "José Lucas Brandão Montes",
@@ -78,6 +106,11 @@ const alunosSeed = [
             altura_cm: 185,
         },
         academiaIndex: 0,
+        historicoAvaliacao: [
+            { diasAtrasNum: 40, peso_kg: "92.00", altura_cm: 185 },
+            { diasAtrasNum: 20, peso_kg: "91.00", altura_cm: 185 },
+            { diasAtrasNum: 4,  peso_kg: "90.00", altura_cm: 185 },
+        ],
     },
     {
         name: "Mariana Silva",
@@ -92,6 +125,12 @@ const alunosSeed = [
             altura_cm: 168,
         },
         academiaIndex: 1,
+        historicoAvaliacao: [
+            { diasAtrasNum: 45, peso_kg: "67.00", altura_cm: 168 },
+            { diasAtrasNum: 21, peso_kg: "66.00", altura_cm: 168 },
+            { diasAtrasNum: 7,  peso_kg: "65.50", altura_cm: 168 },
+            { diasAtrasNum: 2,  peso_kg: "65.00", altura_cm: 168 },
+        ],
     },
 ];
 
@@ -139,9 +178,34 @@ export async function seedUsuarios(academiasIds: string[], treinadores: Treinado
         aluno_id: a.id,
         academia_id: a.academia_id
     }));
-    
+
     if (alunoAcademiaValues.length > 0) {
         await DataBase.insert(aluno_academia).values(alunoAcademiaValues);
+    }
+
+    // Semear histórico de avaliação física (peso) para popular o gráfico de progressão
+    const avaliacaoValues: {
+        aluno_id: string;
+        data_avaliacao: string;
+        peso_kg: string;
+        altura_cm: number | null;
+    }[] = [];
+
+    for (let i = 0; i < alunosSeed.length; i++) {
+        const seed = alunosSeed[i];
+        const alunoId = alunosCriados[i].id;
+        for (const entrada of seed.historicoAvaliacao) {
+            avaliacaoValues.push({
+                aluno_id: alunoId,
+                data_avaliacao: diasAtras(entrada.diasAtrasNum),
+                peso_kg: entrada.peso_kg,
+                altura_cm: entrada.altura_cm,
+            });
+        }
+    }
+
+    if (avaliacaoValues.length > 0) {
+        await DataBase.insert(avaliacao_fisica).values(avaliacaoValues);
     }
 
     return alunosCriados.map((a) => a.id);
