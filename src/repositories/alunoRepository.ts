@@ -1,8 +1,29 @@
 import { DataBase } from "../config/DbConnect";
-import { desc, eq, sql } from "drizzle-orm";
+import { asc, desc, eq, sql } from "drizzle-orm";
 import { aluno, user, avaliacao_fisica, aluno_academia, academia } from "../config/db/schema";
 import { type_aluno } from "../types/dbSchemas";
 import { parseDatabaseError } from "../utils/errors/DatabaseError";
+
+export interface HistoricoPesoEntrada {
+    id: string;
+    data_avaliacao: string;
+    peso_kg: number;
+    altura_cm: number | null;
+    imc: number | null;
+}
+
+export interface HistoricoPesoResponse {
+    entradas: HistoricoPesoEntrada[];
+    metricas: {
+        peso_atual_kg: number | null;
+        peso_minimo_kg: number | null;
+        peso_maximo_kg: number | null;
+        variacao_total_kg: number | null;
+        variacao_ultima_semana_kg: number | null;
+        tendencia: 'SUBINDO' | 'DESCENDO' | 'ESTAVEL' | null;
+        total_registros: number;
+    };
+}
 
 class AlunoRepository {
   private db: typeof DataBase;
@@ -23,7 +44,7 @@ class AlunoRepository {
           academia_id: aluno.academia_id,
           treinador_id: aluno.treinador_id,
           peso_atual_kg: aluno.peso_atual_kg,
-          altura_m: aluno.altura_m,
+          altura_cm: aluno.altura_cm,
           fcm_token: aluno.fcm_token,
           academia_nome: academia.nome,
         })
@@ -80,7 +101,7 @@ class AlunoRepository {
           url_foto: urlFotoFinal,
           academia_id,
           peso_atual_kg: restStudent.peso_atual_kg?.toString() ?? null,
-          altura_m: restStudent.altura_m?.toString() ?? null,
+          altura_cm: restStudent.altura_cm ?? null,
         } as any;
 
         // 2. Inserir Aluno
@@ -227,7 +248,7 @@ class AlunoRepository {
       const updateData = {
         ...alunoEditado,
         peso_atual_kg: alunoEditado.peso_atual_kg?.toString(),
-        altura_m: alunoEditado.altura_m?.toString(),
+        altura_cm: alunoEditado.altura_cm ?? undefined,
       } as any;
         
       const resultado = await this.db.transaction(async (tx) => {
@@ -264,6 +285,92 @@ class AlunoRepository {
       return resultado as unknown as type_aluno;
     } catch (error) {
       throw parseDatabaseError(error, "AlunoRepository.update");
+    }
+  }
+
+  async registrarPeso(alunoId: string, pesoKg: number, alturaCm?: number | null): Promise<void> {
+    try {
+      await this.db.insert(avaliacao_fisica).values({
+        aluno_id: alunoId,
+        peso_kg: pesoKg.toString(),
+        altura_cm: alturaCm ?? null,
+      });
+    } catch (error) {
+      throw parseDatabaseError(error, "AlunoRepository.registrarPeso");
+    }
+  }
+
+  async getHistoricoPeso(alunoId: string): Promise<HistoricoPesoResponse> {
+    try {
+      const rows = await this.db
+        .select({
+          id: avaliacao_fisica.id,
+          data_avaliacao: avaliacao_fisica.data_avaliacao,
+          peso_kg: avaliacao_fisica.peso_kg,
+          altura_cm: avaliacao_fisica.altura_cm,
+        })
+        .from(avaliacao_fisica)
+        .where(eq(avaliacao_fisica.aluno_id, alunoId))
+        .orderBy(asc(avaliacao_fisica.data_avaliacao));
+
+      const entradas: HistoricoPesoEntrada[] = rows.map((r) => {
+        const peso = parseFloat(r.peso_kg);
+        const imc = r.altura_cm && r.altura_cm > 0
+          ? Math.round((peso / Math.pow(r.altura_cm / 100, 2)) * 10) / 10
+          : null;
+        return {
+          id: r.id,
+          data_avaliacao: typeof r.data_avaliacao === 'string' ? r.data_avaliacao : (r.data_avaliacao as Date).toISOString().slice(0, 10),
+          peso_kg: Math.round(peso * 100) / 100,
+          altura_cm: r.altura_cm,
+          imc,
+        };
+      });
+
+      const pesos = entradas.map((e) => e.peso_kg);
+      const peso_atual_kg = pesos.length > 0 ? pesos[pesos.length - 1] : null;
+      const peso_minimo_kg = pesos.length > 0 ? Math.min(...pesos) : null;
+      const peso_maximo_kg = pesos.length > 0 ? Math.max(...pesos) : null;
+      const variacao_total_kg = pesos.length >= 2
+        ? Math.round((pesos[pesos.length - 1] - pesos[0]) * 100) / 100
+        : null;
+
+      // Variação última semana: diferença entre peso atual e registro mais próximo de 7 dias atrás
+      let variacao_ultima_semana_kg: number | null = null;
+      if (pesos.length >= 2) {
+        const umaSemanaAtras = new Date();
+        umaSemanaAtras.setDate(umaSemanaAtras.getDate() - 7);
+        const anteriores = entradas.filter((e) => new Date(e.data_avaliacao) <= umaSemanaAtras);
+        const semanaPast = anteriores[anteriores.length - 1];
+        if (semanaPast && peso_atual_kg !== null) {
+          variacao_ultima_semana_kg = Math.round((peso_atual_kg - semanaPast.peso_kg) * 100) / 100;
+        }
+      }
+
+      // Tendência: baseada nos últimos 3 registros
+      let tendencia: 'SUBINDO' | 'DESCENDO' | 'ESTAVEL' | null = null;
+      if (pesos.length >= 2) {
+        const ultimos = pesos.slice(-3);
+        const diff = ultimos[ultimos.length - 1] - ultimos[0];
+        if (diff > 0.5) tendencia = 'SUBINDO';
+        else if (diff < -0.5) tendencia = 'DESCENDO';
+        else tendencia = 'ESTAVEL';
+      }
+
+      return {
+        entradas,
+        metricas: {
+          peso_atual_kg,
+          peso_minimo_kg,
+          peso_maximo_kg,
+          variacao_total_kg,
+          variacao_ultima_semana_kg,
+          tendencia,
+          total_registros: entradas.length,
+        },
+      };
+    } catch (error) {
+      throw parseDatabaseError(error, "AlunoRepository.getHistoricoPeso");
     }
   }
 }

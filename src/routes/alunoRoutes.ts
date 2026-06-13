@@ -23,6 +23,7 @@ const alunoController = new AlunoController();
 router
     .get('/alunos', authMiddleware, alunoController.getAllAlunos)
     .get('/alunos/me', authMiddleware, alunoController.getMe)
+    .get('/alunos/:id/historico-peso', authMiddleware, alunoController.getHistoricoPeso)
     .get('/alunos/:id', authMiddleware, alunoController.getAlunoById)
     .post('/alunos', authMiddleware, upload.single('foto'), alunoController.createAluno)
     .patch('/alunos/:id', authMiddleware, upload.single('foto'), alunoController.updateAluno)

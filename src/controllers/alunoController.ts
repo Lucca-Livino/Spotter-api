@@ -107,7 +107,7 @@ class AlunoController {
         url_foto: fotoUrl || body.url_foto || null,
         status_conta: body.status_conta ?? true,
         peso_atual_kg: body.peso_atual_kg,
-        altura_m: body.altura_m,
+        altura_cm: body.altura_cm,
         academia_id: body.academia_id,
         treinador_id: body.treinador_id ?? null,
       };
@@ -234,6 +234,20 @@ class AlunoController {
         return CommonResponse.error(res, 409, null, null, [], msg.replace("CONFLITO: ", ""));
       }
       return this.handleError(res, error, "desvincularTreinador");
+    }
+  };
+
+  getHistoricoPeso = async (req: Request, res: Response) => {
+    const id = this.getRequestIdParam(req);
+    if (!id) {
+      return CommonResponse.error(res, HttpStatusCode.BAD_REQUEST.code, null, "id", [], "O id é obrigatório");
+    }
+    try {
+      const userId = (req as any).user?.id;
+      const historico = await this.service.getHistoricoPeso(id, userId);
+      return CommonResponse.success(res, historico, HttpStatusCode.OK.code);
+    } catch (error) {
+      return this.handleError(res, error, "getHistoricoPeso");
     }
   };
 

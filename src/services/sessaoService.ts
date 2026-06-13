@@ -3,7 +3,7 @@ import UsuarioRepository from '../repositories/usuarioRepository';
 import { sessaoSchema, sessaoIdSchema, sessaoListQuerySchema, SessaoListQuery, sessaoUpdateSchema, sessaoExercicioUpdateSchema, exercicioIdSchema, sessaoSeriesUpdateSchema, SessaoSeriesUpdate, reordenarExerciciosSchema, ReordenarExerciciosInput } from '../utils/validations/sessaoValidation';
 import { ZodError } from 'zod';
 import { type_sessao_exercicio, type_sessao_serie, type_sessao_treino } from '../types/dbSchemas';
-import { notificarSessaoFinalizada, notificarSessaoIniciada, notificarTreinoConcluidoTreinador } from '../integrations/notificacoes';
+import { notificarSessaoFinalizada, notificarSessaoIniciada, notificarSessaoCancelada, notificarTreinoConcluidoTreinador } from '../integrations/notificacoes';
 import { DataBase } from '../config/DbConnect';
 import { aluno, treinador, user } from '../config/db/schema';
 import { eq } from 'drizzle-orm';
@@ -68,15 +68,9 @@ class SessaoService {
             // Enviar notificação push (não-bloqueante)
             void (async () => {
                 try {
-                    const alunoData = await DataBase.select({ fcm_token: aluno.fcm_token })
-                        .from(aluno)
-                        .where(eq(aluno.id, perfil.alunoId!))
-                        .limit(1);
-
-                    const fcmToken = alunoData[0]?.fcm_token;
-                    if (fcmToken) {
-                        await notificarSessaoIniciada(fcmToken, treinoComExercicios.nome ?? 'Treino');
-                    }
+                    const alunoUserId = userId; // userId já está disponível no contexto
+                    console.log(`[SessaoService] Notificando usuário: ${alunoUserId}`);
+                    await notificarSessaoIniciada(alunoUserId, treinoComExercicios.nome ?? 'Treino');
                 } catch (e) {
                     console.error('[SessaoService] Erro ao enviar notificação de início:', e);
                 }
@@ -419,7 +413,7 @@ class SessaoService {
             try {
                 if (sessao) {
                     const alunoData = await DataBase.select({ 
-                            fcm_token: aluno.fcm_token, 
+                            user_id: aluno.user_id,
                             nome: user.name,
                             treinador_id: aluno.treinador_id
                         })
@@ -431,10 +425,9 @@ class SessaoService {
                     const alunoEncontrado = alunoData[0];
                     if (!alunoEncontrado) return;
 
-                    const fcmTokenAluno = alunoEncontrado.fcm_token;
-                    if (fcmTokenAluno && resumo) {
+                    if (resumo) {
                         await notificarSessaoFinalizada(
-                            fcmTokenAluno,
+                            alunoEncontrado.user_id,
                             sessao.treino_nome ?? 'Treino',
                             resumo.exercicios_concluidos
                         );
@@ -442,15 +435,15 @@ class SessaoService {
 
                     // Notificar o treinador, se houver
                     if (alunoEncontrado.treinador_id) {
-                        const treinadorData = await DataBase.select({ fcm_token: treinador.fcm_token })
+                        const treinadorData = await DataBase.select({ user_id: treinador.user_id })
                             .from(treinador)
                             .where(eq(treinador.id, alunoEncontrado.treinador_id))
                             .limit(1);
                         
-                        const fcmTokenTreinador = treinadorData[0]?.fcm_token;
-                        if (fcmTokenTreinador) {
+                        const treinadorUserId = treinadorData[0]?.user_id;
+                        if (treinadorUserId) {
                             await notificarTreinoConcluidoTreinador(
-                                fcmTokenTreinador,
+                                treinadorUserId,
                                 alunoEncontrado.nome,
                                 sessao.treino_nome ?? 'Treino'
                             );
@@ -481,7 +474,27 @@ class SessaoService {
 
         await this.repository.updateStatusFim(id, 'CANCELADA');
 
-        return await this.repository.findById(id) as SessaoComDetalhe;
+        const sessaoCancelada = await this.repository.findById(id) as SessaoComDetalhe;
+
+        // Notificar o aluno se foi o treinador quem cancelou (não-bloqueante)
+        void (async () => {
+            try {
+                const alunoData = await DataBase.select({ user_id: aluno.user_id })
+                    .from(aluno)
+                    .where(eq(aluno.id, sessaoStatus.aluno_id))
+                    .limit(1);
+
+                const alunoUserId = alunoData[0]?.user_id;
+                // Só notifica o aluno se quem cancelou não foi ele mesmo
+                if (alunoUserId && alunoUserId !== userId) {
+                    await notificarSessaoCancelada(alunoUserId, sessaoCancelada.treino_nome ?? 'Treino');
+                }
+            } catch (e) {
+                console.error('[SessaoService] Erro ao enviar notificação de cancelamento:', e);
+            }
+        })();
+
+        return sessaoCancelada;
     }
 
     async reordenarExercicios(

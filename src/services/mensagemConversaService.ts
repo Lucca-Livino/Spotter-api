@@ -46,34 +46,34 @@ class MensagemConversaService {
     // Enviar notificação push para a outra parte
     void (async () => {
       try {
-        const destinoUserId = remetenteTipo === 'TREINADOR' ? conversaAtual.aluno_id : conversaAtual.treinador_id;
+        const destinoPerfilId = remetenteTipo === 'TREINADOR' ? conversaAtual.aluno_id : conversaAtual.treinador_id;
         
-        let fcmTokenDestino: string | null | undefined = null;
+        let targetUserId: string | null = null;
         
         if (remetenteTipo === 'TREINADOR') {
             // Destino é Aluno
-            const alunoData = await DataBase.select({ fcm_token: aluno.fcm_token })
+            const alunoData = await DataBase.select({ user_id: aluno.user_id })
                 .from(aluno)
-                .where(eq(aluno.id, destinoUserId))
+                .where(eq(aluno.id, destinoPerfilId))
                 .limit(1);
-            fcmTokenDestino = alunoData[0]?.fcm_token;
+            targetUserId = alunoData[0]?.user_id || null;
         } else {
             // Destino é Treinador
-            const treinadorData = await DataBase.select({ fcm_token: treinador.fcm_token })
+            const treinadorData = await DataBase.select({ user_id: treinador.user_id })
                 .from(treinador)
-                .where(eq(treinador.id, destinoUserId))
+                .where(eq(treinador.id, destinoPerfilId))
                 .limit(1);
-            fcmTokenDestino = treinadorData[0]?.fcm_token;
+            targetUserId = treinadorData[0]?.user_id || null;
         }
 
-        if (fcmTokenDestino) {
+        if (targetUserId) {
             const remetenteData = await DataBase.select({ nome: user.name })
                 .from(user)
                 .where(eq(user.id, userId))
                 .limit(1);
             
             const nomeRemetente = remetenteData[0]?.nome ?? 'Nova mensagem';
-            await notificarNovaMensagem(fcmTokenDestino, nomeRemetente, conversaId);
+            await notificarNovaMensagem(targetUserId, nomeRemetente, conversaId);
         }
       } catch (e) {
           console.error('[MensagemConversaService] Erro ao enviar notificação de chat:', e);

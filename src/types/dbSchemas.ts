@@ -21,7 +21,7 @@ export type type_aluno = {
     is_admin?: boolean;
     status_conta?: boolean;
     peso_atual_kg: number;
-    altura_m: number;
+    altura_cm: number | null;
     created_at?: Date;
     academia_id: string;
     treinador_id?: string | null;
@@ -29,9 +29,9 @@ export type type_aluno = {
 
 export type type_avaliacao_fisica = {
     id?: string;
-    data_avaliacao: Date;
+    data_avaliacao?: Date;
     peso_kg: number;
-    altura_m: number;
+    altura_cm?: number | null;
     aluno_id: string;
 }
 
