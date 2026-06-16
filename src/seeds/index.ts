@@ -23,6 +23,7 @@ async function runSeeds() {
                 treino_exercicio, treino, exercicio_aparelho, exercicio_musculo,
                 exercicio, aparelho, musculo, treinador_academia, treinador,
                 avaliacao_fisica, aluno_academia, aluno, academia,
+                solicitacao_treinador,
                 session, account, verification, "user"
             CASCADE;
         `);
