@@ -24,10 +24,17 @@ class TreinadorService {
 		this.usuarioRepository = new UsuarioRepository();
 	}
 
-	async getAllTreinadores(query: any) {
+	async getAllTreinadores(query: any, userId?: string) {
 		console.log("[TreinadorService] [getAllTreinadores] Buscando todos os treinadores");
 		const { page, limite } = treinadorQuerySchema.parse(query);
-		const resultado = await this.repository.getAllTreinadores(page, limite);
+
+		let alunoId: string | undefined;
+		if (userId) {
+			const aluno = await this.alunoRepository.findByUserId(userId);
+			alunoId = aluno?.id ?? undefined;
+		}
+
+		const resultado = await this.repository.getAllTreinadores(page, limite, alunoId);
 		console.log(`[TreinadorService] [getAllTreinadores] ${resultado.total} treinador(es) encontrado(s)`);
 		return resultado;
 	}
@@ -107,9 +114,11 @@ class TreinadorService {
 			throw new Error("Corpo da requisição é obrigatório");
 		}
 
-		treinadorUpdateSchema.parse(treinadorEditado);
+		const dadosValidados = treinadorUpdateSchema.parse(treinadorEditado);
 
-		const treinadorAtualizado = await this.repository.update(id, treinadorEditado);
+		const { academias_ids, ...dadosRestantes } = dadosValidados;
+
+		const treinadorAtualizado = await this.repository.update(id, dadosRestantes, academias_ids);
 
 		if (!treinadorAtualizado) {
 			throw new Error(`Treinador com ID ${id} não encontrado`);
@@ -120,6 +129,21 @@ class TreinadorService {
 		);
 
 		return treinadorAtualizado;
+	}
+
+	async desvincularAluno(userId: string, alunoId: string): Promise<void> {
+		const treinador = await this.repository.findByUserId(userId);
+		if (!treinador || !treinador.id) {
+			throw new Error("Perfil de treinador não encontrado");
+		}
+		const aluno = await this.alunoRepository.findById(alunoId);
+		if (!aluno || !aluno.id) {
+			throw new Error("Aluno não encontrado");
+		}
+		if (aluno.treinador_id !== treinador.id) {
+			throw new Error("FORBIDDEN: aluno não está vinculado a este treinador");
+		}
+		await this.alunoRepository.update(aluno.id, { treinador_id: null });
 	}
 
 	async getAlunosVinculados(userId: string, query: any) {

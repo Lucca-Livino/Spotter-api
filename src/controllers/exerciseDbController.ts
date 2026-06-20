@@ -209,6 +209,22 @@ class ExerciseDbController {
         }
     }
 
+    syncMidiaExerciciosLocais = async (req: Request, res: Response) => {
+        try {
+            const forcar = req.query.forcar === 'true';
+            this.service.resetRequests();
+            const resultado = await this.service.syncMidiaExerciciosLocais({ forcar });
+            return CommonResponse.success(
+                res,
+                resultado,
+                HttpStatusCode.OK.code,
+                `Mídia sincronizada: ${resultado.sincronizados} exercício(s) atualizados.`,
+            );
+        } catch (error) {
+            return this.handleError(res, error, 'syncMidiaExerciciosLocais');
+        }
+    }
+
     syncMidiaExercicio = async (req: Request, res: Response) => {
         try {
             const nomeEn = String(req.query.nome_en || '').trim();

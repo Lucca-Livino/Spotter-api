@@ -1,4 +1,4 @@
-import { enum_dia_semana, enum_remetente_tipo, enum_sexo, enum_status_serie, enum_status_sessao, enum_tipo_exercicio, enum_turnos } from "./enum";
+import { enum_dia_semana, enum_remetente_tipo, enum_sexo, enum_status_serie, enum_status_sessao, enum_status_solicitacao, enum_tipo_exercicio, enum_turnos } from "./enum";
 
 export type type_academia = {
     id?: string;
@@ -20,6 +20,8 @@ export type type_aluno = {
     sexo: enum_sexo;
     is_admin?: boolean;
     status_conta?: boolean;
+    peso_atual_kg: number;
+    altura_cm: number | null;
     created_at?: Date;
     academia_id: string;
     treinador_id?: string | null;
@@ -27,9 +29,9 @@ export type type_aluno = {
 
 export type type_avaliacao_fisica = {
     id?: string;
-    data_avaliacao: Date;
+    data_avaliacao?: Date;
     peso_kg: number;
-    altura_m: number;
+    altura_cm?: number | null;
     aluno_id: string;
 }
 
@@ -57,6 +59,7 @@ export type type_conversa = {
     ativa?: boolean;
     ultima_mensagem_em?: Date | null;
     created_at?: Date;
+    mensagens_nao_lidas?: number;
 }
 
 export type type_mensagem_conversa = {
@@ -166,6 +169,15 @@ export type type_sessao_serie = {
     distancia_realizada_metros?: number | null;
     status?: enum_status_serie;
     observacoes?: string | null;
+}
+
+export type type_solicitacao_treinador = {
+    id?: string;
+    aluno_id: string;
+    treinador_id: string;
+    status?: enum_status_solicitacao;
+    created_at?: Date;
+    updated_at?: Date;
 }
 
 // Tipo do usuário autenticado

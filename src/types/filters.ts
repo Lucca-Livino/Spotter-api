@@ -42,6 +42,7 @@ export interface FiltrosExercicio {
     treinador_id?: string;
     escopo?: 'GLOBAL' | 'PESSOAL' | 'TODOS';
     em_uso?: boolean;
+    com_midia?: boolean;
     ordem_nome?: 'asc' | 'desc';
     incluir_inativos?: boolean;
 }

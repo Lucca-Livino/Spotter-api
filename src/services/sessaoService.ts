@@ -3,6 +3,10 @@ import UsuarioRepository from '../repositories/usuarioRepository';
 import { sessaoSchema, sessaoIdSchema, sessaoListQuerySchema, SessaoListQuery, sessaoUpdateSchema, sessaoExercicioUpdateSchema, exercicioIdSchema, sessaoSeriesUpdateSchema, SessaoSeriesUpdate, reordenarExerciciosSchema, ReordenarExerciciosInput } from '../utils/validations/sessaoValidation';
 import { ZodError } from 'zod';
 import { type_sessao_exercicio, type_sessao_serie, type_sessao_treino } from '../types/dbSchemas';
+import { notificarSessaoFinalizada, notificarSessaoIniciada, notificarSessaoCancelada, notificarTreinoConcluidoTreinador } from '../integrations/notificacoes';
+import { DataBase } from '../config/DbConnect';
+import { aluno, treinador, user } from '../config/db/schema';
+import { eq } from 'drizzle-orm';
 
 class SessaoService {
     private repository: SessaoRepository;
@@ -61,6 +65,17 @@ class SessaoService {
 
             const sessaoId = await this.repository.create(novaSessao, sessaoExercicios, sessaoSeries);
 
+            // Enviar notificação push (não-bloqueante)
+            void (async () => {
+                try {
+                    const alunoUserId = userId; // userId já está disponível no contexto
+                    console.log(`[SessaoService] Notificando usuário: ${alunoUserId}`);
+                    await notificarSessaoIniciada(alunoUserId, treinoComExercicios.nome ?? 'Treino');
+                } catch (e) {
+                    console.error('[SessaoService] Erro ao enviar notificação de início:', e);
+                }
+            })();
+
             return await this.repository.findById(sessaoId) as SessaoComDetalhe;
         } catch (error) {
             if (error instanceof ZodError) {
@@ -84,7 +99,7 @@ class SessaoService {
             throw new Error('FORBIDDEN: perfil de acesso não autorizado');
         }
 
-        if (!perfil.isAdmin) {
+        if (!perfil.isAdmin || perfil.isAluno) {
             if (perfil.isAluno && perfil.alunoId !== sessao.aluno_id) {
                 throw new Error('FORBIDDEN: você não tem permissão para visualizar esta sessão');
             }
@@ -110,7 +125,7 @@ class SessaoService {
 
         const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
 
-        if (perfil.isAdmin) {
+        if (perfil.isAdmin && !perfil.isAluno) {
             return this.repository.findAll(filtros);
         }
 
@@ -170,7 +185,7 @@ class SessaoService {
             throw new Error('FORBIDDEN: perfil de acesso não autorizado');
         }
 
-        if (!perfil.isAdmin) {
+        if (!perfil.isAdmin || perfil.isAluno) {
             if (perfil.isAluno && perfil.alunoId !== sessaoStatus.aluno_id) {
                 throw new Error('FORBIDDEN: você não tem permissão para atualizar esta sessão');
             }
@@ -212,7 +227,7 @@ class SessaoService {
             throw new Error('FORBIDDEN: perfil de acesso não autorizado');
         }
 
-        if (!perfil.isAdmin) {
+        if (!perfil.isAdmin || perfil.isAluno) {
             if (perfil.isAluno && perfil.alunoId !== sessaoStatus.aluno_id) {
                 throw new Error('FORBIDDEN: você não tem permissão para atualizar esta sessão');
             }
@@ -261,7 +276,7 @@ class SessaoService {
             throw new Error('FORBIDDEN: perfil de acesso não autorizado');
         }
 
-        if (!perfil.isAdmin) {
+        if (!perfil.isAdmin || perfil.isAluno) {
             if (perfil.isAluno && perfil.alunoId !== sessaoAlunoId) {
                 throw new Error('FORBIDDEN: você não tem permissão para acessar esta sessão');
             }
@@ -393,6 +408,53 @@ class SessaoService {
             this.repository.getSessaoResumo(id),
         ]);
 
+        // Enviar notificação push (não-bloqueante)
+        void (async () => {
+            try {
+                if (sessao) {
+                    const alunoData = await DataBase.select({ 
+                            user_id: aluno.user_id,
+                            nome: user.name,
+                            treinador_id: aluno.treinador_id
+                        })
+                        .from(aluno)
+                        .innerJoin(user, eq(aluno.user_id, user.id))
+                        .where(eq(aluno.id, sessao.aluno_id))
+                        .limit(1);
+
+                    const alunoEncontrado = alunoData[0];
+                    if (!alunoEncontrado) return;
+
+                    if (resumo) {
+                        await notificarSessaoFinalizada(
+                            alunoEncontrado.user_id,
+                            sessao.treino_nome ?? 'Treino',
+                            resumo.exercicios_concluidos
+                        );
+                    }
+
+                    // Notificar o treinador, se houver
+                    if (alunoEncontrado.treinador_id) {
+                        const treinadorData = await DataBase.select({ user_id: treinador.user_id })
+                            .from(treinador)
+                            .where(eq(treinador.id, alunoEncontrado.treinador_id))
+                            .limit(1);
+                        
+                        const treinadorUserId = treinadorData[0]?.user_id;
+                        if (treinadorUserId) {
+                            await notificarTreinoConcluidoTreinador(
+                                treinadorUserId,
+                                alunoEncontrado.nome,
+                                sessao.treino_nome ?? 'Treino'
+                            );
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('[SessaoService] Erro ao enviar notificação de fim:', e);
+            }
+        })();
+
         return { ...sessao, resumo: resumo! };
     }
 
@@ -412,7 +474,27 @@ class SessaoService {
 
         await this.repository.updateStatusFim(id, 'CANCELADA');
 
-        return await this.repository.findById(id) as SessaoComDetalhe;
+        const sessaoCancelada = await this.repository.findById(id) as SessaoComDetalhe;
+
+        // Notificar o aluno se foi o treinador quem cancelou (não-bloqueante)
+        void (async () => {
+            try {
+                const alunoData = await DataBase.select({ user_id: aluno.user_id })
+                    .from(aluno)
+                    .where(eq(aluno.id, sessaoStatus.aluno_id))
+                    .limit(1);
+
+                const alunoUserId = alunoData[0]?.user_id;
+                // Só notifica o aluno se quem cancelou não foi ele mesmo
+                if (alunoUserId && alunoUserId !== userId) {
+                    await notificarSessaoCancelada(alunoUserId, sessaoCancelada.treino_nome ?? 'Treino');
+                }
+            } catch (e) {
+                console.error('[SessaoService] Erro ao enviar notificação de cancelamento:', e);
+            }
+        })();
+
+        return sessaoCancelada;
     }
 
     async reordenarExercicios(
@@ -474,7 +556,7 @@ class SessaoService {
             throw new Error('FORBIDDEN: perfil de acesso não autorizado');
         }
 
-        if (!perfil.isAdmin) {
+        if (!perfil.isAdmin || perfil.isAluno) {
             if (perfil.isAluno && perfil.alunoId !== sessao.aluno_id) {
                 throw new Error('FORBIDDEN: você não tem permissão para visualizar esta sessão');
             }

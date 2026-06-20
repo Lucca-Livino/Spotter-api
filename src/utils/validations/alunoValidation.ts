@@ -41,6 +41,21 @@ const alunoSchema = z.object({
         .optional()
         .default(true)
         .openapi({ description: "Status da conta (ativa/inativa)", example: true }),
+    peso_atual_kg: z.coerce
+        .number()
+        .positive({ message: "Peso deve ser um número positivo" })
+        .max(500, { message: "Peso não pode exceder 500 kg" })
+        .optional()
+        .nullable()
+        .openapi({ description: "Peso em kg", example: 75.5 }),
+    altura_cm: z.coerce
+        .number()
+        .int({ message: "Altura deve ser um número inteiro de centímetros" })
+        .positive({ message: "Altura deve ser um número positivo" })
+        .max(300, { message: "Altura não pode exceder 300 cm" })
+        .optional()
+        .nullable()
+        .openapi({ description: "Altura em centímetros", example: 175 }),
     academia_id: z
         .string()
         .uuid({ message: "O ID da academia deve ser um UUID válido" })
@@ -54,6 +69,10 @@ const alunoSchema = z.object({
             description: "UUID do treinador vinculado ao aluno (opcional)",
             example: "550e8400-e29b-41d4-a716-446655440002",
         }),
+    academias_ids: z
+        .array(z.string().uuid({ message: "ID da academia deve ser um UUID válido" }))
+        .optional()
+        .openapi({ description: "Lista de IDs das academias vinculadas", example: ["550e8400-e29b-41d4-a716-446655440000"] }),
 }).openapi("AlunoInput");
 
 const alunoUpdateSchema = alunoSchema.partial().openapi("AlunoUpdateInput");
@@ -64,11 +83,12 @@ const physicalDataSchema = z.object({
         .positive({ message: "Peso deve ser um número positivo" })
         .max(500, { message: "Peso não pode exceder 500 kg" })
         .openapi({ description: "Peso em kg", example: 75.5 }),
-    altura_m: z
+    altura_cm: z
         .number()
+        .int({ message: "Altura deve ser um número inteiro de centímetros" })
         .positive({ message: "Altura deve ser um número positivo" })
-        .max(3, { message: "Altura não pode exceder 3 metros" })
-        .openapi({ description: "Altura em metros", example: 1.75 }),
+        .max(300, { message: "Altura não pode exceder 300 cm" })
+        .openapi({ description: "Altura em centímetros", example: 175 }),
 }).openapi("PhysicalDataInput");
 
 const physicalDataUpdateSchema = physicalDataSchema.partial().openapi("PhysicalDataUpdateInput");

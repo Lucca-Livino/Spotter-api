@@ -1,14 +1,17 @@
-import AlunosRepository from "../repositories/alunoRepository";
+import AlunosRepository, { HistoricoPesoResponse } from "../repositories/alunoRepository";
 import { type_aluno } from "../types/dbSchemas";
 import { type_physical_data } from "../types/userSchemas";
 import { alunoSchema, alunoUpdateSchema, alunoIdSchema, alunoQuerySchema } from "../utils/validations/alunoValidation";
 import { ZodError } from "zod";
+import UsuarioRepository from "../repositories/usuarioRepository";
 
 class AlunoService {
   private repository: AlunosRepository;
+  private usuarioRepository: UsuarioRepository;
 
   constructor() {
     this.repository = new AlunosRepository();
+    this.usuarioRepository = new UsuarioRepository();
   }
 
   async getAlunoById(id: string): Promise<type_aluno> {
@@ -133,6 +136,17 @@ class AlunoService {
     return alunoDeletado;
   }
 
+  async desvincularTreinador(userId: string): Promise<void> {
+    const aluno = await this.repository.findByUserId(userId);
+    if (!aluno || !aluno.id) {
+      throw new Error("Perfil de aluno não encontrado");
+    }
+    if (!aluno.treinador_id) {
+      throw new Error("CONFLITO: Aluno não possui treinador vinculado");
+    }
+    await this.repository.update(aluno.id, { treinador_id: null });
+  }
+
   async updateAluno(id: string, alunoEditado: Partial<type_aluno>): Promise<type_aluno> {
     console.log(
       `[AlunoService] [updateAluno] Atualizando aluno com ID: ${id}`,
@@ -144,12 +158,21 @@ class AlunoService {
       throw new Error("Corpo da requisição é obrigatório");
     }
 
-    alunoUpdateSchema.parse(alunoEditado);
+    const dadosValidados = alunoUpdateSchema.parse(alunoEditado);
 
-    const alunoAtualizado = await this.repository.update(id, alunoEditado);
+    const { academias_ids, ...dadosRestantes } = dadosValidados;
+
+    const alunoAtualizado = await this.repository.update(id, dadosRestantes as any, academias_ids);
 
     if (!alunoAtualizado) {
       throw new Error(`Aluno com ID ${id} não encontrado`);
+    }
+
+    if (dadosValidados.peso_atual_kg !== undefined && dadosValidados.peso_atual_kg !== null) {
+      const alturaCm = (alunoAtualizado as any).altura_cm ?? dadosValidados.altura_cm ?? null;
+      void this.repository.registrarPeso(id, dadosValidados.peso_atual_kg, alturaCm).catch((err) => {
+        console.error('[AlunoService] Erro ao registrar histórico de peso:', err);
+      });
     }
 
     console.log(
@@ -157,6 +180,27 @@ class AlunoService {
     );
 
     return alunoAtualizado;
+  }
+
+  async getHistoricoPeso(idParam: string, userId: string): Promise<HistoricoPesoResponse> {
+    alunoIdSchema.parse(idParam);
+
+    const perfil = await this.usuarioRepository.buscarPerfilAcesso(userId);
+
+    if (perfil.isAluno && perfil.alunoId) {
+      if (idParam !== perfil.alunoId) {
+        throw new Error('FORBIDDEN: você só pode visualizar seu próprio histórico de peso');
+      }
+    } else if (perfil.isTreinador && perfil.treinadorId) {
+      const vinculado = await this.usuarioRepository.alunoVinculadoAoTreinador(idParam, perfil.treinadorId);
+      if (!vinculado) {
+        throw new Error('FORBIDDEN: você não tem permissão para visualizar o histórico deste aluno');
+      }
+    } else if (!perfil.isAdmin) {
+      throw new Error('FORBIDDEN: perfil de acesso não autorizado');
+    }
+
+    return this.repository.getHistoricoPeso(idParam);
   }
 }
 

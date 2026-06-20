@@ -232,11 +232,11 @@ describe('GET /academia', () => {
         expect(res.body.error).toBe(true);
     });
 
-    it('sem autenticação → 401', async () => {
-        asNoAuth();
+    it('sem autenticação → 200 (rota pública para cadastro)', async () => {
         const res = await request(app).get('/api/academia');
 
-        expect(res.status).toBe(401);
+        expect(res.status).toBe(200);
+        expect(Array.isArray(res.body.data.dados)).toBe(true);
     });
 });
 

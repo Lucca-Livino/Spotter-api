@@ -17,6 +17,6 @@ export type type_physical_data = {
     id?: number;
     data_avaliacao?: Date;
     peso_kg: number;
-    altura_m: number;
+    altura_cm?: number | null;
     aluno_id: number;
 }

@@ -1,10 +1,11 @@
 CREATE TYPE "public"."dia_semana" AS ENUM('SEGUNDA', 'TERCA', 'QUARTA', 'QUINTA', 'SEXTA', 'SABADO', 'DOMINGO');--> statement-breakpoint
-CREATE TYPE "public"."grupo_muscular" AS ENUM('PEITO', 'COSTAS', 'PERNAS', 'BRAÇOS', 'OMBROS', 'ABDOMEN');--> statement-breakpoint
+CREATE TYPE "public"."grupo_muscular" AS ENUM('PEITO', 'COSTAS', 'PERNAS', 'BRAÇOS', 'OMBROS', 'ABDOMEN', 'PESCOÇO', 'CARDIO');--> statement-breakpoint
 CREATE TYPE "public"."remetente_tipo" AS ENUM('ALUNO', 'TREINADOR');--> statement-breakpoint
 CREATE TYPE "public"."sexo" AS ENUM('M', 'F');--> statement-breakpoint
 CREATE TYPE "public"."status_serie" AS ENUM('PENDENTE', 'CONCLUIDA', 'PULADA');--> statement-breakpoint
 CREATE TYPE "public"."status_sessao" AS ENUM('EM_ANDAMENTO', 'CONCLUIDA', 'CANCELADA');--> statement-breakpoint
 CREATE TYPE "public"."tipo_ativacao" AS ENUM('PRIMARIO', 'SECUNDARIO');--> statement-breakpoint
+CREATE TYPE "public"."tipo_exercicio" AS ENUM('REPETICAO', 'TEMPO', 'DISTANCIA');--> statement-breakpoint
 CREATE TYPE "public"."turno" AS ENUM('MANHA', 'TARDE', 'NOITE');--> statement-breakpoint
 CREATE TABLE "academia" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
@@ -42,7 +43,10 @@ CREATE TABLE "aluno" (
 	"sexo" "sexo" NOT NULL,
 	"is_admin" boolean DEFAULT false NOT NULL,
 	"status_conta" boolean DEFAULT true NOT NULL,
+	"peso_atual_kg" numeric(5, 2),
+	"altura_m" numeric(3, 2),
 	"created_at" timestamp DEFAULT now() NOT NULL,
+	"fcm_token" text,
 	"academia_id" uuid NOT NULL,
 	"treinador_id" uuid,
 	CONSTRAINT "aluno_user_id_unique" UNIQUE("user_id")
@@ -83,6 +87,8 @@ CREATE TABLE "exercicio" (
 	"descricao" text,
 	"animacao_url" varchar(255),
 	"aluno_id" uuid,
+	"treinador_id" uuid,
+	"tipo_exercicio" "tipo_exercicio" DEFAULT 'REPETICAO' NOT NULL,
 	"deletado_em" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
@@ -135,6 +141,8 @@ CREATE TABLE "sessao_serie" (
 	"numero_serie" integer NOT NULL,
 	"repeticoes_realizadas" integer,
 	"carga_utilizada" numeric(5, 2),
+	"tempo_realizado_segundos" integer,
+	"distancia_realizada_metros" integer,
 	"status" "status_serie" DEFAULT 'PENDENTE' NOT NULL,
 	"observacoes" text
 );
@@ -175,6 +183,7 @@ CREATE TABLE "treinador" (
 	"is_admin" boolean DEFAULT false NOT NULL,
 	"status_conta" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
+	"fcm_token" text,
 	"academia_id" uuid NOT NULL,
 	CONSTRAINT "treinador_user_id_unique" UNIQUE("user_id"),
 	CONSTRAINT "treinador_cref_unique" UNIQUE("cref")
@@ -192,7 +201,7 @@ CREATE TABLE "treino" (
 	"descricao" text,
 	"data_criacao" timestamp DEFAULT now() NOT NULL,
 	"deletado_em" timestamp,
-	"usuario_id" uuid NOT NULL,
+	"usuario_id" uuid,
 	"treinador_id" uuid,
 	"dias_semana" "dia_semana"[],
 	"ordem" integer
@@ -201,8 +210,10 @@ CREATE TABLE "treino" (
 CREATE TABLE "treino_exercicio" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"series" integer NOT NULL,
-	"repeticoes" varchar(50) NOT NULL,
+	"repeticoes" varchar(50),
 	"carga_sugerida" numeric(5, 2),
+	"duracao_sugerida_segundos" integer,
+	"distancia_sugerida_metros" integer,
 	"tempo_descanso_segundos" integer NOT NULL,
 	"ordem_execucao" integer NOT NULL,
 	"treino_id" uuid NOT NULL,
@@ -215,6 +226,7 @@ CREATE TABLE "user" (
 	"email" text NOT NULL,
 	"email_verified" boolean NOT NULL,
 	"image" text,
+	"tipo" text DEFAULT 'aluno' NOT NULL,
 	"created_at" timestamp NOT NULL,
 	"updated_at" timestamp NOT NULL,
 	CONSTRAINT "user_email_unique" UNIQUE("email")
@@ -233,12 +245,13 @@ ALTER TABLE "account" ADD CONSTRAINT "account_user_id_user_id_fk" FOREIGN KEY ("
 ALTER TABLE "aluno" ADD CONSTRAINT "aluno_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "aluno" ADD CONSTRAINT "aluno_academia_id_academia_id_fk" FOREIGN KEY ("academia_id") REFERENCES "public"."academia"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "aluno" ADD CONSTRAINT "aluno_treinador_id_treinador_id_fk" FOREIGN KEY ("treinador_id") REFERENCES "public"."treinador"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "aluno_academia" ADD CONSTRAINT "aluno_academia_aluno_id_aluno_id_fk" FOREIGN KEY ("aluno_id") REFERENCES "public"."aluno"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "aluno_academia" ADD CONSTRAINT "aluno_academia_academia_id_academia_id_fk" FOREIGN KEY ("academia_id") REFERENCES "public"."academia"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "avaliacao_fisica" ADD CONSTRAINT "avaliacao_fisica_aluno_id_aluno_id_fk" FOREIGN KEY ("aluno_id") REFERENCES "public"."aluno"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "conversa" ADD CONSTRAINT "conversa_treinador_id_treinador_id_fk" FOREIGN KEY ("treinador_id") REFERENCES "public"."treinador"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "conversa" ADD CONSTRAINT "conversa_aluno_id_aluno_id_fk" FOREIGN KEY ("aluno_id") REFERENCES "public"."aluno"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "exercicio" ADD CONSTRAINT "exercicio_aluno_id_aluno_id_fk" FOREIGN KEY ("aluno_id") REFERENCES "public"."aluno"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "aluno_academia" ADD CONSTRAINT "aluno_academia_aluno_id_aluno_id_fk" FOREIGN KEY ("aluno_id") REFERENCES "public"."aluno"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "aluno_academia" ADD CONSTRAINT "aluno_academia_academia_id_academia_id_fk" FOREIGN KEY ("academia_id") REFERENCES "public"."academia"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "avaliacao_fisica" ADD CONSTRAINT "avaliacao_fisica_aluno_id_aluno_id_fk" FOREIGN KEY ("aluno_id") REFERENCES "public"."aluno"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "conversa" ADD CONSTRAINT "conversa_treinador_id_treinador_id_fk" FOREIGN KEY ("treinador_id") REFERENCES "public"."treinador"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "conversa" ADD CONSTRAINT "conversa_aluno_id_aluno_id_fk" FOREIGN KEY ("aluno_id") REFERENCES "public"."aluno"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "exercicio" ADD CONSTRAINT "exercicio_aluno_id_aluno_id_fk" FOREIGN KEY ("aluno_id") REFERENCES "public"."aluno"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "exercicio" ADD CONSTRAINT "exercicio_treinador_id_treinador_id_fk" FOREIGN KEY ("treinador_id") REFERENCES "public"."treinador"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "exercicio_aparelho" ADD CONSTRAINT "exercicio_aparelho_exercicio_id_exercicio_id_fk" FOREIGN KEY ("exercicio_id") REFERENCES "public"."exercicio"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "exercicio_aparelho" ADD CONSTRAINT "exercicio_aparelho_aparelho_id_aparelho_id_fk" FOREIGN KEY ("aparelho_id") REFERENCES "public"."aparelho"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "exercicio_musculo" ADD CONSTRAINT "exercicio_musculo_exercicio_id_exercicio_id_fk" FOREIGN KEY ("exercicio_id") REFERENCES "public"."exercicio"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -249,15 +262,15 @@ ALTER TABLE "mensagem_conversa" ADD CONSTRAINT "mensagem_conversa_lida_por_user_
 ALTER TABLE "sessao_exercicio" ADD CONSTRAINT "sessao_exercicio_sessao_treino_id_sessao_treino_id_fk" FOREIGN KEY ("sessao_treino_id") REFERENCES "public"."sessao_treino"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sessao_exercicio" ADD CONSTRAINT "sessao_exercicio_treino_exercicio_id_treino_exercicio_id_fk" FOREIGN KEY ("treino_exercicio_id") REFERENCES "public"."treino_exercicio"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "sessao_serie" ADD CONSTRAINT "sessao_serie_sessao_exercicio_id_sessao_exercicio_id_fk" FOREIGN KEY ("sessao_exercicio_id") REFERENCES "public"."sessao_exercicio"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "sessao_treino" ADD CONSTRAINT "sessao_treino_aluno_id_aluno_id_fk" FOREIGN KEY ("aluno_id") REFERENCES "public"."aluno"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "sessao_treino" ADD CONSTRAINT "sessao_treino_treino_id_treino_id_fk" FOREIGN KEY ("treino_id") REFERENCES "public"."treino"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "sessao_treino" ADD CONSTRAINT "sessao_treino_aluno_id_aluno_id_fk" FOREIGN KEY ("aluno_id") REFERENCES "public"."aluno"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "sessao_treino" ADD CONSTRAINT "sessao_treino_treino_id_treino_id_fk" FOREIGN KEY ("treino_id") REFERENCES "public"."treino"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "treinador" ADD CONSTRAINT "treinador_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "treinador" ADD CONSTRAINT "treinador_academia_id_academia_id_fk" FOREIGN KEY ("academia_id") REFERENCES "public"."academia"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "treinador_academia" ADD CONSTRAINT "treinador_academia_treinador_id_treinador_id_fk" FOREIGN KEY ("treinador_id") REFERENCES "public"."treinador"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "treinador_academia" ADD CONSTRAINT "treinador_academia_academia_id_academia_id_fk" FOREIGN KEY ("academia_id") REFERENCES "public"."academia"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "treino" ADD CONSTRAINT "treino_usuario_id_aluno_id_fk" FOREIGN KEY ("usuario_id") REFERENCES "public"."aluno"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "treino" ADD CONSTRAINT "treino_treinador_id_treinador_id_fk" FOREIGN KEY ("treinador_id") REFERENCES "public"."treinador"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "treinador_academia" ADD CONSTRAINT "treinador_academia_treinador_id_treinador_id_fk" FOREIGN KEY ("treinador_id") REFERENCES "public"."treinador"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "treinador_academia" ADD CONSTRAINT "treinador_academia_academia_id_academia_id_fk" FOREIGN KEY ("academia_id") REFERENCES "public"."academia"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "treino" ADD CONSTRAINT "treino_usuario_id_aluno_id_fk" FOREIGN KEY ("usuario_id") REFERENCES "public"."aluno"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "treino" ADD CONSTRAINT "treino_treinador_id_treinador_id_fk" FOREIGN KEY ("treinador_id") REFERENCES "public"."treinador"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "treino_exercicio" ADD CONSTRAINT "treino_exercicio_treino_id_treino_id_fk" FOREIGN KEY ("treino_id") REFERENCES "public"."treino"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "treino_exercicio" ADD CONSTRAINT "treino_exercicio_exercicio_id_exercicio_id_fk" FOREIGN KEY ("exercicio_id") REFERENCES "public"."exercicio"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 CREATE UNIQUE INDEX "conversa_treinador_aluno_unique" ON "conversa" USING btree ("treinador_id","aluno_id");--> statement-breakpoint

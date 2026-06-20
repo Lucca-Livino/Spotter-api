@@ -3,6 +3,11 @@ import ConversaRepository from '../repositories/conversaRepository';
 import MensagemConversaRepository from '../repositories/mensagemConversaRepository';
 import AutorizacaoConversaService from './autorizacaoConversaService';
 
+import { notificarNovaMensagem } from '../integrations/notificacoes';
+import { DataBase } from '../config/DbConnect';
+import { aluno, treinador, user } from '../config/db/schema';
+import { eq } from 'drizzle-orm';
+
 class MensagemConversaService {
   private conversaRepository: ConversaRepository;
   private mensagemConversaRepository: MensagemConversaRepository;
@@ -37,6 +42,43 @@ class MensagemConversaService {
     });
 
     await this.conversaRepository.updateUltimaMensagem(conversaId, agora);
+
+    // Enviar notificação push para a outra parte
+    void (async () => {
+      try {
+        const destinoPerfilId = remetenteTipo === 'TREINADOR' ? conversaAtual.aluno_id : conversaAtual.treinador_id;
+        
+        let targetUserId: string | null = null;
+        
+        if (remetenteTipo === 'TREINADOR') {
+            // Destino é Aluno
+            const alunoData = await DataBase.select({ user_id: aluno.user_id })
+                .from(aluno)
+                .where(eq(aluno.id, destinoPerfilId))
+                .limit(1);
+            targetUserId = alunoData[0]?.user_id || null;
+        } else {
+            // Destino é Treinador
+            const treinadorData = await DataBase.select({ user_id: treinador.user_id })
+                .from(treinador)
+                .where(eq(treinador.id, destinoPerfilId))
+                .limit(1);
+            targetUserId = treinadorData[0]?.user_id || null;
+        }
+
+        if (targetUserId) {
+            const remetenteData = await DataBase.select({ nome: user.name })
+                .from(user)
+                .where(eq(user.id, userId))
+                .limit(1);
+            
+            const nomeRemetente = remetenteData[0]?.nome ?? 'Nova mensagem';
+            await notificarNovaMensagem(targetUserId, nomeRemetente, conversaId);
+        }
+      } catch (e) {
+          console.error('[MensagemConversaService] Erro ao enviar notificação de chat:', e);
+      }
+    })();
 
     return mensagem;
   }

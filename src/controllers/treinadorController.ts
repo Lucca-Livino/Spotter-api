@@ -17,10 +17,18 @@ class TreinadorController {
         }
 
         private async parseMultipartData(req: Request) {
+                console.log("[TreinadorController] [parseMultipartData] req.body:", JSON.stringify(req.body, null, 2));
                 if (req.body.data) {
                         try {
-                                return JSON.parse(req.body.data);
+                                let parsed = JSON.parse(req.body.data);
+                                // Se o resultado ainda for uma string, faz o parse novamente (corrige double encoding)
+                                if (typeof parsed === 'string') {
+                                        parsed = JSON.parse(parsed);
+                                }
+                                console.log("[TreinadorController] [parseMultipartData] JSON parsed successfully:", JSON.stringify(parsed, null, 2));
+                                return parsed;
                         } catch (e) {
+                                console.error("[TreinadorController] [parseMultipartData] Error parsing JSON:", e);
                                 throw new Error('VALIDATION: Campo "data" deve ser um JSON válido');
                         }
                 }
@@ -48,8 +56,10 @@ class TreinadorController {
 
 		console.log("[TreinadorController] [getAllTreinadores] Requisição recebida");
 
+		const userId = (req as any).user?.id as string | undefined;
+
 		try {
-			const resultado = await this.service.getAllTreinadores(req.query);
+			const resultado = await this.service.getAllTreinadores(req.query, userId);
 			return CommonResponse.success(res, resultado, HttpStatusCode.OK.code);
 		} catch (error) {
 			return this.handleError(res, error, "getAllTreinadores");
@@ -209,6 +219,23 @@ class TreinadorController {
 	                return this.handleError(res, error, "updateTreinador");
 	        }
 	};
+	desvincularAluno = async (req: Request, res: Response) => {
+		const userId = (req as any).user?.id as string | undefined;
+		if (!userId) {
+			return CommonResponse.error(res, HttpStatusCode.UNAUTHORIZED.code, null, null, [], "Usuário não autenticado");
+		}
+		const alunoId = req.params.alunoId as string;
+		if (!alunoId) {
+			return CommonResponse.error(res, HttpStatusCode.BAD_REQUEST.code, null, "alunoId", [], "O alunoId é obrigatório");
+		}
+		try {
+			await this.service.desvincularAluno(userId, alunoId);
+			return CommonResponse.success(res, null, HttpStatusCode.OK.code, "Aluno desvinculado com sucesso");
+		} catch (error) {
+			return this.handleError(res, error, "desvincularAluno");
+		}
+	};
+
 	private handleError(res: Response, error: unknown, context: string) {
 		if (error instanceof ZodError) {
 			console.warn(

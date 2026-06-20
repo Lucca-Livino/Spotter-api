@@ -41,9 +41,6 @@ const MUSCULOS: { nome: string; grupo: type_grupo_muscular }[] = [
     { nome: "Sistema Cardiovascular", grupo: "CARDIO" },
 ];
 
-// Definição dos exercícios
-// Cada entrada define: nome, descrição, músculos (primário + secundários) e aparelhos.
-
 interface ExercicioSeed {
     nome: string;
     descricao: string;
@@ -51,14 +48,110 @@ interface ExercicioSeed {
     secundarios?: string[];
     aparelhos: string[];
     tipo?: enum_tipo_exercicio;
+    exdbNome?: string;
 }
+
+// Mapa de exercícios locais → nome EN para busca na ExerciseDB.
+// Usado por syncMidiaExerciciosLocais no ExerciseDbService.
+export const EXERCICIO_EXDB_NOME: Record<string, string> = {
+    // PEITO
+    "Supino com Barra":                              "barbell bench press",
+    "Supino Inclinado com Halter":                   "dumbbell incline bench press",
+    "Supino Declinado com Barra":                    "barbell decline bench press",
+    "Crucifixo com Halter":                          "dumbbell fly",
+    "Crossover na Polia":                            "cable crossover",
+    "Flexão de Braço":                               "push-up",
+    "Supino na Máquina Smith":                       "smith bench press",
+    // COSTAS
+    "Puxada Frontal na Polia":                       "cable lat pulldown",
+    "Remada Curvada com Barra":                      "barbell bent over row",
+    "Remada Unilateral com Halter":                  "dumbbell bent over row",
+    "Remada Sentada na Polia":                       "cable seated row",
+    "Levantamento Terra com Barra":                  "barbell deadlift",
+    "Pullover com Halter":                           "dumbbell pullover",
+    "Encolhimento de Ombros com Barra":              "barbell shrug",
+    "Barra Fixa":                                    "pull-up",
+    // PERNAS
+    "Agachamento com Barra":                         "barbell squat",
+    "Leg Press":                                     "leg press",
+    "Extensão de Pernas":                            "leg extension",
+    "Flexão de Pernas":                              "leg curl",
+    "Levantamento Terra com Perna Estendida com Barra": "barbell romanian deadlift",
+    "Afundo com Halter":                             "dumbbell lunge",
+    "Elevação de Panturrilha em Pé":                 "standing calf raise",
+    "Agachamento Sumô com Halter":                   "dumbbell sumo squat",
+    "Elevação de Quadril com Barra":                 "barbell glute bridge",
+    // BRAÇOS
+    "Rosca Direta com Barra":                        "barbell biceps curl",
+    "Rosca Martelo com Halter":                      "dumbbell hammer curl",
+    "Rosca Concentrada com Halter":                  "dumbbell concentration curl",
+    "Rosca Scott com Barra EZ":                      "barbell preacher curl",
+    "Extensão de Tríceps na Polia":                  "cable triceps pushdown",
+    "Tríceps Testa com Barra EZ":                    "barbell lying triceps extension skull crusher",
+    "Mergulho de Tríceps":                           "weighted tricep dips",
+    "Rosca com Barra EZ na Polia":                   "cable curl",
+    // OMBROS
+    "Desenvolvimento Militar com Barra":             "barbell seated behind head military press",
+    "Desenvolvimento de Ombros com Halter":          "dumbbell standing overhead press",
+    "Elevação Lateral com Halter":                   "dumbbell lateral raise",
+    "Elevação Frontal com Halter":                   "dumbbell front raise",
+    "Face Pull na Polia":                            "cable kneeling rear delt row (with rope) (male)",
+    "Crucifixo Invertido com Halter":                "dumbbell reverse fly",
+    "Encolhimento de Ombros com Halter":             "dumbbell shrug",
+    "Elevação Lateral na Polia":                     "cable lateral raise",
+    // ABDOMEN
+    "Prancha":                                       "plank",
+    "Abdominal Crunch":                              "crunch",
+    "Elevação de Pernas Pendurado":                  "hanging leg raise",
+    "Roda Abdominal":                                "standing wheel rollerout",
+    "Abdominal na Polia":                            "cable kneeling crunch",
+    "Prancha Lateral":                               "side plank",
+    "Torção Russa com Bola Medicinal":               "russian twist",
+    "Abdominal no Banco Declinado":                  "decline crunch",
+    // PESCOÇO
+    "Extensão de Pescoço com Halter":                "weighted seated neck extension (with head harness)",
+    "Flexão de Pescoço com Elástico":                "weighted lying neck flexion (with head harness)",
+    "Inclinação Lateral de Pescoço":                 "neck side stretch",
+    // PEITO (adicional)
+    "Supino com Halter":                             "dumbbell bench press",
+    // COSTAS (adicional)
+    "Remada Alta com Barra":                         "barbell upright row",
+    "Hiperextensão Lombar":                          "hyperextension",
+    // PERNAS (adicional)
+    "Afundo Búlgaro com Halter":                     "barbell single leg split squat",
+    "Elevação de Panturrilha Sentado":               "seated calf raise",
+    "Agachamento Goblet com Halter":                 "dumbbell goblet squat",
+    // BRAÇOS (adicional)
+    "Rosca Alternada com Halter":                    "dumbbell incline curl",
+    "Extensão de Tríceps com Halter":                "cable overhead triceps extension",
+    "Kickback de Tríceps com Halter":                "dumbbell kickback",
+    "Rosca Inversa com Barra":                       "barbell reverse curl",
+    // OMBROS (adicional)
+    "Arnold Press com Halter":                       "dumbbell arnold press",
+    "Remada Alta com Halter":                        "dumbbell upright row",
+    // ABDOMEN (adicional)
+    "Abdominal Bicicleta":                           "bicycle crunch",
+    "Abdominal Oblíquo":                             "oblique crunch",
+    "Elevação de Pernas no Chão":                    "lying leg raise",
+    // CARDIO
+    "Corrida na Esteira":                            "run",
+    "Pedalar na Bicicleta Ergométrica":              "stationary bike walk",
+    "Elíptico":                                      "walk elliptical cross trainer",
+    "Pulo com Corda":                                "jump rope",
+    "Burpee":                                        "burpee",
+    "Polichinelo":                                   "jumping jacks",
+    "Escalador":                                     "mountain climber",
+    // CARDIO (adicional)
+    "Agachamento com Salto":                         "squat jump",
+    "Step Up com Halter":                            "dumbbell step-up",
+};
 
 const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
 
     // PEITO
     PEITO: [
         {
-            nome: "Supino Reto com Barra",
+            nome: "Supino com Barra",
             descricao: "Deitado no banco reto, empurre a barra verticalmente a partir do nível do peito até os braços estendidos. Exercício composto de alta ativação de peitoral maior, com recrutamento de tríceps e deltóide anterior.",
             primario: "Peitoral Maior",
             secundarios: ["Tríceps", "Deltóide Anterior"],
@@ -106,9 +199,16 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             secundarios: ["Tríceps"],
             aparelhos: ["Máquina Smith", "Banco Reto"],
         },
+        {
+            nome: "Supino com Halter",
+            descricao: "Deitado no banco reto, pressione os halteres do nível do peito até a extensão dos braços. Maior amplitude de movimento e ativação bilateral independente comparado ao supino com barra.",
+            primario: "Peitoral Maior",
+            secundarios: ["Tríceps", "Deltóide Anterior"],
+            aparelhos: ["Halter", "Banco Reto"],
+        },
     ],
 
-    // COSTA
+    // COSTAS
     COSTAS: [
         {
             nome: "Puxada Frontal na Polia",
@@ -118,7 +218,7 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             aparelhos: ["Polia / Cabo"],
         },
         {
-            nome: "Remada com Barra",
+            nome: "Remada Curvada com Barra",
             descricao: "Em posição inclinada com joelhos semiflexionados, puxe a barra em direção ao abdômen mantendo as costas retas. Exercício composto que recruta toda a musculatura das costas.",
             primario: "Latíssimo do Dorso",
             secundarios: ["Trapézio", "Rombóide", "Bíceps"],
@@ -132,7 +232,7 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             aparelhos: ["Halter", "Banco Reto"],
         },
         {
-            nome: "Remada na Polia Baixa",
+            nome: "Remada Sentada na Polia",
             descricao: "Sentado na máquina de cabo, puxe o triângulo em direção ao abdômen mantendo os cotovelos próximos ao corpo e o tronco ereto.",
             primario: "Latíssimo do Dorso",
             secundarios: ["Rombóide", "Eretores da Coluna"],
@@ -153,7 +253,7 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             aparelhos: ["Halter", "Banco Reto"],
         },
         {
-            nome: "Encolhimento com Barra",
+            nome: "Encolhimento de Ombros com Barra",
             descricao: "Em pé com a barra à frente, eleve os ombros em direção às orelhas sem dobrar os cotovelos. Exercício de isolamento para trapézio superior.",
             primario: "Trapézio",
             secundarios: [],
@@ -165,6 +265,20 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             primario: "Latíssimo do Dorso",
             secundarios: ["Bíceps", "Rombóide"],
             aparelhos: ["Peso Corporal"],
+        },
+        {
+            nome: "Remada Alta com Barra",
+            descricao: "Em pé com a barra na frente, puxe verticalmente até a linha do queixo com os cotovelos acima dos ombros. Ativa trapézio superior, deltóides laterais e bíceps.",
+            primario: "Trapézio",
+            secundarios: ["Deltóide Lateral", "Bíceps"],
+            aparelhos: ["Barra Reta"],
+        },
+        {
+            nome: "Hiperextensão Lombar",
+            descricao: "Apoiado no banco romano com os quadris na borda, desça o tronco e retorne à posição horizontal contraindo os eretores da coluna e glúteos. Exercício essencial para lombar.",
+            primario: "Eretores da Coluna",
+            secundarios: ["Glúteos", "Isquiotibiais"],
+            aparelhos: ["Máquina de Alavanca"],
         },
     ],
 
@@ -178,28 +292,28 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             aparelhos: ["Barra Reta"],
         },
         {
-            nome: "Leg Press 45°",
+            nome: "Leg Press",
             descricao: "Sentado na máquina inclinada, posicione os pés na plataforma na largura dos ombros e empurre até a extensão dos joelhos. Versão com menor carga na coluna em comparação ao agachamento livre.",
             primario: "Quadríceps",
             secundarios: ["Glúteos", "Isquiotibiais"],
             aparelhos: ["Leg Press"],
         },
         {
-            nome: "Cadeira Extensora",
+            nome: "Extensão de Pernas",
             descricao: "Sentado na máquina, estenda os joelhos elevando o peso com as pernas até a posição horizontal. Exercício de isolamento para quadríceps.",
             primario: "Quadríceps",
             secundarios: [],
             aparelhos: ["Cadeira Extensora"],
         },
         {
-            nome: "Mesa Flexora",
+            nome: "Flexão de Pernas",
             descricao: "Deitado em posição prona na máquina, flexione os joelhos trazendo o rolo em direção aos glúteos. Exercício de isolamento para isquiotibiais.",
             primario: "Isquiotibiais",
             secundarios: [],
             aparelhos: ["Mesa Flexora"],
         },
         {
-            nome: "Stiff com Barra",
+            nome: "Levantamento Terra com Perna Estendida com Barra",
             descricao: "Em pé com a barra na frente das coxas, desça o quadril para trás mantendo as costas retas e os joelhos levemente flexionados, sentindo o alongamento nos isquiotibiais. Retorne à posição vertical ativando a cadeia posterior.",
             primario: "Isquiotibiais",
             secundarios: ["Glúteos", "Eretores da Coluna"],
@@ -227,11 +341,32 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             aparelhos: ["Halter"],
         },
         {
-            nome: "Hip Thrust com Barra",
+            nome: "Elevação de Quadril com Barra",
             descricao: "Apoiando a parte superior das costas em um banco, posicione a barra sobre o quadril e empurre os quadris para cima até o corpo ficar alinhado. Principal exercício para ativação máxima de glúteos.",
             primario: "Glúteos",
             secundarios: ["Isquiotibiais"],
             aparelhos: ["Barra Reta", "Banco Reto"],
+        },
+        {
+            nome: "Afundo Búlgaro com Halter",
+            descricao: "Com o pé traseiro apoiado em um banco, desça o joelho da perna dianteira até próximo ao chão e retorne. Exercício unilateral de alta ativação de quadríceps e glúteos com grande demanda de equilíbrio.",
+            primario: "Quadríceps",
+            secundarios: ["Glúteos", "Isquiotibiais"],
+            aparelhos: ["Halter", "Banco Reto"],
+        },
+        {
+            nome: "Elevação de Panturrilha Sentado",
+            descricao: "Sentado na máquina com a almofada sobre os joelhos, eleve os calcanhares o máximo possível e desça controladamente. Exercício de isolamento com ênfase no músculo sóleo.",
+            primario: "Panturrilha",
+            secundarios: [],
+            aparelhos: ["Máquina de Panturrilha"],
+        },
+        {
+            nome: "Agachamento Goblet com Halter",
+            descricao: "Segure um halter na vertical com ambas as mãos na frente do peito e agache profundamente mantendo o tronco ereto. Excelente para iniciantes e mobilidade de quadril.",
+            primario: "Quadríceps",
+            secundarios: ["Glúteos", "Adutores"],
+            aparelhos: ["Halter"],
         },
     ],
 
@@ -280,7 +415,7 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             aparelhos: ["Barra EZ", "Banco Reto"],
         },
         {
-            nome: "Mergulho no Banco (Tríceps)",
+            nome: "Mergulho de Tríceps",
             descricao: "Sentado na borda do banco com as mãos ao lado dos quadris, afaste o corpo e desça flexionando os cotovelos a 90°. Exercício de peso corporal para tríceps com o apoio das mãos no banco.",
             primario: "Tríceps",
             secundarios: ["Peitoral Menor", "Deltóide Anterior"],
@@ -293,19 +428,47 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             secundarios: ["Antebraço"],
             aparelhos: ["Barra EZ", "Polia / Cabo"],
         },
+        {
+            nome: "Rosca Alternada com Halter",
+            descricao: "Em pé ou sentado, flexione um braço de cada vez elevando o halter até o ombro em pegada supinada. Permite maior concentração em cada lado e maior amplitude de rotação do antebraço.",
+            primario: "Bíceps",
+            secundarios: ["Braquial", "Antebraço"],
+            aparelhos: ["Halter"],
+        },
+        {
+            nome: "Extensão de Tríceps com Halter",
+            descricao: "Sentado ou em pé, segure o halter com ambas as mãos atrás da cabeça e estenda os cotovelos elevando o halter. Exercício de longa tensão para a cabeça longa do tríceps.",
+            primario: "Tríceps",
+            secundarios: [],
+            aparelhos: ["Halter"],
+        },
+        {
+            nome: "Kickback de Tríceps com Halter",
+            descricao: "Inclinado para frente com cotovelo fixo na linha do tronco, estenda o antebraço para trás até a extensão total. Exercício de isolamento com máxima contração do tríceps.",
+            primario: "Tríceps",
+            secundarios: [],
+            aparelhos: ["Halter"],
+        },
+        {
+            nome: "Rosca Inversa com Barra",
+            descricao: "Em pé com a barra em pegada pronada (palmas para baixo), flexione os cotovelos elevando a barra. Ativa fortemente os extensores do antebraço e a porção braquiorradial.",
+            primario: "Antebraço",
+            secundarios: ["Bíceps", "Braquial"],
+            aparelhos: ["Barra Reta"],
+        },
     ],
 
     // OMBROS
     OMBROS: [
         {
-            nome: "Desenvolvimento com Barra",
+            nome: "Desenvolvimento Militar com Barra",
             descricao: "Em pé ou sentado, pressione a barra do nível dos ombros até a extensão total dos braços acima da cabeça. Exercício composto de alta ativação de deltóides e tríceps.",
             primario: "Deltóide Anterior",
             secundarios: ["Deltóide Lateral", "Tríceps"],
             aparelhos: ["Barra Reta"],
         },
         {
-            nome: "Desenvolvimento com Halter",
+            nome: "Desenvolvimento de Ombros com Halter",
             descricao: "Sentado ou em pé, pressione alternadamente ou simultaneamente os halteres de altura dos ombros até a extensão dos braços. Maior amplitude que com barra.",
             primario: "Deltóide Anterior",
             secundarios: ["Deltóide Lateral", "Tríceps"],
@@ -340,25 +503,39 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             aparelhos: ["Halter", "Banco Inclinado"],
         },
         {
-            nome: "Encolhimento com Halter",
+            nome: "Encolhimento de Ombros com Halter",
             descricao: "Com um halter em cada mão ao lado do corpo, encolha os ombros verticalmente sem rodar o pescoço. Exercício de isolamento para trapézio superior.",
             primario: "Trapézio",
             secundarios: [],
             aparelhos: ["Halter"],
         },
         {
-            nome: "Elevação Lateral na Polia Baixa",
+            nome: "Elevação Lateral na Polia",
             descricao: "Com a polia baixa do lado oposto ao braço de trabalho, eleve o cabo lateralmente até a altura do ombro. A polia mantém tensão constante ao longo de todo o arco.",
             primario: "Deltóide Lateral",
             secundarios: [],
             aparelhos: ["Polia / Cabo"],
+        },
+        {
+            nome: "Arnold Press com Halter",
+            descricao: "Inicie com os halteres na frente do rosto com palmas para dentro, e ao pressionar para cima gire os pulsos de modo que as palmas fiquem para fora no topo. Exercício criado por Arnold Schwarzenegger que ativa os três feixes do deltóide.",
+            primario: "Deltóide Anterior",
+            secundarios: ["Deltóide Lateral", "Tríceps"],
+            aparelhos: ["Halter"],
+        },
+        {
+            nome: "Remada Alta com Halter",
+            descricao: "Em pé com os halteres à frente, puxe verticalmente até a linha do queixo elevando os cotovelos acima dos ombros. Alternativa unilateral à remada alta com barra com maior liberdade de movimento.",
+            primario: "Trapézio",
+            secundarios: ["Deltóide Lateral", "Bíceps"],
+            aparelhos: ["Halter"],
         },
     ],
 
     // ABDOMEN
     ABDOMEN: [
         {
-            nome: "Prancha Abdominal",
+            nome: "Prancha",
             descricao: "Apoiado nos antebraços e pontas dos pés, mantenha o corpo rígido em posição horizontal. Exercício isométrico de core com alta ativação de abdominais, glúteos e estabilizadores.",
             primario: "Abdominais",
             secundarios: ["Glúteos", "Eretores da Coluna"],
@@ -366,7 +543,7 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             tipo: "TEMPO",
         },
         {
-            nome: "Crunch Abdominal",
+            nome: "Abdominal Crunch",
             descricao: "Deitado com joelhos flexionados e pés no chão, contraia o abdômen elevando a parte superior das costas. Exercício clássico de isolamento para abdominais.",
             primario: "Abdominais",
             secundarios: [],
@@ -409,11 +586,32 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             aparelhos: ["Bola Medicinal"],
         },
         {
-            nome: "Crunch no Banco Declinado",
+            nome: "Abdominal no Banco Declinado",
             descricao: "Deitado no banco declinado com os pés presos, eleve o tronco em direção aos joelhos com amplitude completa de movimento. Maior amplitude que o crunch no chão.",
             primario: "Abdominais",
             secundarios: ["Oblíquos"],
             aparelhos: ["Banco Declinado"],
+        },
+        {
+            nome: "Abdominal Bicicleta",
+            descricao: "Deitado com mãos atrás da cabeça, alterne levar cada cotovelo ao joelho oposto enquanto estende a perna contrária. Um dos exercícios mais eficazes para ativação de abdominais e oblíquos simultaneamente.",
+            primario: "Abdominais",
+            secundarios: ["Oblíquos", "Flexores do Quadril"],
+            aparelhos: ["Peso Corporal"],
+        },
+        {
+            nome: "Abdominal Oblíquo",
+            descricao: "Deitado com joelhos dobrados e os dois lados do quadril rotacionados para um lado, execute o crunch em direção ao joelho superior. Isolamento direto do oblíquo.",
+            primario: "Oblíquos",
+            secundarios: ["Abdominais"],
+            aparelhos: ["Peso Corporal"],
+        },
+        {
+            nome: "Elevação de Pernas no Chão",
+            descricao: "Deitado com as costas no chão e as mãos sob o lombar, eleve as pernas estendidas até 90° e desça controladamente sem tocar o chão. Trabalha reto abdominal inferior e flexores do quadril.",
+            primario: "Abdominais",
+            secundarios: ["Flexores do Quadril"],
+            aparelhos: ["Peso Corporal"],
         },
     ],
 
@@ -464,6 +662,7 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             primario: "Sistema Cardiovascular",
             secundarios: [],
             aparelhos: ["Esteira"],
+            tipo: "DISTANCIA",
         },
         {
             nome: "Pedalar na Bicicleta Ergométrica",
@@ -471,6 +670,7 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             primario: "Sistema Cardiovascular",
             secundarios: ["Quadríceps", "Isquiotibiais"],
             aparelhos: ["Bicicleta Ergométrica"],
+            tipo: "DISTANCIA",
         },
         {
             nome: "Elíptico",
@@ -478,6 +678,7 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             primario: "Sistema Cardiovascular",
             secundarios: [],
             aparelhos: ["Elíptico"],
+            tipo: "DISTANCIA",
         },
         {
             nome: "Pulo com Corda",
@@ -485,6 +686,7 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             primario: "Sistema Cardiovascular",
             secundarios: ["Panturrilha"],
             aparelhos: ["Corda de Pular"],
+            tipo: "TEMPO",
         },
         {
             nome: "Burpee",
@@ -506,6 +708,21 @@ const EXERCICIOS_POR_GRUPO: Record<string, ExercicioSeed[]> = {
             primario: "Sistema Cardiovascular",
             secundarios: ["Abdominais", "Quadríceps"],
             aparelhos: ["Peso Corporal"],
+            tipo: "TEMPO",
+        },
+        {
+            nome: "Agachamento com Salto",
+            descricao: "Execute um agachamento completo e ao subir realize um salto explosivo, aterrissando suavemente voltando ao agachamento. Exercício pliométrico que combina força de quadríceps com potência cardiovascular.",
+            primario: "Sistema Cardiovascular",
+            secundarios: ["Quadríceps", "Glúteos"],
+            aparelhos: ["Peso Corporal"],
+        },
+        {
+            nome: "Step Up com Halter",
+            descricao: "Segurando halteres, suba alternando os pés em um banco ou caixa de altura moderada. Exercício funcional que melhora força unilateral de pernas e capacidade aeróbica.",
+            primario: "Sistema Cardiovascular",
+            secundarios: ["Quadríceps", "Glúteos"],
+            aparelhos: ["Halter", "Banco Reto"],
         },
     ],
 };

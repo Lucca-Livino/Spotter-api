@@ -7,6 +7,7 @@ import { seedUsuarios } from './usuarioSeeds';
 import { seedTreinadores } from './treinadorSeeds';
 import { seedExercicios, seedExerciciosPessoais } from './exercicioSeeds';
 import { seedTreinos } from './treinoSeeds';
+import { seedSessoes } from './sessaoSeeds';
 
 async function runSeeds() {
     try {
@@ -17,10 +18,12 @@ async function runSeeds() {
         // O CASCADE deleta todos os registros dependentes automaticamente sem violar as FKs.
         console.log(chalk.whiteBright('Limpando o banco de dados...'));
         await DataBase.execute(sql`
-            TRUNCATE TABLE 
-                treino_exercicio, treino, exercicio_aparelho, exercicio_musculo, 
-                exercicio, aparelho, musculo, treinador_academia, treinador, 
+            TRUNCATE TABLE
+                sessao_serie, sessao_exercicio, sessao_treino,
+                treino_exercicio, treino, exercicio_aparelho, exercicio_musculo,
+                exercicio, aparelho, musculo, treinador_academia, treinador,
                 avaliacao_fisica, aluno_academia, aluno, academia,
+                solicitacao_treinador,
                 session, account, verification, "user"
             CASCADE;
         `);
@@ -33,6 +36,17 @@ async function runSeeds() {
         console.log(chalk.cyanBright(`※ ${chalk.cyan('Exercícios, Músculos e Aparelhos...')}`));
         await seedExercicios();
 
+        // Restaura URLs de mídia cacheadas (tabela exercicio_midia_cache não é truncada).
+        // Garante que animacao_url seja preservada entre re-execuções de seed.
+        await DataBase.execute(sql`
+            UPDATE exercicio e
+            SET animacao_url = c.animacao_url
+            FROM exercicio_midia_cache c
+            WHERE e.nome = c.nome_pt
+            AND e.aluno_id IS NULL
+            AND e.animacao_url IS NULL
+        `);
+
         console.log(chalk.cyanBright(`※ ${chalk.cyan('Treinadores...')}`));
         const treinadores = await seedTreinadores(academiasIds);
 
@@ -44,6 +58,9 @@ async function runSeeds() {
 
         console.log(chalk.cyanBright(`※ ${chalk.cyan('Treinos e Itens de Treino...')}`));
         await seedTreinos();
+
+        console.log(chalk.cyanBright(`※ ${chalk.cyan('Histórico de Sessões...')}`));
+        await seedSessoes();
 
         console.log(chalk.greenBright('Seeds executados com sucesso!'));
         process.exit(0);

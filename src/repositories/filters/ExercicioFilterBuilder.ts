@@ -1,4 +1,4 @@
-import { and, or, isNull, eq, ilike, inArray, notInArray, SQL, sql } from 'drizzle-orm';
+import { and, or, isNull, isNotNull, eq, ilike, inArray, notInArray, SQL, sql } from 'drizzle-orm';
 import { DataBase } from '../../config/DbConnect';
 import { exercicio, exercicio_musculo, musculo, treino_exercicio } from '../../config/db/schema';
 
@@ -113,6 +113,15 @@ class ExercicioFilterBuilder {
     comTipoExercicio(tipo_exercicio?: TipoExercicio) {
         if (tipo_exercicio) {
             this.condicoes.push(eq(exercicio.tipo_exercicio, tipo_exercicio));
+        }
+        return this;
+    }
+
+    comMidia(comMidia?: boolean) {
+        if (comMidia === true) {
+            this.condicoes.push(isNotNull(exercicio.animacao_url));
+        } else if (comMidia === false) {
+            this.condicoes.push(isNull(exercicio.animacao_url));
         }
         return this;
     }

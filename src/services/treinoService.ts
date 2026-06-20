@@ -17,6 +17,10 @@ import {
 } from '../utils/validations/treinoValidation';
 import { type_treino } from '../types/dbSchemas';
 import { mapTreinoTemplateParaAluno } from '../utils/treinoTemplateMapper';
+import { notificarTreinoAtribuido, notificarTreinoAtualizado, notificarTreinoRemovido } from '../integrations/notificacoes';
+import { DataBase } from '../config/DbConnect';
+import { aluno } from '../config/db/schema';
+import { eq } from 'drizzle-orm';
 
 class TreinoService {
     private repository: TreinoRepository;
@@ -215,6 +219,25 @@ class TreinoService {
                 throw new Error('Treino não encontrado');
             }
 
+            // Enviar push notification se o treino foi criado por um treinador para um aluno
+            if (perfil.isTreinador && alunoIdDestino && alunoIdDestino !== perfil.alunoId) {
+                void (async () => {
+                    try {
+                        const alunoData = await DataBase.select({ user_id: aluno.user_id })
+                            .from(aluno)
+                            .where(eq(aluno.id, alunoIdDestino))
+                            .limit(1);
+
+                        const alunoUserId = alunoData[0]?.user_id;
+                        if (alunoUserId) {
+                            await notificarTreinoAtribuido(alunoUserId, treinoDetalhado.nome);
+                        }
+                    } catch (e) {
+                        console.error('[TreinoService] Erro ao enviar notificação de novo treino:', e);
+                    }
+                })();
+            }
+
             return treinoDetalhado;
         } catch (error) {
             if (error instanceof ZodError) {
@@ -240,7 +263,7 @@ class TreinoService {
         }
 
         const podeVisualizar =
-            perfil.isAdmin ||
+            (perfil.isAdmin && (!perfil.alunoId || perfil.alunoId === treinoEncontrado.usuario_id)) ||
             (treinoEncontrado.usuario_id !== null && perfil.alunoId === treinoEncontrado.usuario_id) ||
             (perfil.treinadorId !== null && perfil.treinadorId === treinoEncontrado.treinador_id) ||
             (perfil.isTreinador && perfil.treinadorId !== null && treinoEncontrado.usuario_id !== null &&
@@ -270,31 +293,35 @@ class TreinoService {
             throw new Error('FORBIDDEN: usuário sem perfil para acessar treinos');
         }
 
-        if (!perfil.isAdmin) {
-            if (perfil.isTreinador) {
-                if (filtrosLista.treinador_id && filtrosLista.treinador_id !== perfil.treinadorId) {
-                    throw new Error('FORBIDDEN: treinador só pode listar os próprios treinos');
-                }
-
-                const alunosVinculados = await this.usuarioRepository.listarAlunosVinculadosAoTreinador(
-                    perfil.treinadorId!,
-                );
-
-                if (filtrosLista.usuario_id && !alunosVinculados.includes(filtrosLista.usuario_id)) {
-                    throw new Error('FORBIDDEN: treinador só pode listar treinos de alunos vinculados ao seu perfil');
-                }
-
-                if (filtrosLista.usuario_id) {
-                    usuarioIdsPermitidos = [filtrosLista.usuario_id];
-                }
-
-                filtrosLista.treinador_id = perfil.treinadorId ?? undefined;
-            } else if (perfil.isAluno) {
-                if (filtrosLista.usuario_id && filtrosLista.usuario_id !== perfil.alunoId) {
-                    throw new Error('FORBIDDEN: aluno só pode listar os próprios treinos');
-                }
+        if (perfil.isAdmin) {
+            // Admin sem usuario_id explícito → vê apenas os próprios treinos (privacidade dos alunos)
+            // Admin com usuario_id explícito → acesso de supervisão ao aluno especificado
+            if (!filtrosLista.usuario_id) {
                 filtrosLista.usuario_id = perfil.alunoId ?? undefined;
             }
+        } else if (perfil.isTreinador) {
+            if (filtrosLista.treinador_id && filtrosLista.treinador_id !== perfil.treinadorId) {
+                throw new Error('FORBIDDEN: treinador só pode listar os próprios treinos');
+            }
+
+            const alunosVinculados = await this.usuarioRepository.listarAlunosVinculadosAoTreinador(
+                perfil.treinadorId!,
+            );
+
+            if (filtrosLista.usuario_id && !alunosVinculados.includes(filtrosLista.usuario_id)) {
+                throw new Error('FORBIDDEN: treinador só pode listar treinos de alunos vinculados ao seu perfil');
+            }
+
+            if (filtrosLista.usuario_id) {
+                usuarioIdsPermitidos = [filtrosLista.usuario_id];
+            }
+
+            filtrosLista.treinador_id = perfil.treinadorId ?? undefined;
+        } else if (perfil.isAluno) {
+            if (filtrosLista.usuario_id && filtrosLista.usuario_id !== perfil.alunoId) {
+                throw new Error('FORBIDDEN: aluno só pode listar os próprios treinos');
+            }
+            filtrosLista.usuario_id = perfil.alunoId ?? undefined;
         }
 
         if (possuiFiltroDeExercicio) {
@@ -331,7 +358,7 @@ class TreinoService {
         }
 
         const podeAtualizar =
-            perfil.isAdmin ||
+            (perfil.isAdmin && (!perfil.alunoId || perfil.alunoId === treinoAtual.usuario_id)) ||
             (treinoAtual.usuario_id !== null && perfil.alunoId === treinoAtual.usuario_id) ||
             (perfil.treinadorId !== null && perfil.treinadorId === treinoAtual.treinador_id) ||
             (perfil.isTreinador && perfil.treinadorId !== null && treinoAtual.usuario_id !== null &&
@@ -512,6 +539,25 @@ class TreinoService {
             throw new Error('Treino não encontrado');
         }
 
+        // Enviar push notification se o treino foi atualizado por um treinador para um aluno
+        if (perfil.isTreinador && treinoAtualizadoComExercicios.usuario_id && treinoAtualizadoComExercicios.usuario_id !== perfil.alunoId) {
+            void (async () => {
+                try {
+                    const alunoData = await DataBase.select({ user_id: aluno.user_id })
+                        .from(aluno)
+                        .where(eq(aluno.id, treinoAtualizadoComExercicios.usuario_id as string))
+                        .limit(1);
+
+                    const alunoUserId = alunoData[0]?.user_id;
+                    if (alunoUserId) {
+                        await notificarTreinoAtualizado(alunoUserId, treinoAtualizadoComExercicios.nome);
+                    }
+                } catch (e) {
+                    console.error('[TreinoService] Erro ao enviar notificação de treino atualizado:', e);
+                }
+            })();
+        }
+
         return treinoAtualizadoComExercicios;
     }
 
@@ -535,7 +581,7 @@ class TreinoService {
         }
 
         const podeDeletar =
-            perfil.isAdmin ||
+            (perfil.isAdmin && (!perfil.alunoId || perfil.alunoId === treinoExistente.usuario_id)) ||
             (treinoExistente.usuario_id !== null && perfil.alunoId === treinoExistente.usuario_id) ||
             (perfil.treinadorId !== null && perfil.treinadorId === treinoExistente.treinador_id) ||
             (perfil.isTreinador && perfil.treinadorId !== null && treinoExistente.usuario_id !== null &&
@@ -558,6 +604,26 @@ class TreinoService {
         }
 
         const treinoDeletado = await this.repository.softDelete(id);
+
+        // Notificar o aluno se o treino foi removido pelo treinador (não-bloqueante)
+        if (perfil.isTreinador && treinoExistente.usuario_id) {
+            void (async () => {
+                try {
+                    const alunoData = await DataBase.select({ user_id: aluno.user_id })
+                        .from(aluno)
+                        .where(eq(aluno.id, treinoExistente.usuario_id as string))
+                        .limit(1);
+
+                    const alunoUserId = alunoData[0]?.user_id;
+                    if (alunoUserId) {
+                        await notificarTreinoRemovido(alunoUserId, treinoExistente.nome);
+                    }
+                } catch (e) {
+                    console.error('[TreinoService] Erro ao enviar notificação de remoção:', e);
+                }
+            })();
+        }
+
         return { treino: treinoDeletado, tipo_exclusao: 'soft' };
     }
 
@@ -584,7 +650,7 @@ class TreinoService {
         }
 
         const podeVisualizar =
-            perfil.isAdmin ||
+            (perfil.isAdmin && (!perfil.alunoId || perfil.alunoId === treinoTemplate.usuario_id)) ||
             (treinoTemplate.usuario_id !== null && perfil.alunoId === treinoTemplate.usuario_id) ||
             (perfil.treinadorId !== null && perfil.treinadorId === treinoTemplate.treinador_id) ||
             (perfil.isTreinador && perfil.treinadorId !== null && treinoTemplate.usuario_id !== null &&
@@ -603,6 +669,7 @@ class TreinoService {
         const resultados: TreinoComExercicios[] = [];
         for (const alunoId of alunoIds) {
             const payload = mapTreinoTemplateParaAluno(treinoTemplate, alunoId);
+            // O createTreino já cuida do envio da notificação "Novo Treino Atribuído"
             const criado = await this.createTreino(payload, userId);
             resultados.push(criado);
         }

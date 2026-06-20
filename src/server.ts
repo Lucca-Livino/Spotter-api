@@ -22,6 +22,7 @@ import aparelhoRoutes from './routes/aparelhoRoutes';
 import authRoutes from "./routes/authRoutes";
 import uploadRoutes from "./routes/uploadRoutes";
 import conversaRoutes from './routes/conversaRoutes';
+import solicitacaoTreinadorRoutes from './routes/solicitacaoTreinadorRoutes';
 import exerciseDbRoutes from './routes/exerciseDbRoutes';
 import mediaRoutes from './routes/mediaRoutes';
 import { initSocketIO } from './config/socketIo';
@@ -82,6 +83,22 @@ app.get("/", (req, res) => {
   res.redirect("/api/docs");
 });
 
+// App Links Verification (Android)
+app.get("/.well-known/assetlinks.json", (req, res) => {
+  res.json([
+    {
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "dev.fslab.academia",
+        "sha256_cert_fingerprints": [
+          "8C:8B:DC:41:0D:64:4E:EC:66:59:06:21:52:42:98:02:D5:FF:82:36:D3:DF:83:4E:AE:64:45:66:91:79:53:C4"
+        ]
+      }
+    }
+  ]);
+});
+
 // rotas
 app.use('/api', academiaRoutes);
 app.use('/api', alunoRoutes);
@@ -95,6 +112,7 @@ app.use('/api', aparelhoRoutes);
 app.use('/api', authRoutes);
 app.use('/api', uploadRoutes);
 app.use('/api', conversaRoutes);
+app.use('/api', solicitacaoTreinadorRoutes);
 app.use('/api', exerciseDbRoutes);
 app.use('/api', mediaRoutes);
 
